@@ -1,0 +1,7 @@
+*.lnk
+*.ini
+obj/
+bin/
+*.sln
+*.vcxproj
+*.vcxproj.filters
