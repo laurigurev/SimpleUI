@@ -151,6 +151,9 @@ int main()
 		);
 	}
 
+	struct sui_context sui;
+	sui_init_fixed(&sui, device);
+
 	f32 colors[] = { 0.0f, 0.0f, 0.2f, 1.0f };
 	
 	while (1) {
@@ -164,13 +167,13 @@ int main()
 			DispatchMessage(&msg);
 		}
 
-		ID3D11DeviceContext_ClearRenderTargetView(
-			context, target, colors
-		);
+		ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
+		sui_button(&sui);
 		IDXGISwapChain_Present(swapchain, 1, 0);
 	}
 
 EXIT:
+	sui_terminate(&sui);
 	return 0;
 }
 
