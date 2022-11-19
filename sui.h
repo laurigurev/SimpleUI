@@ -25,32 +25,33 @@ typedef double		d64;
 
 #endif
 
+#include <stdio.h>
+#define sui_todo(x) puts("feature '"x"' not implemented yet");assert(0);
+
 #define WIN32_MEAN_AND_LEAN
 #define COBJMACROS
 #include <d3d11.h>
 #include <windows.h>
 
 struct sui_context;
-struct sui_window;
+// struct sui_window;
 // struct sui_button;
 // struct sui_label;
 // struct sui_slider;
 struct sui_vertex;
+struct sui_rect;
 
 
 
 void sui_init_fixed(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h);
 void sui_terminate(struct sui_context* sui);
 void sui_mouse_input(struct sui_context* sui, i32 x, i32 y);
-void sui_window_begin(
-	struct sui_window* window, struct sui_context* sui, 
-	i32 x, i32 y, i32 w, i32 h /* , i32 sui_window_flags */
-);
-void sui_window_end(struct sui_context* sui);
+void sui_begin(struct sui_context* sui, struct sui_rect* rect);
+void sui_end(struct sui_context* sui);
 
-i32 sui_button(struct sui_context* sui);
-void sui_label();
-void sui_slider(f32* slider_value);
+// i32 sui_button(struct sui_context* sui);
+// void sui_label();
+// void sui_slider(f32* slider_value);
 
 
 
@@ -63,17 +64,11 @@ struct sui_vertex {
 	u8 a;
 };
 
-struct sui_window {
-	// previous state
-	// previous position
-	i32 x;
-	i32 y;
-	
-	// bounding box
-	i32 x0;
-	i32 x1;
-	i32 y0;
-	i32 y1;
+struct sui_rect {
+	union { i32 x; i32 x0; };
+	union { i32 y; i32 y0; };
+	union { i32 w; i32 x1; };
+	union { i32 h; i32 y1; };
 };
 
 struct sui_context {
@@ -88,9 +83,10 @@ struct sui_context {
 	i32 screen_w;
 	i32 screen_h;
 
-	struct sui_vertex* vertices;
 	i32 len;
+	struct sui_vertex* vertices;
+	// i32 window_offsets;
 
-	// i32 mx;
-	// i32 my;
+	i32 mx;
+	i32 my;
 };

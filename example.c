@@ -12,6 +12,19 @@
 struct ex_window;
 struct ex_gfx_context;
 
+enum mouse_event { 
+	MOUSE_LBUTTONUP = 0x0001, 
+	MOUSE_LBUTTONDOWN = 0x0002, 
+	MOUSE_RBUTTONUP = 0x0004, 
+	MOUSE_RBUTTONDOWN = 0x0008
+};
+
+struct mouse_t {
+	i32 x;
+	i32 y;
+	i16 flags;
+};
+
 void ex_window_init();
 void ex_window_terminate();
 
@@ -19,7 +32,8 @@ void ex_gdx_context_init();
 void ex_gdx_context_terminate();
 // TODO(end)
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+LRESULT CALLBACK WindowProc0(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+LRESULT CALLBACK WindowProc1(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 int main()
 {
@@ -30,6 +44,7 @@ int main()
 	WNDCLASSEX wc;
 	HINSTANCE hInstance;
 	HWND hwnd;
+	struct mouse_t mouse;
 
 	{
 		const i32 x = 60;
@@ -47,7 +62,7 @@ int main()
 
 		wc.cbSize = sizeof(wc);
 		wc.style = CS_OWNDC;
-		wc.lpfnWndProc = WindowProc;
+		wc.lpfnWndProc = WindowProc0;
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = hInstance;
@@ -72,7 +87,7 @@ int main()
 			NULL,
 			NULL,
 			hInstance,
-			NULL
+			&mouse
 		);
 
 		if (!hwnd) {
@@ -153,7 +168,7 @@ int main()
 
 	struct sui_context sui;
 	sui_init_fixed(&sui, device, 600, 600);
-	struct sui_window swin;
+	struct sui_rect rect = { .x = 100, .y = 100, .w = 200, .h = 200 };
 
 	f32 colors[] = { 0.0f, 0.0f, 0.2f, 1.0f };
 	
@@ -169,9 +184,12 @@ int main()
 		}
 
 		ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
+		sui_mouse_input(&sui, mouse.x, mouse.y);
 		// sui_button(&sui);
-		sui_window_begin(&swin, &sui, 100, 100, 200, 100);
-		sui_window_end(&sui);
+		// sui_window_begin(&sui, 100, 100, 200, 200);
+		// sui_window_end(&sui);
+		sui_begin(&sui, &rect);
+		sui_end(&sui);
 		IDXGISwapChain_Present(swapchain, 1, 0);
 	}
 
@@ -181,11 +199,45 @@ EXIT:
 }
 
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+LRESULT CALLBACK WindowProc0(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
+	// setup message handling system
+	if (msg == WM_NCCREATE) {
+		CREATESTRUCT* p_create = (CREATESTRUCT*)lparam;
+		struct mouse_t* p_m = (struct mouse_t*)p_create->lpCreateParams;
+		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)p_m);
+		SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc1);
+		return WindowProc1(hwnd, msg, wparam, lparam);
+	}
+	return DefWindowProc(hwnd, msg, wparam, lparam);
+}
+
+LRESULT CALLBACK WindowProc1(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+	// handle messages
+	struct mouse_t* p_mouse = (struct mouse_t*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+	p_mouse->flags = 0;
+
 	switch (msg) {
 	case WM_CLOSE:
 		PostQuitMessage(0);
+		break;
+	case WM_MOUSEMOVE:
+		POINTS p = MAKEPOINTS(lparam);
+		p_mouse->x = p.x;
+		p_mouse->y = p.y;
+		break;
+	case WM_LBUTTONDOWN:
+		p_mouse->flags |= MOUSE_LBUTTONDOWN;
+		break;
+	case WM_RBUTTONDOWN:
+		p_mouse->flags |= MOUSE_RBUTTONDOWN;
+		break;
+	case WM_LBUTTONUP:
+		p_mouse->flags |= MOUSE_LBUTTONUP;
+		break;
+	case WM_RBUTTONUP:
+		p_mouse->flags |= MOUSE_RBUTTONUP;
 		break;
 	}
 	return DefWindowProc(hwnd, msg, wparam, lparam);

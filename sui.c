@@ -146,72 +146,83 @@ void sui_terminate(struct sui_context* sui)
 
 	memset(sui, 0, sizeof(struct sui_context));
 }
-
-void sui_window_begin(
-	struct sui_window* window, struct sui_context* sui, 
-	i32 x, i32 y, i32 w, i32 h /* , i32 sui_window_flags */)
+void sui_mouse_input(struct sui_context* sui, i32 x, i32 y)
 {
-	const i32 header_h = 12;
-	x -= 300;
-	y -= 300;
+	// update states
+	sui->mx = x;
+	sui->my = y;
+}
+
+void sui_begin(struct sui_context* sui, struct sui_rect* rect)
+{
+	// preparing variables
+	const i32 hh = 12;
+	i32 x = rect->x - 300;
+	i32 y = rect->y - 300;
 
 	i32 header_x0 = x;
-	i32 header_x1 = x + w;
+	i32 header_x1 = x + rect->w;
 	i32 header_y0 = y;
-	i32 header_y1 = y + header_h;
+	i32 header_y1 = y + hh;
 	
 	i32 body_x0 = x;
-	i32 body_x1 = x + w;
-	i32 body_y0 = y + header_h;
-	i32 body_y1 = y + h + header_h;
+	i32 body_x1 = x + rect->w;
+	i32 body_y0 = y + hh;
+	i32 body_y1 = y + rect->h + hh;
 
+	// creating vertices
 	struct sui_vertex* vertex = sui->vertices + sui->len;
 	{
 		const f32 swv =   sui->screen_w / 2.0f;
 		const f32 shv = -(sui->screen_h / 2.0f);
 
 		// header
+		u8 hr = 0;
+		u8 hg = 0;
+		u8 hb = 0;
+
 		*vertex = (struct sui_vertex){
-			header_x0 / swv, header_y0 / shv, 0, 0, 0, 255
+			header_x0 / swv, header_y0 / shv, hr, hg, hb, 255
 		};
 		vertex++;
 
 		*vertex = (struct sui_vertex){
-			header_x1 / swv, header_y1 / shv, 0, 0, 0, 255
+			header_x1 / swv, header_y1 / shv, hr, hg, hb, 255
 		};
 		vertex++;
 		
 		*vertex = (struct sui_vertex){
-			header_x0 / swv, header_y1 / shv, 0, 0, 0, 255
+			header_x0 / swv, header_y1 / shv, hr, hg, hb, 255
 		};
 		vertex++;
 
 		*vertex = (struct sui_vertex){
-			header_x1 / swv, header_y0 / shv, 0, 0, 0, 255
+			header_x1 / swv, header_y0 / shv, hr, hg, hb, 255
 		};
 		vertex++;
 
 		// body
-		u8 body_r = 30;
-		u8 body_g = 30;
-		u8 body_b = 30;
+		u8 br = 150;
+		u8 bg = 150;
+		u8 bb = 150;
+
 		*vertex = (struct sui_vertex){ 
-			body_x0 / swv, body_y0 / shv, body_r, body_g, body_b, 255 
+			body_x0 / swv, body_y0 / shv, br, bg, bb, 255 
 		};
 		vertex++;
 
 		*vertex = (struct sui_vertex){ 
-			body_x1 / swv, body_y1 / shv, body_r, body_g, body_b, 255 
+			body_x1 / swv, body_y1 / shv, br, bg, bb, 255 
 		};
 		vertex++;
 		
 		*vertex = (struct sui_vertex){ 
-			body_x0 / swv, body_y1 / shv, body_r, body_g, body_b, 255 
+			body_x0 / swv, body_y1 / shv, br, bg, bb, 255 
 		};
 		vertex++;
 
 		*vertex = (struct sui_vertex){ 
-			body_x1 / swv, body_y0 / shv, body_r, body_g, body_b, 255 
+			body_x1 / swv, body_y0 / shv, br, bg, bb, 255 
 		};
 
 	}
@@ -219,7 +230,7 @@ void sui_window_begin(
 	sui->len += 8;
 }
 
-void sui_window_end(struct sui_context* sui)
+void sui_end(struct sui_context* sui)
 {
 	HRESULT hr;
 	D3D11_MAPPED_SUBRESOURCE vrsc;
@@ -251,43 +262,4 @@ void sui_window_end(struct sui_context* sui)
 
 	memset(sui->vertices, 0, sizeof(struct sui_vertex) * sui->len);
 	sui->len = 0;
-}
-
-i32 sui_button(struct sui_context* sui)
-{
-	// NOT FINISHED
-	struct sui_vertex vertices[] = {
-		{ -1.0f,  1.0f, 255, 0, 0, 255 },	
-		{  1.0f, -1.0f, 0, 255, 0, 255 },	
-		{ -1.0f, -1.0f, 0, 0, 255, 255 },	
-		{  1.0f,  1.0f, 255, 255, 255, 255 }
-	};
-
-	HRESULT hr;
-	D3D11_MAPPED_SUBRESOURCE vrsc;
-	hr = ID3D11DeviceContext_Map(
-		sui->d11context, sui->d11vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &vrsc
-	);
-	sui_assert(hr == 0);
-	memcpy(vrsc.pData, vertices, sizeof(vertices));
-	ID3D11DeviceContext_Unmap(sui->d11context, sui->d11vb, 0);
-
-	ID3D11DeviceContext_IASetPrimitiveTopology(
-		sui->d11context, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
-	);
-	ID3D11DeviceContext_IASetInputLayout(sui->d11context, sui->d11il);
-	ID3D11DeviceContext_VSSetShader(sui->d11context, sui->d11vs, NULL, 0);
-	ID3D11DeviceContext_PSSetShader(sui->d11context, sui->d11ps, NULL, 0);
-	ID3D11DeviceContext_IASetIndexBuffer(
-		sui->d11context, sui->d11ib, DXGI_FORMAT_R32_UINT, 0
-	);
-	
-	u32 stride = sizeof(struct sui_vertex);
-	u32 offset = 0;
-	ID3D11DeviceContext_IASetVertexBuffers(
-		sui->d11context, 0, 1, &sui->d11vb, &stride, &offset
-	);
-	ID3D11DeviceContext_DrawIndexed(sui->d11context, 6, 0, 0);
-
-	return 0;
 }
