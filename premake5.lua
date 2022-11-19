@@ -8,7 +8,7 @@ project "SimpleUI"
 	targetdir "bin/%{cfg.buildcfg}"
 	links { "d3d11", "dxgi", "dxguid", "d3dcompiler" }
 
-	files { "src/**.h", "src/**.c" }
+	files { "**.h", "**.c" }
 
 	filter "configurations:Debug"
 		defines { "DEBUG" }

@@ -3,7 +3,5 @@
 obj/
 bin/
 *.sln
-*.vcxproj
-*.vcxproj.filters
+*.vcxproj*
 .vs/
-*.vcxproj.user

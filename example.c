@@ -152,7 +152,8 @@ int main()
 	}
 
 	struct sui_context sui;
-	sui_init_fixed(&sui, device);
+	sui_init_fixed(&sui, device, 600, 600);
+	struct sui_window swin;
 
 	f32 colors[] = { 0.0f, 0.0f, 0.2f, 1.0f };
 	
@@ -168,7 +169,9 @@ int main()
 		}
 
 		ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
-		sui_button(&sui);
+		// sui_button(&sui);
+		sui_window_begin(&swin, &sui, 100, 100, 200, 100);
+		sui_window_end(&sui);
 		IDXGISwapChain_Present(swapchain, 1, 0);
 	}
 
