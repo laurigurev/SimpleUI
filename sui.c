@@ -3,10 +3,28 @@
 #include <string.h>
 #include <d3dcompiler.h>
 
-
-void sui_init_fixed(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
+void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 {
-	// memset(context, 0, sizeof(struct sui_context);
+	sui->current_window = NULL;
+	sui->voff = -1;
+	sui->current_row = -1;
+	sui->window_border = 0;
+	sui->window_title_bar_h = 0;
+	sui->window_child_h = 0;
+
+	sui->widgets = (struct sui_widget*)malloc(sizeof(struct sui_widget) * 128);
+	sui->wlen = 0;
+	sui->p_windows = (struct sui_widget**)malloc(sizeof(struct sui_widget*) * 32);
+	memset(sui->p_windows, 0, sizeof(struct sui_widget*) * 32);
+
+	sui->vertices = (struct sui_vertex*)malloc(sizeof(struct sui_vertex) * 2048);
+	sui->vlen = 0;
+
+	sui->viewport = (struct sui_viewport) { w, h };
+	sui->input_state = (struct sui_input_state) {
+		-1, -1, 0, 200, 0, 0, 0, 0, 0, 0, 0, 0
+	};
+
 	sui->d11device = d11device;
 	ID3D11Device_GetImmediateContext(d11device, &sui->d11context);
 
@@ -121,16 +139,11 @@ void sui_init_fixed(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32
 		hr = ID3D11Device_CreateBuffer(d11device, &bufdsc, &subrsc, &sui->d11ib);
 		sui_assert(hr == 0);
 	}
-
-	sui->screen_w = w;
-	sui->screen_h = h;
-
-	sui->len = 0;
-	sui->vertices = (struct sui_vertex*)malloc(sizeof(struct sui_vertex) * 2048);
 }
 
 void sui_terminate(struct sui_context* sui)
 {
+	// NOT UP TO DATE
 	sui->d11device = NULL;
 	sui->d11context = NULL;
 
@@ -141,104 +154,189 @@ void sui_terminate(struct sui_context* sui)
 	ID3D11Buffer_Release(sui->d11vb);
 	ID3D11Buffer_Release(sui->d11ib);
 
-	sui->len = 0;
+	sui->vlen = 0;
 	free(sui->vertices);
 
 	memset(sui, 0, sizeof(struct sui_context));
 }
-void sui_mouse_input(struct sui_context* sui, i32 x, i32 y)
+
+void sui_inputs(struct sui_context* sui)
 {
-	// update states
-	sui->mx = x;
-	sui->my = y;
+	sui_todo("sui_inputs() function");
 }
 
-void sui_begin(struct sui_context* sui, struct sui_rect* rect)
+void sui_begin(struct sui_context* sui, i32 i, i16 x, i16 y, i16 w, i16 h)
 {
-	// preparing variables
-	const i32 hh = 12;
-	i32 x = rect->x - 300;
-	i32 y = rect->y - 300;
+	// get index;
+	// get window
+	struct sui_widget* window = sui->p_windows[i];
 
-	i32 header_x0 = x;
-	i32 header_x1 = x + rect->w;
-	i32 header_y0 = y;
-	i32 header_y1 = y + hh;
-	
-	i32 body_x0 = x;
-	i32 body_x1 = x + rect->w;
-	i32 body_y0 = y + hh;
-	i32 body_y1 = y + rect->h + hh;
-
-	// creating vertices
-	struct sui_vertex* vertex = sui->vertices + sui->len;
-	{
-		const f32 swv =   sui->screen_w / 2.0f;
-		const f32 shv = -(sui->screen_h / 2.0f);
-
-		// header
-		u8 hr = 0;
-		u8 hg = 0;
-		u8 hb = 0;
-
-		*vertex = (struct sui_vertex){
-			header_x0 / swv, header_y0 / shv, hr, hg, hb, 255
-		};
-		vertex++;
-
-		*vertex = (struct sui_vertex){
-			header_x1 / swv, header_y1 / shv, hr, hg, hb, 255
-		};
-		vertex++;
-		
-		*vertex = (struct sui_vertex){
-			header_x0 / swv, header_y1 / shv, hr, hg, hb, 255
-		};
-		vertex++;
-
-		*vertex = (struct sui_vertex){
-			header_x1 / swv, header_y0 / shv, hr, hg, hb, 255
-		};
-		vertex++;
-
-		// body
-		u8 br = 150;
-		u8 bg = 150;
-		u8 bb = 150;
-
-		*vertex = (struct sui_vertex){ 
-			body_x0 / swv, body_y0 / shv, br, bg, bb, 255 
-		};
-		vertex++;
-
-		*vertex = (struct sui_vertex){ 
-			body_x1 / swv, body_y1 / shv, br, bg, bb, 255 
-		};
-		vertex++;
-		
-		*vertex = (struct sui_vertex){ 
-			body_x0 / swv, body_y1 / shv, br, bg, bb, 255 
-		};
-		vertex++;
-
-		*vertex = (struct sui_vertex){ 
-			body_x1 / swv, body_y0 / shv, br, bg, bb, 255 
-		};
-
+	// if null, create window
+	if (window == NULL) {
+		window = sui->widgets + sui->wlen;
+		sui->wlen++;
+		window->type = SUI_WIDGET_TYPE_WINDOW;
+		window->x = x;
+		window->y = y;
+		window->w = w;
+		window->h = h;
+		sui->p_windows[i] = window;
 	}
-	
-	sui->len += 8;
+
+	// update sui_context and window
+	sui->current_window = window;
+	sui->voff = sui->vlen;
+	sui->current_row = 0;
+	sui->window_border = 2;
+	sui->window_title_bar_h = 16;
+	sui->window_child_h = 16;
+
+	sui->vlen += (4 * 4);
 }
 
 void sui_end(struct sui_context* sui)
 {
+	sui_assert(sui->current_window);
+	sui_assert(sui->voff > (-1));
+
+	// init variables
+	struct sui_widget window = *sui->current_window;
+	i16 x = window.x;
+	i16 y = window.y;
+	i16 w = window.w;
+	i16 h = window.h;
+
+	// update or add vertices
+	x -= (sui->viewport.w / 2);
+	y -= (sui->viewport.h / 2);
+	f32 xdiv =  (sui->viewport.w / 2.0f);
+	f32 ydiv = -(sui->viewport.h / 2.0f);
+	struct sui_vertex* vertex = sui->vertices + sui->voff;	
+
+	// border
+	i16 border = sui->window_border;
+	i16 title_bar_h = sui->window_title_bar_h;
+	i16 x0 = x - border;
+	i16 x1 = x + w + border;
+	i16 y0 = y - border;
+	i16 y1 = y + h + border + title_bar_h;
+	u8 rgb = 255; u8 a = 255;
+	*vertex = (struct sui_vertex) { x0/xdiv, y0/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+	*vertex = (struct sui_vertex) { x1/xdiv, y1/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+	*vertex = (struct sui_vertex) { x0/xdiv, y1/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+	*vertex = (struct sui_vertex) { x1/xdiv, y0/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+
+	// title bar
+	x0 = x;
+	x1 = x + w;
+	y0 = y;
+	y1 = y + title_bar_h;
+	rgb = 0;
+	*vertex = (struct sui_vertex) { x0/xdiv, y0/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+	*vertex = (struct sui_vertex) { x1/xdiv, y1/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+	*vertex = (struct sui_vertex) { x0/xdiv, y1/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+	*vertex = (struct sui_vertex) { x1/xdiv, y0/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+
+	// minimize
+	i16 minimize_pad = 2;
+	i16 minimize_w = 12;
+	x0 = x + w - minimize_pad - minimize_w;
+	x1 = x + w - minimize_pad;
+	y0 = y + minimize_pad;
+	y1 = y + minimize_pad + minimize_w;
+	rgb = 255;
+	*vertex = (struct sui_vertex) { x0/xdiv, y0/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+	*vertex = (struct sui_vertex) { x1/xdiv, y1/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+	*vertex = (struct sui_vertex) { x0/xdiv, y1/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+	*vertex = (struct sui_vertex) { x1/xdiv, y0/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+
+	// body
+	x0 = x;
+	x1 = x + w;
+	y0 = y + title_bar_h;
+	y1 = y + h + title_bar_h;
+	rgb = 90;
+	*vertex = (struct sui_vertex) { x0/xdiv, y0/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+	*vertex = (struct sui_vertex) { x1/xdiv, y1/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+	*vertex = (struct sui_vertex) { x0/xdiv, y1/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+	*vertex = (struct sui_vertex) { x1/xdiv, y0/ydiv, rgb, rgb, rgb, a };
+	vertex++;
+	
+	//cleanup
+	sui->current_window = NULL;
+	sui->voff = -1;
+}
+
+i32 sui_button(struct sui_context* sui)
+{
+	// TODO
+	//  - add button to widgets
+	//  - save current state of a window to somekind of handler
+	
+	sui_assert(sui->current_window);
+	sui_assert(sui->voff > (-1));
+
+	// init variables
+	struct sui_widget window = *sui->current_window;
+	i16 child_pad = 3;
+	i16 x = window.x + sui->window_border + child_pad;
+	i16 y = window.y + sui->window_border + sui->window_title_bar_h + child_pad;
+	y += (sui->current_row * (child_pad + sui->window_child_h));
+	i16 w = 70;
+	i16 h = sui->window_child_h;
+
+	// update or add vertices
+	x -= (sui->viewport.w / 2);
+	y -= (sui->viewport.h / 2);
+	f32 xdiv =  (sui->viewport.w / 2.0f);
+	f32 ydiv = -(sui->viewport.h / 2.0f);
+	struct sui_vertex* vertex = sui->vertices + sui->vlen;
+
+	// button
+	i16 x0 = x;
+	i16 x1 = x + w;
+	i16 y0 = y;
+	i16 y1 = y + h;
+	u8 r = 0;
+	u8 g = 10;
+	u8 b = 70;
+	u8 a = 255;
+	*vertex = (struct sui_vertex) { x0/xdiv, y0/ydiv, r, g, b, a };
+	vertex++; sui->vlen++;
+	*vertex = (struct sui_vertex) { x1/xdiv, y1/ydiv, r, g, b, a };
+	vertex++; sui->vlen++;
+	*vertex = (struct sui_vertex) { x0/xdiv, y1/ydiv, r, g, b, a };
+	vertex++; sui->vlen++;
+	*vertex = (struct sui_vertex) { x1/xdiv, y0/ydiv, r, g, b, a };
+	vertex++; sui->vlen++;
+
+	return 0;
+}
+
+void sui_render(struct sui_context* sui)
+{
 	HRESULT hr;
-	D3D11_MAPPED_SUBRESOURCE vrsc;
+	D3D11_MAPPED_SUBRESOURCE vtx_rsc;
 	hr = ID3D11DeviceContext_Map(
-		sui->d11context, sui->d11vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &vrsc
+		sui->d11context, sui->d11vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &vtx_rsc
 	);
 	sui_assert(hr == 0);
-	memcpy(vrsc.pData, sui->vertices, sizeof(struct sui_vertex) * sui->len);
+	memcpy(vtx_rsc.pData, sui->vertices, sui->vlen * sizeof(struct sui_vertex));
 	ID3D11DeviceContext_Unmap(sui->d11context, sui->d11vb, 0);
 
 	ID3D11DeviceContext_IASetPrimitiveTopology(
@@ -250,16 +348,16 @@ void sui_end(struct sui_context* sui)
 	ID3D11DeviceContext_IASetIndexBuffer(
 		sui->d11context, sui->d11ib, DXGI_FORMAT_R32_UINT, 0
 	);
-	
+
 	u32 stride = sizeof(struct sui_vertex);
-	for (i32 i = 0; i < sui->len; i += 4) {
-		u32 offset = stride * i;
+	u32 offset = 0;
+	for (i32 i = 0; i < sui->vlen; i += 4) {
+		offset = i * stride;
 		ID3D11DeviceContext_IASetVertexBuffers(
 			sui->d11context, 0, 1, &sui->d11vb, &stride, &offset
 		);
 		ID3D11DeviceContext_DrawIndexed(sui->d11context, 6, 0, 0);
 	}
-
-	memset(sui->vertices, 0, sizeof(struct sui_vertex) * sui->len);
-	sui->len = 0;
+	memset(sui->vertices, 0, sizeof(struct sui_vertex) * sui->vlen);
+	sui->vlen = 0;
 }

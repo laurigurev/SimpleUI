@@ -167,8 +167,7 @@ int main()
 	}
 
 	struct sui_context sui;
-	sui_init_fixed(&sui, device, 600, 600);
-	struct sui_rect rect = { .x = 100, .y = 100, .w = 200, .h = 200 };
+	sui_init(&sui, device, 600, 600);
 
 	f32 colors[] = { 0.0f, 0.0f, 0.2f, 1.0f };
 	
@@ -184,12 +183,10 @@ int main()
 		}
 
 		ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
-		sui_mouse_input(&sui, mouse.x, mouse.y);
-		// sui_button(&sui);
-		// sui_window_begin(&sui, 100, 100, 200, 200);
-		// sui_window_end(&sui);
-		sui_begin(&sui, &rect);
+		sui_begin(&sui, 0, 100, 100, 200, 200);
+		if (sui_button(&sui)) { puts("button pressed"); }
 		sui_end(&sui);
+		sui_render(&sui);
 		IDXGISwapChain_Present(swapchain, 1, 0);
 	}
 
