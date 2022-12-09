@@ -50,17 +50,10 @@ typedef double		d64;
  */
 
 struct sui_context;
-// TODO
-//  - replace sui_widget with sui_window, because you 
-//    don't really need to save other widgets into
-//    memory.
-struct sui_widget;
-// struct sui_window_handler;
 struct sui_viewport;
-struct sui_input_state;
 struct sui_vertex;
-
-enum sui_widget_type;
+struct sui_window;
+struct sui_io;
 
 /*
  *	USER FUNCTIONS
@@ -68,82 +61,89 @@ enum sui_widget_type;
 
 void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h);
 void sui_terminate(struct sui_context* sui);
-void sui_inputs(struct sui_context* sui);
-void sui_begin(struct sui_context* sui, i32 i, i16 x, i16 y, i16 w, i16 h);
+
+void sui_input(struct sui_context* sui, i16 mx, i16 my);
+
+void sui_begin(struct sui_context* sui, i16* x, i16* y);
 void sui_end(struct sui_context* sui);
-i32 sui_button(struct sui_context* sui);
+
+// TODO
+void sui_button(struct sui_context* sui, const char* name);
+// void sui_label(struct sui_context* sui);
+// void sui_slider(struct sui_context* sui);
+// void sui_canvas(struct sui_context* sui);
+// void sui_radiobtn(struct sui_context* sui);
+// void sui_checkbox(struct sui_context* sui);
+
 void sui_render(struct sui_context* sui);
-
-/*
- *	ENUMS
- */
-
-enum sui_widget_type {
-	SUI_WIDGET_TYPE_WINDOW
-};
+void sui_rect_insert(
+	struct sui_context* sui, i32 vi, 
+	i16 x, i16 y, i16 w, i16 h, 
+	u8 r, u8 g, u8 b, u8 a
+);
+i32 sui_hover(struct sui_io* io, i16 x, i16 y, i16 w, i16 h);
 
 /*
  *	STRUCTURES
  */
+
+struct sui_io {
+	i16 mx;
+	i16 my;
+	// delta mouse coordinates to previous coordinates
+	i16 dmx;
+	i16 dmy;
+
+	u8 rdown;
+	u8 rheld;
+	u8 rup;
+
+	u8 ldown;
+	u8 lheld;
+	u8 lup;
+
+	// u8 rclicked;
+	// u8 lclicked;
+	// u64 click_delta;
+	
+	// TODO: double click
+};
+
+struct sui_window {
+	i16 x;
+	i16 y;
+	i16 w;
+	i16 h;
+
+	i32 vi;
+
+	// margin is space we leave around the object
+	// padding is space we leave between the object and its borders
+	// align
+	// border
+	
+	i16 pad;
+	i16 child_margin;
+};
 
 struct sui_vertex {
 	f32 x; f32 y;
 	u8 r; u8 g; u8 b; u8 a;
 };
 
-struct sui_input_state {
-	i16 mx;
-	i16 my;
-
-	// u64 frequency
-	u64 prev_time;
-	u64 delta_time;
-	u64 click_time;
-
-	u8 lpressed;
-	u8 ldown;
-	u8 lup;
-	u8 lclicked;
-
-	u8 rpressed;
-	u8 rdown;
-	u8 rup;
-	u8 rclicked;
-
-	// i8 scroll;
-};
-
 struct sui_viewport { i32 w; i32 h; };
 
-struct sui_widget {
-	enum sui_widget_type type;
-	i16 x; i16 y; i16 w; i16 h;
-	// name[MAXLEN];
-	// struct sui_widget* next;
-	// struct sui_widget* prev;
-};
-
 struct sui_context {
-	// user function handling
-	struct sui_widget* current_window;
-	i32 voff;
-	i16 current_row;
-	i16 window_border;
-	i16 window_title_bar_h;
-	i16 window_child_h;
-
-	// widgets
-	struct sui_widget* widgets;
-	i32 wlen;
-	struct sui_widget** p_windows;
+	// window
+	struct sui_window window;
 
 	// vertices
 	struct sui_vertex* vertices;
 	i32 vlen;
 
 	// backend
+	struct sui_io io;
 	struct sui_viewport viewport;
-	struct sui_input_state input_state;
 
 	// graphics api backend
 	ID3D11Device* d11device;

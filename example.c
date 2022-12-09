@@ -183,10 +183,16 @@ int main()
 		}
 
 		ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
-		sui_begin(&sui, 0, 100, 100, 200, 200);
-		if (sui_button(&sui)) { puts("button pressed"); }
+
+		sui_input(&sui, mouse.x, mouse.y);
+		i16 x = 200;
+		i16 y = 200;
+		sui_begin(&sui, &x, &y);
+		sui_button(&sui, "button 1");
+		sui_button(&sui, "button 2");
 		sui_end(&sui);
 		sui_render(&sui);
+
 		IDXGISwapChain_Present(swapchain, 1, 0);
 	}
 
