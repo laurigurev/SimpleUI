@@ -45,6 +45,9 @@ typedef double		d64;
 #include <d3d11.h>
 #include <windows.h>
 
+#define CLICK_DELTA_RESET 9223372036854775807
+#define sui_max(a,b) ((a)>(b)?(a):(b))
+
 /*
  *	FORWARD DECLARATIONS
  */
@@ -52,8 +55,9 @@ typedef double		d64;
 struct sui_context;
 struct sui_viewport;
 struct sui_vertex;
-struct sui_window;
-struct sui_io;
+// TODO: struct sui_widget;
+// struct sui_window;
+// struct sui_io;
 
 /*
  *	USER FUNCTIONS
@@ -61,33 +65,37 @@ struct sui_io;
 
 void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h);
 void sui_terminate(struct sui_context* sui);
+void sui_test(struct sui_context* sui);
 
-void sui_input(struct sui_context* sui, i16 mx, i16 my);
+/* void sui_input(struct sui_context* sui, i16 mx, i16 my, u8 rdown, u8 rup, u8 ldown, u8 lup);
 
 void sui_begin(struct sui_context* sui, i16* x, i16* y);
 void sui_end(struct sui_context* sui);
+void sui_row(struct sui_context* sui);
 
-// TODO
-void sui_button(struct sui_context* sui, const char* name);
-// void sui_label(struct sui_context* sui);
+i32 sui_button(struct sui_context* sui, const char* name);
+void sui_label(struct sui_context* sui, const char* str); */
 // void sui_slider(struct sui_context* sui);
 // void sui_canvas(struct sui_context* sui);
 // void sui_radiobtn(struct sui_context* sui);
 // void sui_checkbox(struct sui_context* sui);
 
 void sui_render(struct sui_context* sui);
-void sui_rect_insert(
+
+/* void sui_rect_insert(
 	struct sui_context* sui, i32 vi, 
 	i16 x, i16 y, i16 w, i16 h, 
 	u8 r, u8 g, u8 b, u8 a
 );
 i32 sui_hover(struct sui_io* io, i16 x, i16 y, i16 w, i16 h);
+i64 sui_timer_begin();
+i64 sui_timer_end(i64 begin); */
 
 /*
  *	STRUCTURES
  */
 
-struct sui_io {
+/* struct sui_io {
 	i16 mx;
 	i16 my;
 	// delta mouse coordinates to previous coordinates
@@ -102,9 +110,10 @@ struct sui_io {
 	u8 lheld;
 	u8 lup;
 
-	// u8 rclicked;
-	// u8 lclicked;
-	// u64 click_delta;
+	u8 rclick;
+	u8 lclick;
+	i64 rclick_delta;
+	i64 lclick_delta;
 	
 	// TODO: double click
 };
@@ -116,6 +125,7 @@ struct sui_window {
 	i16 h;
 
 	i32 vi;
+	i16 max_w;
 
 	// margin is space we leave around the object
 	// padding is space we leave between the object and its borders
@@ -124,7 +134,9 @@ struct sui_window {
 	
 	i16 pad;
 	i16 child_margin;
-};
+
+	i16 row;
+}; */
 
 struct sui_vertex {
 	f32 x; f32 y;
@@ -134,15 +146,11 @@ struct sui_vertex {
 struct sui_viewport { i32 w; i32 h; };
 
 struct sui_context {
-	// window
-	struct sui_window window;
-
 	// vertices
 	struct sui_vertex* vertices;
 	i32 vlen;
 
 	// backend
-	struct sui_io io;
 	struct sui_viewport viewport;
 
 	// graphics api backend
@@ -153,4 +161,6 @@ struct sui_context {
 	ID3D11PixelShader* d11ps;
 	ID3D11Buffer* d11vb;
 	ID3D11Buffer* d11ib;
+	ID3D11Buffer* d11cb;
+	ID3D11BlendState* d11bs;
 };

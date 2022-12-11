@@ -172,6 +172,7 @@ int main()
 	f32 colors[] = { 0.0f, 0.0f, 0.2f, 1.0f };
 	
 	while (1) {
+		mouse.flags = 0;
 		MSG msg;
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 			if (msg.message == WM_QUIT) {
@@ -184,13 +185,23 @@ int main()
 
 		ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
 
-		sui_input(&sui, mouse.x, mouse.y);
+		/* sui_input(
+			&sui, mouse.x, mouse.y, 
+			mouse.flags & MOUSE_RBUTTONDOWN, 
+			mouse.flags & MOUSE_RBUTTONUP, 
+			mouse.flags & MOUSE_LBUTTONDOWN, 
+			mouse.flags & MOUSE_LBUTTONUP
+		);
 		i16 x = 200;
 		i16 y = 200;
 		sui_begin(&sui, &x, &y);
-		sui_button(&sui, "button 1");
-		sui_button(&sui, "button 2");
-		sui_end(&sui);
+		if (sui_button(&sui, "button 1")) printf("button1 clicked\n");
+		sui_row(&sui);
+		if (sui_button(&sui, "button 2")) printf("button2 clicked\n");
+		sui_row(&sui);
+		if (sui_button(&sui, "button 3")) printf("button3 clicked\n");
+		sui_end(&sui); */
+		sui_test(&sui);
 		sui_render(&sui);
 
 		IDXGISwapChain_Present(swapchain, 1, 0);
@@ -219,7 +230,7 @@ LRESULT CALLBACK WindowProc1(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	// handle messages
 	struct mouse_t* p_mouse = (struct mouse_t*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-	p_mouse->flags = 0;
+	// p_mouse->flags = 0;
 
 	switch (msg) {
 	case WM_CLOSE:

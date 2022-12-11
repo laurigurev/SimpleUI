@@ -2,6 +2,8 @@
 
 #include <string.h>
 #include <d3dcompiler.h>
+#define HANDMADE_MATH_IMPLEMENTATION
+#include "HandmadeMath.h"
 
 void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 {
@@ -12,38 +14,40 @@ void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 
 	sui->viewport = (struct sui_viewport){ w, h };
 
+	/* sui->io.rclick_delta = CLICK_DELTA_RESET;
+	sui->io.lclick_delta = CLICK_DELTA_RESET; */
+
 	sui->d11device = d11device;
 	ID3D11Device_GetImmediateContext(d11device, &sui->d11context);
 
 	{
 		HRESULT hr;
 
-		const char d11shaders[] = {
-			"struct VS_INPUT {						\n"
-			"	float2 position : POSITION0;				\n"
-			"	float4 color : COLOR0;					\n"
-			"};								\n"
-			"								\n"
-			"struct VS_OUTPUT {						\n"
-			"	float4 color : COLOR0;					\n"
-			"	float4 position : SV_POSITION;				\n"
-			"};								\n"
-			"								\n"
-			"VS_OUTPUT vs_main(VS_INPUT vsin) {				\n"
-			"	VS_OUTPUT vsout;					\n"
-			"	vsout.position = float4(vsin.position, 0.0f, 1.0f);	\n"
-			"	vsout.color = vsin.color;				\n"
-			"	return vsout;						\n"
-			"}								\n"
-			"								\n"
-			"float4 ps_main(float4 color : COLOR0) : SV_TARGET {		\n"
-			"	return color;						\n"
-			"}								\n"
-		};
+		const char* vs =
+			"cbuffer ConstantBuffer : register(b0) {\
+				float4x4 proj;\
+			};\
+			\
+			struct VS_INPUT {\
+				float2 position : POSITION0;\
+				float4 color : COLOR0;\
+			};\
+			\
+			struct VS_OUTPUT {\
+				float4 color : COLOR0;\
+				float4 position : SV_POSITION;\
+			};\
+			\
+			VS_OUTPUT main(VS_INPUT vsin) {\
+				VS_OUTPUT vsout;\
+				vsout.position = mul(proj, float4(vsin.position, 0.0, 1.0));\
+				vsout.color = vsin.color;\
+				return vsout;\
+			}";
 
 		ID3DBlob* blob = NULL;
 		hr = D3DCompile(
-			d11shaders, sizeof(d11shaders)-1, NULL, NULL, NULL, "vs_main", 
+			vs, strlen(vs), NULL, NULL, NULL, "main",
 			"vs_4_0", 0 /* deal with shader flags later */, 0, &blob, NULL
 		);
 		sui_assert(hr == 0);
@@ -76,9 +80,14 @@ void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 			&sui->d11il
 		);
 		sui_assert(hr == 0);
+		
+		const char* ps =
+			"float4 main(float4 color : COLOR0) : SV_TARGET {\
+				return color;\
+			}";
 
 		hr = D3DCompile(
-			d11shaders, sizeof(d11shaders)-1, NULL, NULL, NULL, "ps_main", 
+			ps, strlen(ps), NULL, NULL, NULL, "main",
 			"ps_4_0", 0 /* deal with shader flags later */, 0, &blob, NULL
 		);
 		sui_assert(hr == 0);
@@ -93,6 +102,21 @@ void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 		sui_assert(hr == 0);
 
 		ID3D10Blob_Release(blob);
+
+		// blending
+		D3D11_BLEND_DESC bdesc;
+		memset(&bdesc, 0, sizeof(D3D11_BLEND_DESC));
+		bdesc.RenderTarget[0].BlendEnable = 1;
+		bdesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		bdesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		bdesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		bdesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+		bdesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+		bdesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		bdesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+		
+		hr = ID3D11Device_CreateBlendState(d11device, &bdesc, &sui->d11bs);
+		sui_assert(hr == 0);
 	}
 
 	{
@@ -125,6 +149,34 @@ void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 
 		hr = ID3D11Device_CreateBuffer(d11device, &bufdsc, &subrsc, &sui->d11ib);
 		sui_assert(hr == 0);
+
+		// orthographic projection matrix
+		float L = 0;
+		float R = sui->viewport.w;
+		float T = 0;
+		float B = sui->viewport.h;
+		float proj[4][4] = {
+			{ 2.0f/(R-L),  0.0f,        0.0f, 0.0f },
+			{ 0.0f,        2.0f/(T-B),  0.0f, 0.0f },
+			{ 0.0f,        0.0f,        0.5f, 0.0f },
+			{ (R+L)/(L-R), (T+B)/(B-T), 0.5f, 1.0f }
+		}; 
+
+		// hmm_mat4 proj = HMM_Orthographic(L, R, B, T, 0.5f, 0.5f);
+		bufdsc.ByteWidth = sizeof(proj);
+		bufdsc.Usage = D3D11_USAGE_DEFAULT;
+		bufdsc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bufdsc.CPUAccessFlags = 0;
+		bufdsc.MiscFlags = 0;
+		bufdsc.StructureByteStride = 0;
+		
+		subrsc.pSysMem = proj;
+		subrsc.SysMemPitch = 0;
+		subrsc.SysMemSlicePitch = 0;
+
+		hr = ID3D11Device_CreateBuffer(d11device, &bufdsc, &subrsc, &sui->d11cb);
+		sui_assert(hr == 0);
+
 	}
 }
 
@@ -139,6 +191,9 @@ void sui_terminate(struct sui_context* sui)
 
 	ID3D11Buffer_Release(sui->d11vb);
 	ID3D11Buffer_Release(sui->d11ib);
+	ID3D11Buffer_Release(sui->d11cb);
+
+	ID3D11BlendState_Release(sui->d11bs);
 
 	sui->vlen = 0;
 	free(sui->vertices);
@@ -146,49 +201,94 @@ void sui_terminate(struct sui_context* sui)
 	memset(sui, 0, sizeof(struct sui_context));
 }
 
-void sui_input(struct sui_context* sui, i16 mx, i16 my)
+ /* void sui_input(struct sui_context* sui, i16 mx, i16 my, u8 rdown, u8 rup, u8 ldown, u8 lup)
 {
 	sui->io.dmx = sui->io.mx - mx;
 	sui->io.dmy = sui->io.my - my;
 
 	sui->io.mx = mx;
 	sui->io.my = my;
+
+	sui->io.rdown = rdown;
+	sui->io.rup = rup;
+	sui->io.ldown = ldown;
+	sui->io.lup = lup;
+
+	sui->io.rclick = 0;
+	sui->io.lclick = 0;
+
+	if (rdown) { 
+		sui->io.rheld = 1; 
+		sui->io.rclick_delta = sui_timer_begin(); 
+	}
+	else if (rup) { 
+		sui->io.rheld = 0; 
+		sui->io.rclick_delta = sui_timer_end(sui->io.rclick_delta);
+	}
+	if (sui->io.rclick_delta < 200000) { 
+		sui->io.rclick = 1; 
+		sui->io.rclick_delta = CLICK_DELTA_RESET;
+	}
+
+	if (ldown) { 
+		sui->io.lheld = 1; 
+		sui->io.lclick_delta = sui_timer_begin(); 
+	}
+	else if (lup) { 
+		sui->io.lheld = 0; 
+		sui->io.lclick_delta = sui_timer_end(sui->io.lclick_delta);
+	}
+	if (sui->io.lclick_delta < 200000) { 
+		sui->io.lclick = 1; 
+		sui->io.lclick_delta = CLICK_DELTA_RESET;
+	}
+
 }
 
 void sui_begin(struct sui_context* sui, i16* x, i16* y)
 {
-	sui->window = (struct sui_window){ *x, *y, 0, 0, sui->vlen, 4, 2 };
+	sui->window = (struct sui_window){ *x, *y, 0, 0, 0, sui->vlen, 4, 2, 0 };
 	sui->vlen += 4;
 	memset(sui->vertices + sui->window.vi, 0, sizeof(struct sui_window) * 4);
 }
 
 void sui_end(struct sui_context* sui)
 {
+	sui->window.w = max(sui->window.w, sui->window.max_w);
 	sui_rect_insert(
 		sui, sui->window.vi,
 		sui->window.x - sui->window.pad,
 		sui->window.y - sui->window.pad,
 		sui->window.w + 2 * sui->window.pad,
-		sui->window.h + 2 * sui->window.pad,
+		sui->window.h + 2 * sui->window.pad + sui->window.row * sui->window.pad,
 		255, 255, 255, 255
 	);
 
 	memset(&sui->window, 0, sizeof(struct sui_window));
 }
 
-void sui_button(struct sui_context* sui, const char* name)
+void sui_row(struct sui_context* sui)
+{
+	sui->window.max_w = sui_max(sui->window.w, sui->window.max_w);
+	sui->window.row++;
+	sui->window.w = 0;
+	sui->window.h += 16;
+}
+
+i32 sui_button(struct sui_context* sui, const char* name)
 {
 	// assumed letter width and height is 16 px
 	i32 slen = strlen(name);
 
 	if (sui->window.w) sui->window.w += sui->window.child_margin;
 	i16 btn_x = sui->window.x + sui->window.w;
-	i16 btn_y = sui->window.y;
+	i16 btn_y = sui->window.y + sui->window.row * (16 + sui->window.pad);
 	i16 btn_w = slen * (16 + 2) - 2;
 	i16 btn_h = 16;
 
 	u8 r = 255; u8 g = 0; u8 b = 0;
-	if (sui_hover(&sui->io, btn_x, btn_y, btn_w, btn_h)) {
+	i32 hover = sui_hover(&sui->io, btn_x, btn_y, btn_w, btn_h);
+	if (hover) {
 		r = 0;
 		g = 255;
 	}
@@ -207,7 +307,59 @@ void sui_button(struct sui_context* sui, const char* name)
 	
 	// update window
 	sui->window.w += slen * (16 + 2) - 2;
-	sui->window.h = 16;
+	if (!sui->window.h) sui->window.h += 16;
+
+	if (hover && sui->io.lclick) return 1;
+	return 0;
+} */
+
+void sui_test(struct sui_context* sui)
+{
+	struct sui_vertex* vertex = sui->vertices;	
+	sui->vlen+=4;
+
+	u8 r = 255;
+	u8 g = 255;
+	u8 b = 255;
+	u8 a = 255;
+
+	float x = 100;
+	float y = 100;
+	float w = 100;
+	float h = 100;
+
+	float tx = - (w / 2.0f);
+	float ty = - (h / 2.0f);
+
+	hmm_vec4 v0 = { tx,     ty     , 0.0f, 0.0f };
+	hmm_vec4 v1 = { tx + w, ty + h , 0.0f, 0.0f };
+	hmm_vec4 v2 = { tx,     ty + h , 0.0f, 0.0f };
+	hmm_vec4 v3 = { tx + w, ty     , 0.0f, 0.0f };
+
+	float scale = 1.0f;
+	float rotation = 0.0f;
+
+	hmm_mat4 rot = HMM_Rotate(rotation, (hmm_vec3){ 0.0f, 0.0f, 1.0f } );
+	hmm_mat4 sca = HMM_Scale((hmm_vec3){ scale, scale, 0.0f });
+	hmm_mat4 mat = HMM_MultiplyMat4(rot, sca);
+	
+	v0 = HMM_MultiplyMat4ByVec4(mat, v0);
+	v1 = HMM_MultiplyMat4ByVec4(mat, v1);
+	v2 = HMM_MultiplyMat4ByVec4(mat, v2);
+	v3 = HMM_MultiplyMat4ByVec4(mat, v3);
+
+	v0 = HMM_AddVec4(v0, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
+	v1 = HMM_AddVec4(v1, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
+	v2 = HMM_AddVec4(v2, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
+	v3 = HMM_AddVec4(v3, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
+
+	*vertex = (struct sui_vertex){ v0.X, v0.Y, r, g, b, a };
+	vertex++;
+	*vertex = (struct sui_vertex){ v1.X, v1.Y, r, g, b, a };
+	vertex++;
+	*vertex = (struct sui_vertex){ v2.X, v2.Y, r, g, b, a };
+	vertex++;
+	*vertex = (struct sui_vertex){ v3.X, v3.Y, r, g, b, a };
 }
 
 void sui_render(struct sui_context* sui)
@@ -230,6 +382,8 @@ void sui_render(struct sui_context* sui)
 	ID3D11DeviceContext_IASetIndexBuffer(
 		sui->d11context, sui->d11ib, DXGI_FORMAT_R32_UINT, 0
 	);
+	ID3D11DeviceContext_VSSetConstantBuffers(sui->d11context, 0, 1, &sui->d11cb);
+	ID3D11DeviceContext_OMSetBlendState(sui->d11context, sui->d11bs, 0, 0xffffffff);
 
 	u32 stride = sizeof(struct sui_vertex);
 	u32 offset = 0;
@@ -244,7 +398,7 @@ void sui_render(struct sui_context* sui)
 	sui->vlen = 0;
 }
 
-void sui_rect_insert(
+/* void sui_rect_insert(
 	struct sui_context* sui, i32 vi, 
 	i16 x, i16 y, i16 w, i16 h, 
 	u8 r, u8 g, u8 b, u8 a)
@@ -289,3 +443,24 @@ i32 sui_hover(struct sui_io* io, i16 x, i16 y, i16 w, i16 h)
 
 	return 0;
 }
+
+i64 Frequency = 0;
+// QueryPerformanceFrequency(&Frequency);
+
+i64 sui_timer_begin()
+{
+	if (!Frequency) QueryPerformanceFrequency(&Frequency);
+	i64 t;
+	QueryPerformanceCounter(&t);
+	return t;
+}
+
+i64 sui_timer_end(i64 begin)
+{
+	i64 t;
+	QueryPerformanceCounter(&t);
+	t -= begin;
+	t *= 1000000;
+	t /= Frequency;
+	return t;
+} */
