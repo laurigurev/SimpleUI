@@ -1,9 +1,110 @@
 #include "sui.h"
 
+struct sui_glyph cdata[] = {
+	{ 32 , 63 , 48 , 24, 1 , -8 , 14 , 8 }, 
+	{ 33 , 83 , 31 , 4 , 9 , 2  , 3  , 8 }, 
+	{ 34 , 105, 39 , 6 , 3 , 1  , 3  , 8 }, 
+	{ 35 , 8  , 14 , 7 , 9 , 1  , 3  , 8 }, 
+	{ 36 , 0  , 0  , 6 , 13, 1  , 1  , 8 }, 
+	{ 37 , 26 , 0  , 8 , 11, 0  , 2  , 8 }, 
+	{ 38 , 16 , 13 , 7 , 9 , 1  , 3  , 8 }, 
+	{ 39 , 125, 10 , 2 , 3 , 3  , 3  , 8 }, 
+	{ 40 , 54 , 0  , 4 , 11, 2  , 3  , 8 }, 
+	{ 41 , 59 , 0  , 4 , 11, 2  , 3  , 8 }, 
+	{ 42 , 63 , 42 , 7 , 5 , 1  , 5  , 8 }, 
+	{ 43 , 71 , 41 , 6 , 5 , 1  , 5  , 8 }, 
+	{ 44 , 78 , 41 , 3 , 4 , 3  , 10 , 8 }, 
+	{ 45 , 121, 39 , 6 , 1 , 1  , 7  , 8 }, 
+	{ 46 , 117, 39 , 3 , 2 , 3  , 10 , 8 }, 
+	{ 47 , 86 , 0  , 6 , 10, 1  , 3  , 8 }, 
+	{ 48 , 62 , 12 , 6 , 9 , 2  , 3  , 8 }, 
+	{ 49 , 77 , 31 , 5 , 9 , 1  , 3  , 8 }, 
+	{ 50 , 69 , 11 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 51 , 76 , 11 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 52 , 32 , 12 , 7 , 9 , 1  , 3  , 8 }, 
+	{ 53 , 83 , 11 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 54 , 90 , 11 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 55 , 97 , 11 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 56 , 48 , 12 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 57 , 104, 11 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 58 , 122, 30 , 3 , 7 , 3  , 5  , 8 }, 
+	{ 59 , 88 , 31 , 3 , 9 , 3  , 5  , 8 }, 
+	{ 60 , 111, 11 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 61 , 91 , 41 , 6 , 3 , 1  , 6  , 8 }, 
+	{ 62 , 118, 10 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 63 , 0  , 24 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 64 , 114, 0  , 8 , 9 , 0  , 3  , 8 }, 
+	{ 65 , 7  , 24 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 66 , 14 , 24 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 67 , 21 , 23 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 68 , 55 , 12 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 69 , 28 , 23 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 70 , 35 , 22 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 71 , 42 , 22 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 72 , 49 , 22 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 73 , 123, 0  , 4 , 9 , 2  , 3  , 8 }, 
+	{ 74 , 56 , 22 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 75 , 63 , 22 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 76 , 70 , 21 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 77 , 0  , 14 , 7 , 9 , 1  , 3  , 8 }, 
+	{ 78 , 40 , 12 , 7 , 9 , 1  , 3  , 8 }, 
+	{ 79 , 77 , 21 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 80 , 21 , 33 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 81 , 35 , 0  , 6 , 11, 1  , 3  , 8 }, 
+	{ 82 , 91 , 21 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 83 , 98 , 21 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 84 , 105, 21 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 85 , 112, 21 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 86 , 119, 20 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 87 , 24 , 13 , 7 , 9 , 1  , 3  , 8 }, 
+	{ 88 , 0  , 34 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 89 , 7  , 34 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 90 , 14 , 34 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 91 , 18 , 0  , 4 , 12, 2  , 3  , 8 }, 
+	{ 92 , 100, 0  , 6 , 10, 1  , 3  , 8 }, 
+	{ 93 , 13 , 0  , 4 , 12, 2  , 3  , 8 }, 
+	{ 94 , 98 , 39 , 6 , 3 , 1  , 1  , 8 }, 
+	{ 95 , 88 , 45 , 8 , 1 , 0  , 14 , 8 }, 
+	{ 96 , 112, 39 , 4 , 3 , 2  , 1  , 8 }, 
+	{ 97 , 108, 31 , 6 , 7 , 1  , 5  , 8 }, 
+	{ 98 , 28 , 33 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 99 , 115, 31 , 6 , 7 , 1  , 5  , 8 }, 
+	{ 100, 35 , 32 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 101, 0  , 44 , 6 , 7 , 1  , 5  , 8 }, 
+	{ 102, 42 , 32 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 103, 107, 0  , 6 , 10, 1  , 5  , 8 }, 
+	{ 104, 49 , 32 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 105, 93 , 0  , 6 , 10, 1  , 2  , 8 }, 
+	{ 106, 7  , 0  , 5 , 13, 1  , 2  , 8 }, 
+	{ 107, 56 , 32 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 108, 63 , 32 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 109, 92 , 31 , 7 , 7 , 1  , 5  , 8 }, 
+	{ 110, 7  , 44 , 6 , 7 , 1  , 5  , 8 }, 
+	{ 111, 14 , 44 , 6 , 7 , 1  , 5  , 8 }, 
+	{ 112, 79 , 0  , 6 , 10, 1  , 5  , 8 }, 
+	{ 113, 72 , 0  , 6 , 10, 1  , 5  , 8 }, 
+	{ 114, 21 , 43 , 6 , 7 , 1  , 5  , 8 }, 
+	{ 115, 56 , 42 , 6 , 7 , 1  , 5  , 8 }, 
+	{ 116, 70 , 31 , 6 , 9 , 1  , 3  , 8 }, 
+	{ 117, 28 , 43 , 6 , 7 , 1  , 5  , 8 }, 
+	{ 118, 35 , 42 , 6 , 7 , 1  , 5  , 8 }, 
+	{ 119, 100, 31 , 7 , 7 , 1  , 5  , 8 }, 
+	{ 120, 42 , 42 , 6 , 7 , 1  , 5  , 8 }, 
+	{ 121, 64 , 0  , 7 , 10, 0  , 5  , 8 }, 
+	{ 122, 49 , 42 , 6 , 7 , 1  , 5  , 8 }, 
+	{ 123, 48 , 0  , 5 , 11, 1  , 3  , 8 }, 
+	{ 124, 23 , 0  , 2 , 12, 3  , 3  , 8 }, 
+	{ 125, 42 , 0  , 5 , 11, 2  , 3  , 8 }, 
+	{ 126, 82 , 41 , 8 , 3 , 0  , 3  , 8 }, 
+	{ 127, 84 , 21 , 6 , 9 , 1  , 3  , 8 }
+};
+
 #include <string.h>
 #include <d3dcompiler.h>
 #define HANDMADE_MATH_IMPLEMENTATION
 #include "HandmadeMath.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 {
@@ -30,10 +131,12 @@ void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 			\
 			struct VS_INPUT {\
 				float2 position : POSITION0;\
+				float2 uv : TEXCOORD0;\
 				float4 color : COLOR0;\
 			};\
 			\
 			struct VS_OUTPUT {\
+				float2 uv : TEXCOORD0;\
 				float4 color : COLOR0;\
 				float4 position : SV_POSITION;\
 			};\
@@ -42,6 +145,7 @@ void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 				VS_OUTPUT vsout;\
 				vsout.position = mul(proj, float4(vsin.position, 0.0, 1.0));\
 				vsout.color = vsin.color;\
+				vsout.uv = vsin.uv;\
 				return vsout;\
 			}";
 
@@ -68,13 +172,19 @@ void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 				D3D11_INPUT_PER_VERTEX_DATA, 0
 			},
 			{ 
+				"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 
+				D3D11_APPEND_ALIGNED_ELEMENT, 
+				D3D11_INPUT_PER_VERTEX_DATA, 0
+			},
+
+			{ 
 				"COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, 
 				D3D11_APPEND_ALIGNED_ELEMENT, 
 				D3D11_INPUT_PER_VERTEX_DATA, 0
 			},
 		};
 		hr = ID3D11Device_CreateInputLayout(
-			d11device, ieds, 2,
+			d11device, ieds, 3,
 			ID3D10Blob_GetBufferPointer(blob),
 			ID3D10Blob_GetBufferSize(blob),
 			&sui->d11il
@@ -82,8 +192,16 @@ void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 		sui_assert(hr == 0);
 		
 		const char* ps =
-			"float4 main(float4 color : COLOR0) : SV_TARGET {\
-				return color;\
+			"Texture2D tex;\
+			SamplerState samp;\
+			struct PS_INPUT {\
+				float2 uv : TEXCOORD0;\
+				float4 color : COLOR0;\
+			};\
+			\
+			float4 main(PS_INPUT psin) : SV_TARGET {\
+				float a = tex.Sample(samp, psin.uv).x;\
+				return psin.color * a;\
 			}";
 
 		hr = D3DCompile(
@@ -117,6 +235,65 @@ void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 		
 		hr = ID3D11Device_CreateBlendState(d11device, &bdesc, &sui->d11bs);
 		sui_assert(hr == 0);
+
+		// font atlas
+		i32 n;
+		const char* file = "Fixedsys.png";
+		u8* bmp = stbi_load(file, &sui->img_w, &sui->img_h, &n, 0);
+		sui->img_wf = (f32)sui->img_w;
+		sui->img_hf = (f32)sui->img_h;
+
+		D3D11_TEXTURE2D_DESC texture_desc;
+		texture_desc.Width = sui->img_w;
+		texture_desc.Height = sui->img_h;
+		texture_desc.MipLevels = 1;
+		texture_desc.ArraySize = 1;
+		texture_desc.Format = DXGI_FORMAT_R8_UNORM;
+		texture_desc.SampleDesc = (DXGI_SAMPLE_DESC){ 1, 0 };
+		texture_desc.Usage = D3D11_USAGE_DEFAULT;
+		texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		texture_desc.CPUAccessFlags = 0;
+		texture_desc.MiscFlags = 0;
+
+		D3D11_SUBRESOURCE_DATA sub_data;
+		sub_data.pSysMem = bmp;
+		sub_data.SysMemPitch = sui->img_w;
+		sub_data.SysMemSlicePitch = 0;
+
+		ID3D11Texture2D* texture;
+		hr = ID3D11Device_CreateTexture2D(
+			d11device, &texture_desc, &sub_data, &texture
+		);
+		sui_assert(hr == 0);
+		
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvd;
+		srvd.Format = texture_desc.Format;
+		srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		srvd.Texture2D = (D3D11_TEX2D_SRV){ 0, 1 };
+
+		hr = ID3D11Device_CreateShaderResourceView(
+			d11device, texture, &srvd, &sui->view);
+		sui_assert(hr == 0);
+
+		D3D11_SAMPLER_DESC sampler_desc;
+		memset(&sampler_desc, 0, sizeof(D3D11_SAMPLER_DESC));
+		sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+		sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		// sampler_desc.MipLODBias = 0;
+		// sampler_desc.MaxAnisotropy = 0;
+		// sampler_desc.ComparisonFunc = 0;
+		// sampler_desc.BorderColor = 0;
+		// sampler_desc.MinLOD;
+		// sampler_desc.MaxLOD;
+		 
+		hr = ID3D11Device_CreateSamplerState(
+			d11device, &sampler_desc, &sui->sampler);
+		sui_assert(hr == 0);
+		
+		ID3D11Texture2D_Release(texture);
+		stbi_image_free(bmp);
 	}
 
 	{
@@ -194,6 +371,8 @@ void sui_terminate(struct sui_context* sui)
 	ID3D11Buffer_Release(sui->d11cb);
 
 	ID3D11BlendState_Release(sui->d11bs);
+	ID3D11ShaderResourceView_Release(sui->view);
+	ID3D11SamplerState_Release(sui->sampler);
 
 	sui->vlen = 0;
 	free(sui->vertices);
@@ -315,51 +494,21 @@ i32 sui_button(struct sui_context* sui, const char* name)
 
 void sui_test(struct sui_context* sui)
 {
-	struct sui_vertex* vertex = sui->vertices;	
+	struct sui_vertex* vertex = sui->vertices + sui->vlen;
 	sui->vlen+=4;
 
-	u8 r = 255;
-	u8 g = 255;
-	u8 b = 255;
-	u8 a = 255;
+	sui_rect(
+		sui, vertex, 100, 100, 128, 64, 
+		(struct sui_color){255, 255, 255, 255}, 0.0f, 1.0f
+	);
+}
 
-	float x = 100;
-	float y = 100;
-	float w = 100;
-	float h = 100;
-
-	float tx = - (w / 2.0f);
-	float ty = - (h / 2.0f);
-
-	hmm_vec4 v0 = { tx,     ty     , 0.0f, 0.0f };
-	hmm_vec4 v1 = { tx + w, ty + h , 0.0f, 0.0f };
-	hmm_vec4 v2 = { tx,     ty + h , 0.0f, 0.0f };
-	hmm_vec4 v3 = { tx + w, ty     , 0.0f, 0.0f };
-
-	float scale = 1.0f;
-	float rotation = 0.0f;
-
-	hmm_mat4 rot = HMM_Rotate(rotation, (hmm_vec3){ 0.0f, 0.0f, 1.0f } );
-	hmm_mat4 sca = HMM_Scale((hmm_vec3){ scale, scale, 0.0f });
-	hmm_mat4 mat = HMM_MultiplyMat4(rot, sca);
-	
-	v0 = HMM_MultiplyMat4ByVec4(mat, v0);
-	v1 = HMM_MultiplyMat4ByVec4(mat, v1);
-	v2 = HMM_MultiplyMat4ByVec4(mat, v2);
-	v3 = HMM_MultiplyMat4ByVec4(mat, v3);
-
-	v0 = HMM_AddVec4(v0, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
-	v1 = HMM_AddVec4(v1, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
-	v2 = HMM_AddVec4(v2, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
-	v3 = HMM_AddVec4(v3, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
-
-	*vertex = (struct sui_vertex){ v0.X, v0.Y, r, g, b, a };
-	vertex++;
-	*vertex = (struct sui_vertex){ v1.X, v1.Y, r, g, b, a };
-	vertex++;
-	*vertex = (struct sui_vertex){ v2.X, v2.Y, r, g, b, a };
-	vertex++;
-	*vertex = (struct sui_vertex){ v3.X, v3.Y, r, g, b, a };
+void sui_txt_test(struct sui_context* sui, char* str)
+{
+	i16 xadvance = 0;
+	while(*str) {
+		xadvance += sui_putc(sui, *str++, 100 + xadvance, 300);
+	}
 }
 
 void sui_render(struct sui_context* sui)
@@ -384,6 +533,9 @@ void sui_render(struct sui_context* sui)
 	);
 	ID3D11DeviceContext_VSSetConstantBuffers(sui->d11context, 0, 1, &sui->d11cb);
 	ID3D11DeviceContext_OMSetBlendState(sui->d11context, sui->d11bs, 0, 0xffffffff);
+	ID3D11DeviceContext_PSSetShaderResources(sui->d11context, 0, 1, &sui->view);
+	ID3D11DeviceContext_PSSetSamplers(sui->d11context, 0, 1, &sui->sampler);
+
 
 	u32 stride = sizeof(struct sui_vertex);
 	u32 offset = 0;
@@ -396,6 +548,86 @@ void sui_render(struct sui_context* sui)
 	}
 	// memset(sui->vertices, 0, sizeof(struct sui_vertex) * sui->vlen);
 	sui->vlen = 0;
+}
+
+i16 sui_putc(struct sui_context* sui, char c, f32 x, f32 y)
+{
+	struct sui_glyph ch = cdata[c - 32];
+
+	f32 tx = ch.x / sui->img_wf;
+	f32 ty = ch.y / sui->img_hf;
+	f32 tw = ch.width / sui->img_wf;
+	f32 th = ch.height / sui->img_hf;
+
+	f32 u0 = tx;
+	f32 u1 = tx + tw;
+	f32 v0 = ty;
+	f32 v1 = ty + th;
+
+	struct sui_vertex* vertex = sui->vertices + sui->vlen;	
+	sui->vlen+=4;
+
+	sui_rect(
+		sui, vertex, x + ch.xoffset, y + ch.yoffset, ch.width, ch.height,
+		(struct sui_color){255, 255, 255, 255}, 0.0f, 1.0f
+	);
+
+	vertex->u = u0;
+	vertex->v = v0;
+	vertex++;
+
+	vertex->u = u1;
+	vertex->v = v1;
+	vertex++;
+
+	vertex->u = u0;
+	vertex->v = v1;
+	vertex++;
+
+	vertex->u = u1;
+	vertex->v = v0;
+
+	return ch.xadvance * 1.0f;
+}
+
+
+void sui_rect(
+	struct sui_context* sui, struct sui_vertex* vertex, f32 x, f32 y, f32 w, f32 h, 
+	struct sui_color color, f32 rotation, f32 scale)
+{
+	f32 tx = - (w / 2.0f);
+	f32 ty = - (h / 2.0f);
+
+	hmm_vec4 v0 = { tx,     ty     , 0.0f, 0.0f };
+	hmm_vec4 v1 = { tx + w, ty + h , 0.0f, 0.0f };
+	hmm_vec4 v2 = { tx,     ty + h , 0.0f, 0.0f };
+	hmm_vec4 v3 = { tx + w, ty     , 0.0f, 0.0f };
+
+	hmm_mat4 rotatemat = HMM_Rotate(rotation, (hmm_vec3){ 0.0f, 0.0f, 1.0f } );
+	hmm_mat4 scalemat = HMM_Scale((hmm_vec3){ scale, scale, 0.0f });
+	hmm_mat4 mat = HMM_MultiplyMat4(rotatemat, scalemat);
+	
+	v0 = HMM_MultiplyMat4ByVec4(mat, v0);
+	v1 = HMM_MultiplyMat4ByVec4(mat, v1);
+	v2 = HMM_MultiplyMat4ByVec4(mat, v2);
+	v3 = HMM_MultiplyMat4ByVec4(mat, v3);
+
+	v0 = HMM_AddVec4(v0, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
+	v1 = HMM_AddVec4(v1, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
+	v2 = HMM_AddVec4(v2, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
+	v3 = HMM_AddVec4(v3, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
+
+	*vertex = (struct sui_vertex){ 
+		v0.X, v0.Y, 0.0f, 0.0f, color.r, color.g, color.b, color.a };
+	vertex++;
+	*vertex = (struct sui_vertex)
+		{ v1.X, v1.Y, 1.0f, 1.0f, color.r, color.g, color.b, color.a };
+	vertex++;
+	*vertex = (struct sui_vertex)
+		{ v2.X, v2.Y, 0.0f, 1.0f, color.r, color.g, color.b, color.a };
+	vertex++;
+	*vertex = (struct sui_vertex)
+		{ v3.X, v3.Y, 1.0f, 0.0f, color.r, color.g, color.b, color.a };
 }
 
 /* void sui_rect_insert(

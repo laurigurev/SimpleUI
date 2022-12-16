@@ -55,6 +55,9 @@ typedef double		d64;
 struct sui_context;
 struct sui_viewport;
 struct sui_vertex;
+struct sui_glyph;
+struct sui_color;
+// struct sui_image;
 // TODO: struct sui_widget;
 // struct sui_window;
 // struct sui_io;
@@ -66,6 +69,7 @@ struct sui_vertex;
 void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h);
 void sui_terminate(struct sui_context* sui);
 void sui_test(struct sui_context* sui);
+void sui_txt_test(struct sui_context* sui, const char* str);
 
 /* void sui_input(struct sui_context* sui, i16 mx, i16 my, u8 rdown, u8 rup, u8 ldown, u8 lup);
 
@@ -81,6 +85,11 @@ void sui_label(struct sui_context* sui, const char* str); */
 // void sui_checkbox(struct sui_context* sui);
 
 void sui_render(struct sui_context* sui);
+i16 sui_putc(struct sui_context* sui, char c, f32 x, f32 y);
+void sui_rect(
+	struct sui_context* sui, struct sui_vertex* vertex, f32 x, f32 y, f32 w, f32 h, 
+	struct sui_color color, f32 rotation, f32 scale
+);
 
 /* void sui_rect_insert(
 	struct sui_context* sui, i32 vi, 
@@ -138,8 +147,24 @@ struct sui_window {
 	i16 row;
 }; */
 
+struct sui_color {
+	u8 r; u8 g; u8 b; u8 a;
+};
+
+struct sui_glyph {
+	i16 id;
+	i16 x;
+	i16 y;
+	i16 width;
+	i16 height;
+	i16 xoffset;
+	i16 yoffset;
+	i16 xadvance;
+};
+
 struct sui_vertex {
 	f32 x; f32 y;
+	f32 u; f32 v;
 	u8 r; u8 g; u8 b; u8 a;
 };
 
@@ -152,6 +177,10 @@ struct sui_context {
 
 	// backend
 	struct sui_viewport viewport;
+	i32 img_w;
+	i32 img_h;
+	f32 img_wf;
+	f32 img_hf;
 
 	// graphics api backend
 	ID3D11Device* d11device;
@@ -163,4 +192,6 @@ struct sui_context {
 	ID3D11Buffer* d11ib;
 	ID3D11Buffer* d11cb;
 	ID3D11BlendState* d11bs;
+	ID3D11ShaderResourceView* view;
+	ID3D11SamplerState* sampler;
 };
