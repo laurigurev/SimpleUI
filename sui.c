@@ -503,11 +503,35 @@ void sui_test(struct sui_context* sui)
 	);
 }
 
+static f32 angle = 0.0f;
 void sui_txt_test(struct sui_context* sui, char* str)
 {
-	i16 xadvance = 0;
+	f32 x = 100;
+	f32 y = 300;
+	// f32 angle = 45.0f;
+	// angle -= 1.0f;
+
+	char* aux = str;
+	i16 w = 0;
+	i16 max_h = 0;
+	while(*aux) {
+		w += cdata[*aux - 32].xadvance;
+		max_h = sui_max(max_h, cdata[*aux -32].height);
+		*aux++;
+	};
+	f32 mid = w/2.0f;
+	f32 xadvance = -mid;
+	x += mid;
+
 	while(*str) {
-		xadvance += sui_putc(sui, *str++, 100 + xadvance, 300);
+		hmm_mat4 rotate= HMM_Rotate(angle, (hmm_vec3){ 0.0f, 0.0f, 1.0f });
+		f32 yoffset = (f32)cdata[*str - 32].yoffset;
+		yoffset /= 2.0f;
+		// hmm_vec4 vec = (hmm_vec4){ xadvance, yoffset, 0.0f, 0.0f };
+		hmm_vec4 vec = (hmm_vec4){ xadvance, 0.0f, 0.0f, 0.0f };
+		vec = HMM_MultiplyMat4ByVec4(rotate, vec);
+		// if (*str == ',') printf("a %f, c %c, x %f, y %f\n", angle, *str, vec.X, vec.Y);
+		xadvance += (f32)sui_putc(sui, *str++, x + vec.X, y + vec.Y);
 	}
 }
 
@@ -569,7 +593,8 @@ i16 sui_putc(struct sui_context* sui, char c, f32 x, f32 y)
 
 	sui_rect(
 		sui, vertex, x + ch.xoffset, y + ch.yoffset, ch.width, ch.height,
-		(struct sui_color){255, 255, 255, 255}, 0.0f, 1.0f
+		// sui, vertex, x + ch.xoffset, y, ch.width, ch.height,
+		(struct sui_color){255, 255, 255, 255}, angle, 1.0f
 	);
 
 	vertex->u = u0;

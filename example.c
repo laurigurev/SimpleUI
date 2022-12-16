@@ -202,7 +202,8 @@ int main()
 		if (sui_button(&sui, "button 3")) printf("button3 clicked\n");
 		sui_end(&sui); */
 		sui_test(&sui);
-		char str[] = "Hello, world!";
+		char str[] = "Hello, world! Who let the dogs out??!";
+		// char str[] = ",";
 		sui_txt_test(&sui, str);
 		sui_render(&sui);
 
