@@ -5,3 +5,4 @@ bin/
 *.sln
 *.vcxproj*
 .vs/
+compile_commands/

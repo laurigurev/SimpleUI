@@ -517,7 +517,7 @@ void sui_txt_test(struct sui_context* sui, char* str)
 	while(*aux) {
 		w += cdata[*aux - 32].xadvance;
 		max_h = sui_max(max_h, cdata[*aux -32].height);
-		*aux++;
+		aux++;
 	};
 	f32 mid = w/2.0f;
 	f32 xadvance = -mid;

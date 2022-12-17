@@ -69,7 +69,7 @@ struct sui_color;
 void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h);
 void sui_terminate(struct sui_context* sui);
 void sui_test(struct sui_context* sui);
-void sui_txt_test(struct sui_context* sui, const char* str);
+void sui_txt_test(struct sui_context* sui, char* str);
 
 /* void sui_input(struct sui_context* sui, i16 mx, i16 my, u8 rdown, u8 rup, u8 ldown, u8 lup);
 

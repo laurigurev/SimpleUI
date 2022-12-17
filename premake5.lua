@@ -1,5 +1,6 @@
 -- SimpleUI build file
 workspace "SimpleUI"
+	toolset "msc"
 	configurations { "Debug", "Release" }
 
 project "SimpleUI"
