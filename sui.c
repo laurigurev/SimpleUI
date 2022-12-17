@@ -522,16 +522,30 @@ void sui_txt_test(struct sui_context* sui, char* str)
 	f32 mid = w/2.0f;
 	f32 xadvance = -mid;
 	x += mid;
+	f32 ymax = (f32)max_h;
+	f32 ymid = ymax/2.0f;
+	
+	struct sui_vertex* vertex = sui->vertices + sui->vlen;
+	sui->vlen+=4;
+
+	sui_rect(
+		sui, vertex, x - mid, y, (f32)w, 16.0f, 
+		(struct sui_color){0, 0, 0, 255}, angle, 1.0f
+	);
+
 
 	while(*str) {
 		hmm_mat4 rotate= HMM_Rotate(angle, (hmm_vec3){ 0.0f, 0.0f, 1.0f });
-		f32 yoffset = (f32)cdata[*str - 32].yoffset;
-		yoffset /= 2.0f;
-		// hmm_vec4 vec = (hmm_vec4){ xadvance, yoffset, 0.0f, 0.0f };
-		hmm_vec4 vec = (hmm_vec4){ xadvance, 0.0f, 0.0f, 0.0f };
+		// xadvance += (f32)sui_putc(sui, *str++, x + vec.X, y + vec.Y - yoffset);*/
+		// xadvance += (f32)sui_putc(sui, *str++, x + xadvance, y);
+
+		struct sui_glyph glyph = cdata[*str - 32];
+		// f32 yoffset = glyph.height + glyph.yoffset - ymax;
+		f32 yoffset = (glyph.height / 2.0f) + glyph.yoffset;
+		hmm_vec4 vec = (hmm_vec4){ 0.0f, -yoffset, 0.0f, 0.0f };
 		vec = HMM_MultiplyMat4ByVec4(rotate, vec);
-		// if (*str == ',') printf("a %f, c %c, x %f, y %f\n", angle, *str, vec.X, vec.Y);
-		xadvance += (f32)sui_putc(sui, *str++, x + vec.X, y + vec.Y);
+		// vec = HMM_AddVec4(vec, (hmm_vec4){ x + xadvance, y + yoffset, 0.0f, 0.0f });
+		xadvance += (f32)sui_putc(sui, *str++, x + xadvance, y - vec.Y);
 	}
 }
 
@@ -592,8 +606,8 @@ i16 sui_putc(struct sui_context* sui, char c, f32 x, f32 y)
 	sui->vlen+=4;
 
 	sui_rect(
-		sui, vertex, x + ch.xoffset, y + ch.yoffset, ch.width, ch.height,
-		// sui, vertex, x + ch.xoffset, y, ch.width, ch.height,
+		// sui, vertex, x + ch.xoffset, y + ch.yoffset, ch.width, ch.height,
+		sui, vertex, x + ch.xoffset, y, ch.width, ch.height,
 		(struct sui_color){255, 255, 255, 255}, angle, 1.0f
 	);
 
@@ -643,16 +657,16 @@ void sui_rect(
 	v3 = HMM_AddVec4(v3, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
 
 	*vertex = (struct sui_vertex){ 
-		v0.X, v0.Y, 0.0f, 0.0f, color.r, color.g, color.b, color.a };
+		v0.X, v0.Y, 0.65625f, 0.328125f, color.r, color.g, color.b, color.a };
 	vertex++;
 	*vertex = (struct sui_vertex)
-		{ v1.X, v1.Y, 1.0f, 1.0f, color.r, color.g, color.b, color.a };
+		{ v1.X, v1.Y, 0.703125f, 0.46875f, color.r, color.g, color.b, color.a };
 	vertex++;
 	*vertex = (struct sui_vertex)
-		{ v2.X, v2.Y, 0.0f, 1.0f, color.r, color.g, color.b, color.a };
+		{ v2.X, v2.Y, 0.65625f, 0.46875f, color.r, color.g, color.b, color.a };
 	vertex++;
 	*vertex = (struct sui_vertex)
-		{ v3.X, v3.Y, 1.0f, 0.0f, color.r, color.g, color.b, color.a };
+		{ v3.X, v3.Y, 0.703125f, 0.328125f, color.r, color.g, color.b, color.a };
 }
 
 /* void sui_rect_insert(
