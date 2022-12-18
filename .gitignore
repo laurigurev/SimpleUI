@@ -6,3 +6,6 @@ bin/
 *.vcxproj*
 .vs/
 compile_commands/
+.cache/
+compile_commands.json
+.clang-format

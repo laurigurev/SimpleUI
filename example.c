@@ -168,6 +168,20 @@ int main()
 
 	struct sui_context sui;
 	sui_init(&sui, device, 600, 600);
+	char ws[] = "window";
+	struct sui_window swin = sui_create_window(ws, 
+						   (struct sui_color){ 255, 255, 255, 255 }, 
+						   (struct sui_color){ 255, 255, 255, 255 }, 
+						   (struct sui_color){ 255, 255, 255, 255 }, 
+						   (struct sui_color){ 255, 255, 255, 255 }
+	);
+	char bs[] = "button";
+	struct sui_widget sbtn = sui_create_widget(bs, 
+						   (struct sui_color){ 255, 255, 255, 255 }, 
+						   (struct sui_color){ 255, 0, 255, 255 }, 
+						   (struct sui_color){ 0, 0, 0, 255 }, 
+						   (struct sui_color){ 0, 0, 100, 255 }
+	);
 
 	f32 colors[] = { 0.0f, 0.0f, 0.2f, 1.0f };
 	
@@ -201,10 +215,11 @@ int main()
 		sui_row(&sui);
 		if (sui_button(&sui, "button 3")) printf("button3 clicked\n");
 		sui_end(&sui); */
-		sui_test(&sui);
-		char str[] = "Hello, world! Who let the dogs out??!";
-		// char str[] = ",";
-		sui_txt_test(&sui, str);
+		// sui_test(&sui);
+		sui_begin(&sui, &swin, 100, 100);
+		sui_button(&sui, &sbtn);
+		sui_button(&sui, &sbtn);
+		sui_end(&sui);
 		sui_render(&sui);
 
 		IDXGISwapChain_Present(swapchain, 1, 0);

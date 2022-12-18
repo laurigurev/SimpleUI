@@ -496,57 +496,163 @@ void sui_test(struct sui_context* sui)
 {
 	struct sui_vertex* vertex = sui->vertices + sui->vlen;
 	sui->vlen+=4;
-
-	sui_rect(
-		sui, vertex, 100, 100, 128, 64, 
-		(struct sui_color){255, 255, 255, 255}, 0.0f, 1.0f
-	);
+        sui_putr(vertex, (union sui_rect){ 150.0f, 150.0f, 300.0f, 300.f }, (struct sui_color){ 255, 255, 255, 255 });
+        
+        char str[] = "Hello, world!";
+        char* aux = str;
+        f32 x = 100.0f;
+        while (*aux) {
+                vertex += 4;
+                sui->vlen += 4;
+                x += sui_putc(vertex, *aux, x, 16.0f, (struct sui_color){ 255, 0, 255, 255 });
+                aux++;
+        }
 }
 
-static f32 angle = 0.0f;
-void sui_txt_test(struct sui_context* sui, char* str)
+struct sui_widget sui_create_widget(char* str, struct sui_color color, struct sui_color hover_color,
+                                    struct sui_color bg_color, struct sui_color hover_bg_color)
 {
-	f32 x = 100;
-	f32 y = 300;
-	// f32 angle = 45.0f;
-	// angle -= 1.0f;
+        struct sui_widget widget;
+        widget.str = str;
+        widget.color = color;
+        widget.hover_color = hover_color;
+        widget.bg_color = bg_color;
+        widget.hover_bg_color = hover_bg_color;
+        widget.root = NULL;
+        widget.rect = (union sui_rect){ 0.0f, 0.0f, 0.0f, 0.0f };        
+        widget.bbox = (union sui_rect){ 0.0f, 0.0f, 0.0f, 0.0f };        
+        widget.pressed = 0;
+        widget.released = 0;
+        widget.hovering = 0;
+        widget.clicked = 0;
+        return widget;
+}
 
-	char* aux = str;
-	i16 w = 0;
-	i16 max_h = 0;
-	while(*aux) {
-		w += cdata[*aux - 32].xadvance;
-		max_h = sui_max(max_h, cdata[*aux -32].height);
-		aux++;
-	};
-	f32 mid = w/2.0f;
-	f32 xadvance = -mid;
-	x += mid;
-	f32 ymax = (f32)max_h;
-	f32 ymid = ymax/2.0f;
-	
-	struct sui_vertex* vertex = sui->vertices + sui->vlen;
-	sui->vlen+=4;
+struct sui_window sui_create_window(char* str, struct sui_color color, struct sui_color hover_color,
+                                    struct sui_color bg_color, struct sui_color hover_bg_color)
+{
+        struct sui_window window;
+        window.widget = sui_create_widget(str, color, hover_color, bg_color, hover_bg_color);
+        window.p_vertex = 0;
+        window.rows = 0;
+        return window;
+}
 
-	sui_rect(
-		sui, vertex, x - mid, y, (f32)w, 16.0f, 
-		(struct sui_color){0, 0, 0, 255}, angle, 1.0f
-	);
+void sui_begin(struct sui_context* sui, struct sui_window* window, f32 x, f32 y)
+{
+        sui_assert(sui);
+        sui_assert(window);
+        
+        // if (sui->current_window) window->widget.root = sui->current_window;
+        window->widget.root = sui->current_window;
+        window->widget.rect.x = x;
+        window->widget.rect.y = y;
+        window->p_vertex = sui->vertices + sui->vlen;
+        
+        sui->current_window = window;       
+        sui->vlen += 4;
+}
 
+void sui_end(struct sui_context* sui)
+{
+        sui_assert(sui);
+        
+        struct sui_window* window = sui->current_window;
+        sui_putr(window->p_vertex, window->widget.rect, window->widget.color);
+        window->widget.rect = (union sui_rect){ 0.0f, 0.0f, 0.0f, 0.0f };
+        sui->current_window = window->widget.root;
+}
 
-	while(*str) {
-		hmm_mat4 rotate= HMM_Rotate(angle, (hmm_vec3){ 0.0f, 0.0f, 1.0f });
-		// xadvance += (f32)sui_putc(sui, *str++, x + vec.X, y + vec.Y - yoffset);*/
-		// xadvance += (f32)sui_putc(sui, *str++, x + xadvance, y);
+union sui_rect sui_getuv(char c, f32 w, f32 h)
+{
+        struct sui_glyph glyph = cdata[c - 32];
+        
+        f32 tmp_x = glyph.x / w;
+        f32 tmp_y = glyph.y / h;
+        f32 tmp_w = glyph.width / w;
+        f32 tmp_h = glyph.height / h;    
+        
+        union sui_rect uv;
+        uv.u0 = tmp_x;
+        uv.u1 = tmp_x + tmp_w;
+        uv.v0 = tmp_y;
+        uv.v1 = tmp_y + tmp_h;
+        
+        return uv;
+}
 
-		struct sui_glyph glyph = cdata[*str - 32];
-		// f32 yoffset = glyph.height + glyph.yoffset - ymax;
-		f32 yoffset = (glyph.height / 2.0f) + glyph.yoffset;
-		hmm_vec4 vec = (hmm_vec4){ 0.0f, -yoffset, 0.0f, 0.0f };
-		vec = HMM_MultiplyMat4ByVec4(rotate, vec);
-		// vec = HMM_AddVec4(vec, (hmm_vec4){ x + xadvance, y + yoffset, 0.0f, 0.0f });
-		xadvance += (f32)sui_putc(sui, *str++, x + xadvance, y - vec.Y);
-	}
+void sui_putr(struct sui_vertex* vertex, union sui_rect rect, struct sui_color color)
+{
+        f32 x0 = rect.x;
+        f32 x1 = rect.x + rect.w;
+        f32 y0 = rect.y;
+        f32 y1 = rect.y + rect.h;
+
+        // TODO: deal with different w ja h for different font atlases
+        union sui_rect uv = sui_getuv(127, 128.0f, 64.0f);
+
+	*vertex++ = (struct sui_vertex){ x0, y0, uv.u0, uv.v0, color.r, color.g, color.b, color.a };
+	*vertex++ = (struct sui_vertex){ x1, y1, uv.u1, uv.v1, color.r, color.g, color.b, color.a };
+	*vertex++ = (struct sui_vertex){ x0, y1, uv.u0, uv.v1, color.r, color.g, color.b, color.a };
+	*vertex++ = (struct sui_vertex){ x1, y0, uv.u1, uv.v0, color.r, color.g, color.b, color.a };
+}
+
+f32 sui_putc(struct sui_vertex* vertex, char c, f32 x, f32 y, struct sui_color color)
+{
+        const f32 img_w = 128.0f;
+        const f32 img_h = 64.0f;
+        struct sui_glyph glyph = cdata[c - 32];
+
+        union sui_rect rect = { x + glyph.xoffset, y + glyph.yoffset, glyph.width, glyph.height };
+        
+        f32 tmp_x = glyph.x / img_w;
+        f32 tmp_y = glyph.y / img_h;
+        f32 tmp_w = glyph.width / img_w;
+        f32 tmp_h = glyph.height / img_h;
+        
+        union sui_rect uv;
+        uv.u0 = tmp_x;
+        uv.u1 = tmp_x + tmp_w;
+        uv.v0 = tmp_y;
+        uv.v1 = tmp_y + tmp_h;
+        
+	*vertex++ = (struct sui_vertex){ rect.x, rect.y, uv.u0, uv.v0, color.r, color.g, color.b, color.a };
+	*vertex++ = (struct sui_vertex){ rect.x + rect.w, rect.y + rect.h, uv.u1, uv.v1, color.r, color.g, color.b, color.a };
+	*vertex++ = (struct sui_vertex){ rect.x, rect.y + rect.h, uv.u0, uv.v1, color.r, color.g, color.b, color.a };
+	*vertex++ = (struct sui_vertex){ rect.x + rect.w, rect.y, uv.u1, uv.v0, color.r, color.g, color.b, color.a };
+
+        return (f32)glyph.xadvance;
+}
+
+void sui_button(struct sui_context* sui, struct sui_widget* widget)
+{
+        sui_assert(sui);
+        sui_assert(widget);
+
+        // if (!widget->root) widget->root = sui->current_window;
+        widget->root = sui->current_window;
+        union sui_rect root_rect = widget->root->widget.rect;
+        
+        struct sui_color color = widget->color;
+        struct sui_color bg_color = widget->bg_color;
+        
+        struct sui_vertex* bg_vertex = sui->vertices + sui->vlen;
+        sui->vlen += 4;
+        char* c = widget->str;
+        struct sui_vertex* c_vertex = sui->vertices + sui->vlen;
+        
+        f32 x = root_rect.x + root_rect.w;
+        f32 y = root_rect.y + root_rect.h;
+        f32 w = 0.0f;
+        // TODO: what if widget->str == NULL
+        while (*c) {
+                w += sui_putc(c_vertex, *c, x + w, y, color);
+                c_vertex += 4;
+                sui->vlen += 4;
+                c++;
+        }
+        sui_putr(bg_vertex, (union sui_rect){ x, y, w, 16.0f}, bg_color);
+        widget->root->widget.rect.w = sui_max(w, root_rect.w);
 }
 
 void sui_render(struct sui_context* sui)
@@ -588,119 +694,7 @@ void sui_render(struct sui_context* sui)
 	sui->vlen = 0;
 }
 
-i16 sui_putc(struct sui_context* sui, char c, f32 x, f32 y)
-{
-	struct sui_glyph ch = cdata[c - 32];
-
-	f32 tx = ch.x / sui->img_wf;
-	f32 ty = ch.y / sui->img_hf;
-	f32 tw = ch.width / sui->img_wf;
-	f32 th = ch.height / sui->img_hf;
-
-	f32 u0 = tx;
-	f32 u1 = tx + tw;
-	f32 v0 = ty;
-	f32 v1 = ty + th;
-
-	struct sui_vertex* vertex = sui->vertices + sui->vlen;	
-	sui->vlen+=4;
-
-	sui_rect(
-		// sui, vertex, x + ch.xoffset, y + ch.yoffset, ch.width, ch.height,
-		sui, vertex, x + ch.xoffset, y, ch.width, ch.height,
-		(struct sui_color){255, 255, 255, 255}, angle, 1.0f
-	);
-
-	vertex->u = u0;
-	vertex->v = v0;
-	vertex++;
-
-	vertex->u = u1;
-	vertex->v = v1;
-	vertex++;
-
-	vertex->u = u0;
-	vertex->v = v1;
-	vertex++;
-
-	vertex->u = u1;
-	vertex->v = v0;
-
-	return ch.xadvance * 1.0f;
-}
-
-
-void sui_rect(
-	struct sui_context* sui, struct sui_vertex* vertex, f32 x, f32 y, f32 w, f32 h, 
-	struct sui_color color, f32 rotation, f32 scale)
-{
-	f32 tx = - (w / 2.0f);
-	f32 ty = - (h / 2.0f);
-
-	hmm_vec4 v0 = { tx,     ty     , 0.0f, 0.0f };
-	hmm_vec4 v1 = { tx + w, ty + h , 0.0f, 0.0f };
-	hmm_vec4 v2 = { tx,     ty + h , 0.0f, 0.0f };
-	hmm_vec4 v3 = { tx + w, ty     , 0.0f, 0.0f };
-
-	hmm_mat4 rotatemat = HMM_Rotate(rotation, (hmm_vec3){ 0.0f, 0.0f, 1.0f } );
-	hmm_mat4 scalemat = HMM_Scale((hmm_vec3){ scale, scale, 0.0f });
-	hmm_mat4 mat = HMM_MultiplyMat4(rotatemat, scalemat);
-	
-	v0 = HMM_MultiplyMat4ByVec4(mat, v0);
-	v1 = HMM_MultiplyMat4ByVec4(mat, v1);
-	v2 = HMM_MultiplyMat4ByVec4(mat, v2);
-	v3 = HMM_MultiplyMat4ByVec4(mat, v3);
-
-	v0 = HMM_AddVec4(v0, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
-	v1 = HMM_AddVec4(v1, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
-	v2 = HMM_AddVec4(v2, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
-	v3 = HMM_AddVec4(v3, (hmm_vec4){ x - tx, y - ty, 0.0f, 0.0f });
-
-	*vertex = (struct sui_vertex){ 
-		v0.X, v0.Y, 0.65625f, 0.328125f, color.r, color.g, color.b, color.a };
-	vertex++;
-	*vertex = (struct sui_vertex)
-		{ v1.X, v1.Y, 0.703125f, 0.46875f, color.r, color.g, color.b, color.a };
-	vertex++;
-	*vertex = (struct sui_vertex)
-		{ v2.X, v2.Y, 0.65625f, 0.46875f, color.r, color.g, color.b, color.a };
-	vertex++;
-	*vertex = (struct sui_vertex)
-		{ v3.X, v3.Y, 0.703125f, 0.328125f, color.r, color.g, color.b, color.a };
-}
-
-/* void sui_rect_insert(
-	struct sui_context* sui, i32 vi, 
-	i16 x, i16 y, i16 w, i16 h, 
-	u8 r, u8 g, u8 b, u8 a)
-{
-	// get vertex
-	struct sui_vertex* vertex = sui->vertices + vi;	
-
-	// convert position to d11
-	x -= (sui->viewport.w / 2);
-	y -= (sui->viewport.h / 2);
-	f32 xdiv =  (sui->viewport.w / 2.0f);
-	f32 ydiv = -(sui->viewport.h / 2.0f);
-	
-	// convert to vertex points
-	i16 x0 = x;
-	i16 x1 = x + w;
-	i16 y0 = y;
-	i16 y1 = y + h;
-
-	// create vertices
-	*vertex = (struct sui_vertex) { x0/xdiv, y0/ydiv, r, g, b, a };
-	vertex++;
-	*vertex = (struct sui_vertex) { x1/xdiv, y1/ydiv, r, g, b, a };
-	vertex++;
-	*vertex = (struct sui_vertex) { x0/xdiv, y1/ydiv, r, g, b, a };
-	vertex++;
-	*vertex = (struct sui_vertex) { x1/xdiv, y0/ydiv, r, g, b, a };
-	// vertex++;
-}
-
-i32 sui_hover(struct sui_io* io, i16 x, i16 y, i16 w, i16 h)
+/* i32 sui_hover(struct sui_io* io, i16 x, i16 y, i16 w, i16 h)
 {
 	i16 x0 = x;
 	i16 x1 = x + w;
