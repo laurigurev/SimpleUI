@@ -380,7 +380,7 @@ void sui_terminate(struct sui_context* sui)
 	memset(sui, 0, sizeof(struct sui_context));
 }
 
- /* void sui_input(struct sui_context* sui, i16 mx, i16 my, u8 rdown, u8 rup, u8 ldown, u8 lup)
+void sui_input(struct sui_context* sui, i16 mx, i16 my, u8 rdown, u8 rup, u8 ldown, u8 lup)
 {
 	sui->io.dmx = sui->io.mx - mx;
 	sui->io.dmy = sui->io.my - my;
@@ -393,121 +393,21 @@ void sui_terminate(struct sui_context* sui)
 	sui->io.ldown = ldown;
 	sui->io.lup = lup;
 
-	sui->io.rclick = 0;
-	sui->io.lclick = 0;
+	if (rdown) sui->io.rheld = 1; 
+	else if (rup) sui->io.rheld = 0; 
 
-	if (rdown) { 
-		sui->io.rheld = 1; 
-		sui->io.rclick_delta = sui_timer_begin(); 
-	}
-	else if (rup) { 
-		sui->io.rheld = 0; 
-		sui->io.rclick_delta = sui_timer_end(sui->io.rclick_delta);
-	}
-	if (sui->io.rclick_delta < 200000) { 
-		sui->io.rclick = 1; 
-		sui->io.rclick_delta = CLICK_DELTA_RESET;
-	}
-
-	if (ldown) { 
-		sui->io.lheld = 1; 
-		sui->io.lclick_delta = sui_timer_begin(); 
-	}
-	else if (lup) { 
-		sui->io.lheld = 0; 
-		sui->io.lclick_delta = sui_timer_end(sui->io.lclick_delta);
-	}
-	if (sui->io.lclick_delta < 200000) { 
-		sui->io.lclick = 1; 
-		sui->io.lclick_delta = CLICK_DELTA_RESET;
-	}
-
+	if (ldown) sui->io.lheld = 1; 
+	else if (lup) sui->io.lheld = 0; 
 }
 
-void sui_begin(struct sui_context* sui, i16* x, i16* y)
-{
-	sui->window = (struct sui_window){ *x, *y, 0, 0, 0, sui->vlen, 4, 2, 0 };
-	sui->vlen += 4;
-	memset(sui->vertices + sui->window.vi, 0, sizeof(struct sui_window) * 4);
-}
-
-void sui_end(struct sui_context* sui)
-{
-	sui->window.w = max(sui->window.w, sui->window.max_w);
-	sui_rect_insert(
-		sui, sui->window.vi,
-		sui->window.x - sui->window.pad,
-		sui->window.y - sui->window.pad,
-		sui->window.w + 2 * sui->window.pad,
-		sui->window.h + 2 * sui->window.pad + sui->window.row * sui->window.pad,
-		255, 255, 255, 255
-	);
-
-	memset(&sui->window, 0, sizeof(struct sui_window));
-}
-
-void sui_row(struct sui_context* sui)
+/* void sui_row(struct sui_context* sui)
 {
 	sui->window.max_w = sui_max(sui->window.w, sui->window.max_w);
 	sui->window.row++;
 	sui->window.w = 0;
 	sui->window.h += 16;
-}
-
-i32 sui_button(struct sui_context* sui, const char* name)
-{
-	// assumed letter width and height is 16 px
-	i32 slen = strlen(name);
-
-	if (sui->window.w) sui->window.w += sui->window.child_margin;
-	i16 btn_x = sui->window.x + sui->window.w;
-	i16 btn_y = sui->window.y + sui->window.row * (16 + sui->window.pad);
-	i16 btn_w = slen * (16 + 2) - 2;
-	i16 btn_h = 16;
-
-	u8 r = 255; u8 g = 0; u8 b = 0;
-	i32 hover = sui_hover(&sui->io, btn_x, btn_y, btn_w, btn_h);
-	if (hover) {
-		r = 0;
-		g = 255;
-	}
-
-
-	i16 xoff = sui->window.x + sui->window.w;
-	for (i32 i = 0; i < slen; i++) {
-		sui_rect_insert(
-			sui, sui->vlen,
-			xoff, btn_y, btn_h, btn_h,
-			r, g, b, 255
-		);
-		xoff += 16 + 2;
-		sui->vlen += 4;
-	}
-	
-	// update window
-	sui->window.w += slen * (16 + 2) - 2;
-	if (!sui->window.h) sui->window.h += 16;
-
-	if (hover && sui->io.lclick) return 1;
-	return 0;
 } */
 
-void sui_test(struct sui_context* sui)
-{
-	struct sui_vertex* vertex = sui->vertices + sui->vlen;
-	sui->vlen+=4;
-        sui_putr(vertex, (union sui_rect){ 150.0f, 150.0f, 300.0f, 300.f }, (struct sui_color){ 255, 255, 255, 255 });
-        
-        char str[] = "Hello, world!";
-        char* aux = str;
-        f32 x = 100.0f;
-        while (*aux) {
-                vertex += 4;
-                sui->vlen += 4;
-                x += sui_putc(vertex, *aux, x, 16.0f, (struct sui_color){ 255, 0, 255, 255 });
-                aux++;
-        }
-}
 
 struct sui_widget sui_create_widget(char* str, struct sui_color color, struct sui_color hover_color,
                                     struct sui_color bg_color, struct sui_color hover_bg_color)
@@ -521,6 +421,8 @@ struct sui_widget sui_create_widget(char* str, struct sui_color color, struct su
         widget.root = NULL;
         widget.rect = (union sui_rect){ 0.0f, 0.0f, 0.0f, 0.0f };        
         widget.bbox = (union sui_rect){ 0.0f, 0.0f, 0.0f, 0.0f };        
+	widget.click_time = 0;
+	widget.held = 0;
         widget.pressed = 0;
         widget.released = 0;
         widget.hovering = 0;
@@ -624,35 +526,96 @@ f32 sui_putc(struct sui_vertex* vertex, char c, f32 x, f32 y, struct sui_color c
         return (f32)glyph.xadvance;
 }
 
+i32 sui_overlap(union sui_rect bbox, f32 mx, f32 my)
+{
+	if (bbox.x0 < mx && bbox.x1 > mx && bbox.y0 < my && bbox.y1 > my) {
+		return 1;
+	}
+	return 0;
+}
+
+i64 sui_time_begin()
+{
+	LARGE_INTEGER frequency;
+	QueryPerformanceFrequency(&frequency);
+	LARGE_INTEGER t;
+	QueryPerformanceCounter(&t);
+	return t.QuadPart;
+}
+
+i64 sui_time_end(i64 begin)
+{
+	LARGE_INTEGER frequency;
+	QueryPerformanceFrequency(&frequency);
+	LARGE_INTEGER time;
+	QueryPerformanceCounter(&time);
+	i64 res = time.QuadPart;
+	res -= begin;
+	res *= 1000000;
+	res /= frequency.QuadPart;
+	return res;
+}
+
 void sui_button(struct sui_context* sui, struct sui_widget* widget)
 {
         sui_assert(sui);
         sui_assert(widget);
 
-        // if (!widget->root) widget->root = sui->current_window;
-        widget->root = sui->current_window;
-        union sui_rect root_rect = widget->root->widget.rect;
-        
-        struct sui_color color = widget->color;
+	struct sui_window* root = sui->current_window;
+        union sui_rect root_rect = root->widget.rect;
+	
+	char* aux = widget->str;
+	f32 x = root_rect.x + root_rect.w;
+	f32 y = root_rect.y + root_rect.h;
+	f32 w = 0.0f;
+	while (*aux) { w += cdata[*aux++ - 32].xadvance; }
+	union sui_rect rect = (union sui_rect){ x, y, w, 16.0f };
+	union sui_rect bbox = (union sui_rect){ x, x + w, y, y + 16.0f };
+	widget->rect = rect;
+	widget->bbox = bbox;
+
+	i32 overlap = sui_overlap(bbox, (f32)sui->io.mx, (f32)sui->io.my);
         struct sui_color bg_color = widget->bg_color;
-        
-        struct sui_vertex* bg_vertex = sui->vertices + sui->vlen;
-        sui->vlen += 4;
-        char* c = widget->str;
-        struct sui_vertex* c_vertex = sui->vertices + sui->vlen;
-        
-        f32 x = root_rect.x + root_rect.w;
-        f32 y = root_rect.y + root_rect.h;
-        f32 w = 0.0f;
-        // TODO: what if widget->str == NULL
-        while (*c) {
-                w += sui_putc(c_vertex, *c, x + w, y, color);
-                c_vertex += 4;
-                sui->vlen += 4;
-                c++;
-        }
-        sui_putr(bg_vertex, (union sui_rect){ x, y, w, 16.0f}, bg_color);
-        widget->root->widget.rect.w = sui_max(w, root_rect.w);
+	struct sui_color color = widget->color;
+	// pressed, released, hovering, clicked
+	u8 old_states[4];
+	memcpy(old_states, &widget->pressed, 4);
+	memset(&widget->pressed, 0, 4);
+	if (overlap) {
+		// if (old_states[2] && sui->io.ldown) widget->pressed = 1;
+		// if (old_states[2] && sui->io.lup) widget->released = 1;
+		if (sui->io.ldown) widget->pressed = 1;
+		// if (sui->io.lup) widget->released = 1;
+		if (widget->pressed) widget->held = 1;
+		if (sui->io.lup && widget->held) { widget->released = 1; widget->held = 0; }
+		widget->hovering = 1;
+	}
+	if (widget->hovering) {
+		bg_color = widget->hover_bg_color;
+		color = widget->hover_color;
+	}
+	if (widget->pressed) widget->click_time = sui_time_begin();
+	if (widget->released) widget->click_time = sui_time_end(widget->click_time);
+	if (widget->click_time != 0 && widget->click_time < 200000) { 
+		// printf("click_time %lli\n", widget->click_time);
+		widget->clicked = 1;
+		widget->click_time = 0;
+	}
+	
+	struct sui_vertex* vertex = sui->vertices + sui->vlen;
+	sui->vlen += 4;
+	sui_putr(vertex, rect, bg_color);
+	vertex += 4;
+	aux = widget->str;
+	w = 0.0f;
+	while (*aux) { 
+		w += sui_putc(vertex, *aux++, x + w, y, color); 
+		vertex +=4; 
+		sui->vlen += 4;
+	}
+
+	// TODO: a better way to update root
+	root->widget.rect.w = w;
 }
 
 void sui_render(struct sui_context* sui)
@@ -694,38 +657,3 @@ void sui_render(struct sui_context* sui)
 	sui->vlen = 0;
 }
 
-/* i32 sui_hover(struct sui_io* io, i16 x, i16 y, i16 w, i16 h)
-{
-	i16 x0 = x;
-	i16 x1 = x + w;
-	i16 y0 = y;
-	i16 y1 = y + h;
-
-	if (x0 < io->mx && io->mx < x1 &&
-	    y0 < io->my && io->my < y1) {
-		return 1;
-	}
-
-	return 0;
-}
-
-i64 Frequency = 0;
-// QueryPerformanceFrequency(&Frequency);
-
-i64 sui_timer_begin()
-{
-	if (!Frequency) QueryPerformanceFrequency(&Frequency);
-	i64 t;
-	QueryPerformanceCounter(&t);
-	return t;
-}
-
-i64 sui_timer_end(i64 begin)
-{
-	i64 t;
-	QueryPerformanceCounter(&t);
-	t -= begin;
-	t *= 1000000;
-	t /= Frequency;
-	return t;
-} */

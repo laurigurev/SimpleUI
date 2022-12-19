@@ -12,17 +12,13 @@
 struct ex_window;
 struct ex_gfx_context;
 
-enum mouse_event { 
-	MOUSE_LBUTTONUP = 0x0001, 
-	MOUSE_LBUTTONDOWN = 0x0002, 
-	MOUSE_RBUTTONUP = 0x0004, 
-	MOUSE_RBUTTONDOWN = 0x0008
-};
-
 struct mouse_t {
 	i32 x;
 	i32 y;
-	i16 flags;
+	u8 ldown;
+	u8 lup;
+	u8 rdown;
+	u8 rup;
 };
 
 void ex_window_init();
@@ -186,7 +182,7 @@ int main()
 	f32 colors[] = { 0.0f, 0.0f, 0.2f, 1.0f };
 	
 	while (1) {
-		mouse.flags = 0;
+		memset(&mouse.ldown, 0, 4);
 		MSG msg;
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 			if (msg.message == WM_QUIT) {
@@ -199,14 +195,8 @@ int main()
 
 		ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
 
-		/* sui_input(
-			&sui, mouse.x, mouse.y, 
-			mouse.flags & MOUSE_RBUTTONDOWN, 
-			mouse.flags & MOUSE_RBUTTONUP, 
-			mouse.flags & MOUSE_LBUTTONDOWN, 
-			mouse.flags & MOUSE_LBUTTONUP
-		);
-		i16 x = 200;
+		sui_input(&sui, mouse.x, mouse.y, mouse.rdown, mouse.rup, mouse.ldown, mouse.lup);
+		/* i16 x = 200;
 		i16 y = 200;
 		sui_begin(&sui, &x, &y);
 		if (sui_button(&sui, "button 1")) printf("button1 clicked\n");
@@ -218,7 +208,15 @@ int main()
 		// sui_test(&sui);
 		sui_begin(&sui, &swin, 100, 100);
 		sui_button(&sui, &sbtn);
+		if (sbtn.pressed) printf("button0 PRESSED ");
+		if (sbtn.released) printf("button0 RELEASED ");
+		if (sbtn.clicked) printf("button0 CLICKED ");
+		if (sbtn.pressed || sbtn.released || sbtn.clicked) printf("\n");
 		sui_button(&sui, &sbtn);
+		if (sbtn.pressed) printf("button1 PRESSED ");
+		if (sbtn.released) printf("button1 RELEASED ");
+		if (sbtn.clicked) printf("button1 CLICKED ");
+		if (sbtn.pressed || sbtn.released || sbtn.clicked) printf("\n");
 		sui_end(&sui);
 		sui_render(&sui);
 
@@ -260,16 +258,16 @@ LRESULT CALLBACK WindowProc1(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		p_mouse->y = p.y;
 		break;
 	case WM_LBUTTONDOWN:
-		p_mouse->flags |= MOUSE_LBUTTONDOWN;
+		p_mouse->ldown = 1;
 		break;
 	case WM_RBUTTONDOWN:
-		p_mouse->flags |= MOUSE_RBUTTONDOWN;
+		p_mouse->rdown = 1;
 		break;
 	case WM_LBUTTONUP:
-		p_mouse->flags |= MOUSE_LBUTTONUP;
+		p_mouse->lup = 1;
 		break;
 	case WM_RBUTTONUP:
-		p_mouse->flags |= MOUSE_RBUTTONUP;
+		p_mouse->rup = 1;
 		break;
 	}
 	return DefWindowProc(hwnd, msg, wparam, lparam);

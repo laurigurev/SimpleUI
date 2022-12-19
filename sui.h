@@ -63,7 +63,7 @@ struct sui_widget;
 struct sui_color;
 union sui_rect;
 // struct sui_image;
-// struct sui_io;
+struct sui_io;
 
 /*
  *	USER FUNCTIONS
@@ -72,8 +72,7 @@ union sui_rect;
 void sui_init(struct sui_context *sui, ID3D11Device *d11device, i32 w, i32 h);
 void sui_terminate(struct sui_context *sui);
 
-void sui_test(struct sui_context *sui);
-
+void sui_input(struct sui_context* sui, i16 mx, i16 my, u8 rdown, u8 rup, u8 ldown, u8 lup);
 struct sui_widget sui_create_widget(char* str, struct sui_color color, struct sui_color hover_color,
                                     struct sui_color bg_color, struct sui_color hover_bg_color);
 
@@ -84,12 +83,13 @@ void sui_end(struct sui_context* sui);
 union sui_rect sui_getuv(char c, f32 w, f32 h);
 void sui_putr(struct sui_vertex* vertex, union sui_rect rect, struct sui_color color);
 f32 sui_putc(struct sui_vertex* vertex, char c, f32 x, f32 y, struct sui_color color);
+i32 sui_overlap(union sui_rect bbox, f32 mx, f32 my);
+i64 sui_time_begin();
+i64 sui_time_end(i64 begin);
 void sui_button(struct sui_context* sui, struct sui_widget* widget);
 
-/* void sui_input(struct sui_context* sui, i16 mx, i16 my, u8 rdown, u8 rup, u8
-ldown, u8 lup);
 
-void sui_begin(struct sui_context* sui, i16* x, i16* y);
+/* void sui_begin(struct sui_context* sui, i16* x, i16* y);
 void sui_end(struct sui_context* sui);
 void sui_row(struct sui_context* sui);
 
@@ -102,20 +102,12 @@ void sui_label(struct sui_context* sui, const char* str); */
 
 void sui_render(struct sui_context *sui);
 
-/* void sui_rect_insert(
-        struct sui_context* sui, i32 vi,
-        i16 x, i16 y, i16 w, i16 h,
-        u8 r, u8 g, u8 b, u8 a
-);
-i32 sui_hover(struct sui_io* io, i16 x, i16 y, i16 w, i16 h);
-i64 sui_timer_begin();
-i64 sui_timer_end(i64 begin); */
 
 /*
  *	STRUCTURES
  */
 
-/* struct sui_io {
+struct sui_io {
         i16 mx;
         i16 my;
         // delta mouse coordinates to previous coordinates
@@ -129,16 +121,9 @@ i64 sui_timer_end(i64 begin); */
         u8 ldown;
         u8 lheld;
         u8 lup;
-
-        u8 rclick;
-        u8 lclick;
-        i64 rclick_delta;
-        i64 lclick_delta;
-
-        // TODO: double click
 };
 
-struct sui_window {
+/* struct sui_window {
         i16 x;
         i16 y;
         i16 w;
@@ -160,7 +145,7 @@ struct sui_window {
 
 union sui_rect {
         struct { f32 x; f32 y; f32 w; f32 h; };
-        // struct { f32 x0; f32 y0; f32 x1; f32 y1; }; 
+        struct { f32 x0; f32 x1; f32 y0; f32 y1; }; 
         struct { f32 u0; f32 u1; f32 v0; f32 v1; };
 };
 
@@ -197,12 +182,16 @@ struct sui_widget {
         // f32 margin_right;
         // f32 margin_top;
         // f32 margin_bottom;
+        // f32 rotation;
+        // f32 size;
         
         // generated fields
         struct sui_window* root;
         union sui_rect rect;
         union sui_rect bbox;
+        i64 click_time;
         
+        u8 held;
         u8 pressed;
         u8 released;
         u8 hovering;
@@ -240,6 +229,7 @@ struct sui_context {
         i32 vlen;
 
         // backend
+        struct sui_io io;
         struct sui_viewport viewport;
         i32 img_w;
         i32 img_h;
