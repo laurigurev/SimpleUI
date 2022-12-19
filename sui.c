@@ -417,15 +417,6 @@ void sui_input(struct sui_context* sui, i16 mx, i16 my, u8 rdown, u8 rup, u8 ldo
 	}
 }
 
-/* void sui_row(struct sui_context* sui)
-{
-	sui->window.max_w = sui_max(sui->window.w, sui->window.max_w);
-	sui->window.row++;
-	sui->window.w = 0;
-	sui->window.h += 16;
-} */
-
-
 struct sui_widget sui_create_widget(char* str, struct sui_color color, struct sui_color hover_color,
                                     struct sui_color bg_color, struct sui_color hover_bg_color)
 {
@@ -452,7 +443,9 @@ struct sui_window sui_create_window(char* str, struct sui_color color, struct su
         struct sui_window window;
         window.widget = sui_create_widget(str, color, hover_color, bg_color, hover_bg_color);
         window.p_vertex = 0;
-        window.rows = 0;
+	window.current_w = 0.0f;
+	window.current_h = 0.0f;
+	window.current_max_h = 0.0f;
         return window;
 }
 
@@ -463,9 +456,16 @@ void sui_begin(struct sui_context* sui, struct sui_window* window, f32 x, f32 y)
         
         // if (sui->current_window) window->widget.root = sui->current_window;
         window->widget.root = sui->current_window;
+	/* if (sui->current_window) {
+		x += sui->current_window->widget.rect.x;
+		y += sui->current_window->widget.rect.y;
+	} */
         window->widget.rect.x = x;
         window->widget.rect.y = y;
         window->p_vertex = sui->vertices + sui->vlen;
+	window->current_w = 0.0f;
+	window->current_h = 0.0f;
+	window->current_max_h = 0.0f;
         
         sui->current_window = window;       
         sui->vlen += 4;
@@ -476,9 +476,24 @@ void sui_end(struct sui_context* sui)
         sui_assert(sui);
         
         struct sui_window* window = sui->current_window;
+	window->widget.rect.w = sui_max(window->current_w, window->widget.rect.w);
+	// window->widget.rect.h = sui_max(window->current_h, window->widget.rect.h);
+	window->widget.rect.h += window->current_max_h;
         sui_putr(window->p_vertex, window->widget.rect, window->widget.color);
         window->widget.rect = (union sui_rect){ 0.0f, 0.0f, 0.0f, 0.0f };
         sui->current_window = window->widget.root;
+}
+
+void sui_row(struct sui_context* sui)
+{
+        struct sui_window* window = sui->current_window;
+	
+	window->widget.rect.w = sui_max(window->current_w, window->widget.rect.w);
+	window->current_w = 0.0f;
+	
+	window->widget.rect.h += window->current_max_h;
+	window->current_h = window->widget.rect.h;
+	window->current_max_h = 0.0f;
 }
 
 union sui_rect sui_getuv(char c, f32 w, f32 h)
@@ -581,8 +596,8 @@ void sui_button(struct sui_context* sui, struct sui_widget* widget)
         union sui_rect root_rect = root->widget.rect;
 	
 	char* aux = widget->str;
-	f32 x = root_rect.x + root_rect.w;
-	f32 y = root_rect.y + root_rect.h;
+	f32 x = root_rect.x + root->current_w;
+	f32 y = root_rect.y + root->current_h;
 	f32 w = 0.0f;
 	while (*aux) { w += cdata[*aux++ - 32].xadvance; }
 	union sui_rect rect = (union sui_rect){ x, y, w, 16.0f };
@@ -617,8 +632,8 @@ void sui_button(struct sui_context* sui, struct sui_widget* widget)
 		sui->vlen += 4;
 	}
 
-	// TODO: a better way to update root
-	root->widget.rect.w = w;
+	root->current_w += w;
+	root->current_max_h = sui_max(16.0f, root->current_max_h);
 }
 
 void sui_render(struct sui_context* sui)

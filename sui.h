@@ -80,6 +80,7 @@ struct sui_window sui_create_window(char* str, struct sui_color color, struct su
                                     struct sui_color bg_color, struct sui_color hover_bg_color);
 void sui_begin(struct sui_context* sui, struct sui_window* window, f32 x, f32 y);
 void sui_end(struct sui_context* sui);
+void sui_row(struct sui_context* sui);
 union sui_rect sui_getuv(char c, f32 w, f32 h);
 void sui_putr(struct sui_vertex* vertex, union sui_rect rect, struct sui_color color);
 f32 sui_putc(struct sui_vertex* vertex, char c, f32 x, f32 y, struct sui_color color);
@@ -197,12 +198,11 @@ struct sui_widget {
 };
 
 struct sui_window {
-        // TODO
         struct sui_widget widget;
         struct sui_vertex* p_vertex;
-        i32 rows;
-        // f32 current_w;
-        // f32 current_h;
+        f32 current_w;
+        f32 current_h;
+        f32 current_max_h;
 };
 
 struct sui_glyph {
