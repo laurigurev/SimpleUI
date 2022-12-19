@@ -88,13 +88,6 @@ i64 sui_time_begin();
 i64 sui_time_end(i64 begin);
 void sui_button(struct sui_context* sui, struct sui_widget* widget);
 
-
-/* void sui_begin(struct sui_context* sui, i16* x, i16* y);
-void sui_end(struct sui_context* sui);
-void sui_row(struct sui_context* sui);
-
-i32 sui_button(struct sui_context* sui, const char* name);
-void sui_label(struct sui_context* sui, const char* str); */
 // void sui_slider(struct sui_context* sui);
 // void sui_canvas(struct sui_context* sui);
 // void sui_radiobtn(struct sui_context* sui);
@@ -114,13 +107,18 @@ struct sui_io {
         i16 dmx;
         i16 dmy;
 
+        i64 rclick_time;
+        i64 lclick_time;
+
         u8 rdown;
         u8 rheld;
         u8 rup;
+        u8 rclicked;
 
         u8 ldown;
         u8 lheld;
         u8 lup;
+        u8 lclicked;
 };
 
 /* struct sui_window {
@@ -186,10 +184,10 @@ struct sui_widget {
         // f32 size;
         
         // generated fields
+        // TODO: figure out, if we need to save root, rect and bbox
         struct sui_window* root;
         union sui_rect rect;
         union sui_rect bbox;
-        i64 click_time;
         
         u8 held;
         u8 pressed;
@@ -199,9 +197,12 @@ struct sui_widget {
 };
 
 struct sui_window {
+        // TODO
         struct sui_widget widget;
         struct sui_vertex* p_vertex;
         i32 rows;
+        // f32 current_w;
+        // f32 current_h;
 };
 
 struct sui_glyph {

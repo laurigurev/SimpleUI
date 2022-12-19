@@ -392,12 +392,29 @@ void sui_input(struct sui_context* sui, i16 mx, i16 my, u8 rdown, u8 rup, u8 ldo
 	sui->io.rup = rup;
 	sui->io.ldown = ldown;
 	sui->io.lup = lup;
+	sui->io.rclicked = 0;
+	sui->io.lclicked = 0;
 
 	if (rdown) sui->io.rheld = 1; 
 	else if (rup) sui->io.rheld = 0; 
 
 	if (ldown) sui->io.lheld = 1; 
 	else if (lup) sui->io.lheld = 0; 
+
+	if (rdown) sui->io.rclick_time = sui_time_begin();
+	if (rup) sui->io.rclick_time = sui_time_end(sui->io.rclick_time);
+	
+	if (ldown) sui->io.lclick_time = sui_time_begin();
+	if (lup) sui->io.lclick_time = sui_time_end(sui->io.lclick_time);
+
+	if (sui->io.rclick_time != 0 && sui->io.rclick_time < 200000) {
+		sui->io.rclicked = 1;
+		sui->io.rclick_time = 0;
+	}
+	if (sui->io.lclick_time != 0 && sui->io.lclick_time < 200000) {
+		sui->io.lclicked = 1;
+		sui->io.lclick_time = 0;
+	}
 }
 
 /* void sui_row(struct sui_context* sui)
@@ -421,7 +438,6 @@ struct sui_widget sui_create_widget(char* str, struct sui_color color, struct su
         widget.root = NULL;
         widget.rect = (union sui_rect){ 0.0f, 0.0f, 0.0f, 0.0f };        
         widget.bbox = (union sui_rect){ 0.0f, 0.0f, 0.0f, 0.0f };        
-	widget.click_time = 0;
 	widget.held = 0;
         widget.pressed = 0;
         widget.released = 0;
@@ -577,16 +593,9 @@ void sui_button(struct sui_context* sui, struct sui_widget* widget)
 	i32 overlap = sui_overlap(bbox, (f32)sui->io.mx, (f32)sui->io.my);
         struct sui_color bg_color = widget->bg_color;
 	struct sui_color color = widget->color;
-	// pressed, released, hovering, clicked
-	u8 old_states[4];
-	memcpy(old_states, &widget->pressed, 4);
 	memset(&widget->pressed, 0, 4);
 	if (overlap) {
-		// if (old_states[2] && sui->io.ldown) widget->pressed = 1;
-		// if (old_states[2] && sui->io.lup) widget->released = 1;
-		if (sui->io.ldown) widget->pressed = 1;
-		// if (sui->io.lup) widget->released = 1;
-		if (widget->pressed) widget->held = 1;
+		if (sui->io.ldown) { widget->pressed = 1; widget->held = 1; }
 		if (sui->io.lup && widget->held) { widget->released = 1; widget->held = 0; }
 		widget->hovering = 1;
 	}
@@ -594,14 +603,8 @@ void sui_button(struct sui_context* sui, struct sui_widget* widget)
 		bg_color = widget->hover_bg_color;
 		color = widget->hover_color;
 	}
-	if (widget->pressed) widget->click_time = sui_time_begin();
-	if (widget->released) widget->click_time = sui_time_end(widget->click_time);
-	if (widget->click_time != 0 && widget->click_time < 200000) { 
-		// printf("click_time %lli\n", widget->click_time);
-		widget->clicked = 1;
-		widget->click_time = 0;
-	}
-	
+	if (widget->released && sui->io.lclicked) widget->clicked = 1;
+		
 	struct sui_vertex* vertex = sui->vertices + sui->vlen;
 	sui->vlen += 4;
 	sui_putr(vertex, rect, bg_color);
@@ -656,4 +659,3 @@ void sui_render(struct sui_context* sui)
 	// memset(sui->vertices, 0, sizeof(struct sui_vertex) * sui->vlen);
 	sui->vlen = 0;
 }
-
