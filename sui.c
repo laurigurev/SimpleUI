@@ -598,26 +598,67 @@ struct sui_state sui_handle_state(union sui_rect bbox, struct sui_state prev, st
 	return state;
 }
 
+i32 sui_string_len(char* str)
+{
+	i32 len = 0;
+	while (*str) len += cdata[*str++ - 32].xadvance;
+	return len;
+}
+
+void sui_get_params(struct sui_window* root, struct sui_widget* widget, char* str, union sui_rect* rect, union sui_rect* bbox)
+{
+	// NOTE: this is only for a button and a label
+	sui_assert(root);
+	
+        union sui_rect root_rect = root->rect;
+	f32 x = root_rect.x + root->current_w + widget->margin_left;
+	f32 y = root_rect.y + root->current_h + widget->margin_top;
+	f32 w = widget->pad_left + widget->pad_right + (f32)sui_string_len((char*)str);
+	f32 h = 16.0f + widget->pad_top + widget->pad_bottom;
+	*rect = (union sui_rect){ x, y, w, h };
+	*bbox = (union sui_rect){ x, x + w, y, y + h };
+}
+
+void sui_draw_rect(struct sui_context* sui, union sui_rect rect, struct sui_color color)
+{
+	struct sui_vertex* vertex = sui->vertices + sui->vlen;
+	sui->vlen += 4;
+	sui_putr(vertex, rect, color);
+}
+
+void sui_draw_string(char* str, struct sui_context* sui, struct sui_widget* widget, union sui_rect rect, struct sui_color color)
+{
+	struct sui_vertex* vertex = sui->vertices + sui->vlen;
+	sui->vlen += 4;
+	
+	f32 x = rect.x + widget->pad_left;
+	f32 y = rect.y + widget->pad_top;
+	f32 w = 0.0f;
+	while (*str) { 
+		w += sui_putc(vertex, *str++, x + w, y, color); 
+		vertex +=4; 
+		sui->vlen += 4;
+	}
+}
+
+void sui_update_root(struct sui_window* root, struct sui_widget* widget, union sui_rect rect)
+{
+	// paddings should already be summed into width
+	root->current_w = (root->current_w + rect.w) + (widget->margin_left + widget->margin_right);
+	root->current_max_h = sui_max((rect.h + widget->margin_top + widget->margin_bottom), root->current_max_h);
+}
+
 void sui_button(struct sui_context* sui, struct sui_widget* widget, const char* str, struct sui_state* state)
 {
-	// TODO: refactor this function
-	
         sui_assert(sui);
         sui_assert(widget);
 	sui_assert(state);
 
 	struct sui_window* root = sui->current_window;
-        union sui_rect root_rect = root->rect;
 	
-	// TODO: sui_get_params(widget, root);
-	char* aux = (char*)str;
-	f32 x = root_rect.x + root->current_w + widget->margin_left;
-	f32 y = root_rect.y + root->current_h + widget->margin_top;
-	f32 w = widget->pad_left + widget->pad_right;
-	f32 h = 16.0f + widget->pad_top + widget->pad_bottom;
-	while (*aux) { w += cdata[*aux++ - 32].xadvance; }
-	union sui_rect rect = (union sui_rect){ x, y, w, h };
-	union sui_rect bbox = (union sui_rect){ x, x + w, y, y + h };
+        union sui_rect root_rect = root->rect;
+	union sui_rect rect, bbox;
+	sui_get_params(root, widget, (char*)str, &rect, &bbox);
 
 	*state = sui_handle_state(bbox, *state, sui->io);
         struct sui_color bg_color = widget->bg_color;
@@ -627,27 +668,9 @@ void sui_button(struct sui_context* sui, struct sui_widget* widget, const char* 
 		color = widget->hover_color;
 	}
 	
-	// TODO: sui_draw_rect(sui, rect);
-	struct sui_vertex* vertex = sui->vertices + sui->vlen;
-	sui->vlen += 4;
-	sui_putr(vertex, rect, bg_color);
-	
-	vertex += 4;
-	aux = (char*)str;
-	
-	// TODO: sui_draw_str(sui, widget);
-	x += widget->pad_left;
-	y += widget->pad_top;
-	w = 0.0f;
-	while (*aux) { 
-		w += sui_putc(vertex, *aux++, x + w, y, color); 
-		vertex +=4; 
-		sui->vlen += 4;
-	}
-
-	// TODO: sui_update_root(root, widget);
-	root->current_w += w + (widget->pad_left + widget->pad_right) + (widget->margin_left + widget->margin_right);
-	root->current_max_h = sui_max((h + widget->margin_top + widget->margin_bottom), root->current_max_h);
+	sui_draw_rect(sui, rect, bg_color);
+	sui_draw_string((char*)str, sui, widget, rect, color);
+	sui_update_root(root, widget, rect);
 }
 
 void sui_render(struct sui_context* sui)

@@ -205,17 +205,21 @@ int main()
 		if (bst0.released) printf("button0 RELEASED ");
 		if (bst0.clicked) printf("button0 CLICKED ");
 		if (bst0.released || bst0.clicked) printf("\n");
+		
 		sui_button(&sui, &sbtn, "button1", &bst1);
 		if (bst1.pressed) printf("button1 PRESSED ");
 		if (bst1.released) printf("button1 RELEASED ");
 		if (bst1.clicked) printf("button1 CLICKED ");
 		if (bst1.released || bst1.clicked) printf("\n");
+		
 		sui_row(&sui);
+		
 		sui_button(&sui, &sbtn, "button2", &bst2);
 		if (bst2.pressed) printf("button2 PRESSED ");
 		if (bst2.released) printf("button2 RELEASED ");
 		if (bst2.clicked) printf("button2 CLICKED ");
 		if (bst2.released || bst2.clicked) printf("\n");
+		
 		sui_end(&sui);
 		sui_render(&sui);
 

@@ -84,6 +84,11 @@ f32 sui_putc(struct sui_vertex* vertex, char c, f32 x, f32 y, struct sui_color c
 i64 sui_time_begin();
 i64 sui_time_end(i64 begin);
 struct sui_state sui_handle_state(union sui_rect bbox, struct sui_state prev, struct sui_io io);
+i32 sui_string_len(char* str);
+void sui_get_params(struct sui_window* root, struct sui_widget* widget, char* str, union sui_rect* rect, union sui_rect* bbox);
+void sui_draw_rect(struct sui_context* sui, union sui_rect rect, struct sui_color color);
+void sui_draw_string(char* str, struct sui_context* sui, struct sui_widget* widget, union sui_rect rect, struct sui_color color);
+void sui_update_root(struct sui_window* root, struct sui_widget* widget, union sui_rect rect);
 void sui_button(struct sui_context* sui, struct sui_widget* widget, const char* str, struct sui_state* state);
 
 // void sui_slider(struct sui_context* sui);
