@@ -426,6 +426,14 @@ struct sui_widget sui_create_widget(char* str, struct sui_color color, struct su
         widget.hover_color = hover_color;
         widget.bg_color = bg_color;
         widget.hover_bg_color = hover_bg_color;
+        widget.pad_left = 50.0f;
+        widget.pad_right = 50.0f;
+        widget.pad_top = 20.0f;
+        widget.pad_bottom = 20.0f;
+        widget.margin_left = 10.0f;
+        widget.margin_right = 10.0f;
+        widget.margin_top = 10.0f;
+        widget.margin_bottom = 10.0f;
         widget.root = NULL;
         widget.rect = (union sui_rect){ 0.0f, 0.0f, 0.0f, 0.0f };        
         widget.bbox = (union sui_rect){ 0.0f, 0.0f, 0.0f, 0.0f };        
@@ -596,12 +604,15 @@ void sui_button(struct sui_context* sui, struct sui_widget* widget)
         union sui_rect root_rect = root->widget.rect;
 	
 	char* aux = widget->str;
-	f32 x = root_rect.x + root->current_w;
-	f32 y = root_rect.y + root->current_h;
-	f32 w = 0.0f;
+	f32 x = root_rect.x + root->current_w + widget->margin_left;
+	f32 y = root_rect.y + root->current_h + widget->margin_top;
+	f32 w = widget->pad_left + widget->pad_right;
+	f32 h = 16.0f + widget->pad_top + widget->pad_bottom;
+	// f32 w = 0.0f;
+	// f32 h = 16.0f;
 	while (*aux) { w += cdata[*aux++ - 32].xadvance; }
-	union sui_rect rect = (union sui_rect){ x, y, w, 16.0f };
-	union sui_rect bbox = (union sui_rect){ x, x + w, y, y + 16.0f };
+	union sui_rect rect = (union sui_rect){ x, y, w, h };
+	union sui_rect bbox = (union sui_rect){ x, x + w, y, y + h };
 	widget->rect = rect;
 	widget->bbox = bbox;
 
@@ -625,6 +636,9 @@ void sui_button(struct sui_context* sui, struct sui_widget* widget)
 	sui_putr(vertex, rect, bg_color);
 	vertex += 4;
 	aux = widget->str;
+	
+	x += widget->pad_left;
+	y += widget->pad_top;
 	w = 0.0f;
 	while (*aux) { 
 		w += sui_putc(vertex, *aux++, x + w, y, color); 
@@ -632,8 +646,8 @@ void sui_button(struct sui_context* sui, struct sui_widget* widget)
 		sui->vlen += 4;
 	}
 
-	root->current_w += w;
-	root->current_max_h = sui_max(16.0f, root->current_max_h);
+	root->current_w += w + (widget->pad_left + widget->pad_right) + (widget->margin_left + widget->margin_right);
+	root->current_max_h = sui_max((h + widget->margin_top + widget->margin_bottom), root->current_max_h);
 }
 
 void sui_render(struct sui_context* sui)

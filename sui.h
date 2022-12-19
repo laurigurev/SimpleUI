@@ -122,26 +122,6 @@ struct sui_io {
         u8 lclicked;
 };
 
-/* struct sui_window {
-        i16 x;
-        i16 y;
-        i16 w;
-        i16 h;
-
-        i32 vi;
-        i16 max_w;
-
-        // margin is space we leave around the object
-        // padding is space we leave between the object and its borders
-        // align
-        // border
-
-        i16 pad;
-        i16 child_margin;
-
-        i16 row;
-}; */
-
 union sui_rect {
         struct { f32 x; f32 y; f32 w; f32 h; };
         struct { f32 x0; f32 x1; f32 y0; f32 y1; }; 
@@ -173,14 +153,16 @@ struct sui_widget {
         struct sui_color hover_color;
         struct sui_color bg_color;
         struct sui_color hover_bg_color;
-        // f32 pad_left;
-        // f32 pad_right;
-        // f32 pad_top;
-        // f32 pad_bottom;
-        // f32 margin_left;
-        // f32 margin_right;
-        // f32 margin_top;
-        // f32 margin_bottom;
+        // padding is space we leave between the object and its borders
+        f32 pad_left;
+        f32 pad_right;
+        f32 pad_top;
+        f32 pad_bottom;
+        // margin is space we leave around the object
+        f32 margin_left;
+        f32 margin_right;
+        f32 margin_top;
+        f32 margin_bottom;
         // f32 rotation;
         // f32 size;
         
