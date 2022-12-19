@@ -59,7 +59,7 @@ struct sui_color;
 union sui_rect;
 // struct sui_image;
 struct sui_io;
-// struct sui_state;
+struct sui_state;
 
 /*
  *	USER FUNCTIONS
@@ -81,12 +81,10 @@ void sui_row(struct sui_context* sui);
 union sui_rect sui_getuv(char c, f32 w, f32 h);
 void sui_putr(struct sui_vertex* vertex, union sui_rect rect, struct sui_color color);
 f32 sui_putc(struct sui_vertex* vertex, char c, f32 x, f32 y, struct sui_color color);
-i32 sui_overlap(union sui_rect bbox, f32 mx, f32 my);
 i64 sui_time_begin();
 i64 sui_time_end(i64 begin);
-// TODO: redo sui_button as:
-//       struct sui_state sui_button(struct sui_context* sui, struct sui_widget* widget, const char* str);
-void sui_button(struct sui_context* sui, struct sui_widget* widget);
+struct sui_state sui_handle_state(union sui_rect bbox, struct sui_state prev, struct sui_io io);
+void sui_button(struct sui_context* sui, struct sui_widget* widget, const char* str, struct sui_state* state);
 
 // void sui_slider(struct sui_context* sui);
 // void sui_canvas(struct sui_context* sui);
@@ -99,6 +97,14 @@ void sui_render(struct sui_context *sui);
 /*
  *	STRUCTURES
  */
+
+struct sui_state {
+        u8 pressed;
+        u8 released;
+        u8 hovering;
+        u8 clicked;
+        u8 held;
+};
 
 struct sui_io {
         i16 mx;
@@ -146,9 +152,6 @@ struct sui_vertex {
 };
 
 struct sui_widget {
-        // TODO: separate public and private data into different structures
-        // user fields
-        char* str;
         struct sui_color color;
         struct sui_color hover_color;
         struct sui_color bg_color;
@@ -165,13 +168,6 @@ struct sui_widget {
         f32 margin_bottom;
         // f32 rotation;
         // f32 size;
-        
-        // generated fields
-        u8 held;
-        u8 pressed;
-        u8 released;
-        u8 hovering;
-        u8 clicked;
 };
 
 struct sui_window {

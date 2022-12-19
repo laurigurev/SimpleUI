@@ -178,6 +178,9 @@ int main()
 						   (struct sui_color){ 0, 0, 0, 255 }, 
 						   (struct sui_color){ 0, 0, 100, 255 }
 	);
+	struct sui_state bst0 = { 0, 0, 0, 0, 0 };
+	struct sui_state bst1 = { 0, 0, 0, 0, 0 };
+	struct sui_state bst2 = { 0, 0, 0, 0, 0 };
 
 	f32 colors[] = { 0.0f, 0.0f, 0.2f, 1.0f };
 	
@@ -197,22 +200,22 @@ int main()
 
 		sui_input(&sui, mouse.x, mouse.y, mouse.rdown, mouse.rup, mouse.ldown, mouse.lup);
 		sui_begin(&sui, &swin, 100, 100);
-		sui_button(&sui, &sbtn);
-		if (sbtn.pressed) printf("button0 PRESSED ");
-		if (sbtn.released) printf("button0 RELEASED ");
-		if (sbtn.clicked) printf("button0 CLICKED ");
-		if (sbtn.released || sbtn.clicked) printf("\n");
-		sui_button(&sui, &sbtn);
-		if (sbtn.pressed) printf("button1 PRESSED ");
-		if (sbtn.released) printf("button1 RELEASED ");
-		if (sbtn.clicked) printf("button1 CLICKED ");
-		if (sbtn.released || sbtn.clicked) printf("\n");
+		sui_button(&sui, &sbtn, "button0", &bst0);
+		if (bst0.pressed) printf("button0 PRESSED ");
+		if (bst0.released) printf("button0 RELEASED ");
+		if (bst0.clicked) printf("button0 CLICKED ");
+		if (bst0.released || bst0.clicked) printf("\n");
+		sui_button(&sui, &sbtn, "button1", &bst1);
+		if (bst1.pressed) printf("button1 PRESSED ");
+		if (bst1.released) printf("button1 RELEASED ");
+		if (bst1.clicked) printf("button1 CLICKED ");
+		if (bst1.released || bst1.clicked) printf("\n");
 		sui_row(&sui);
-		sui_button(&sui, &sbtn);
-		if (sbtn.pressed) printf("button2 PRESSED ");
-		if (sbtn.released) printf("button2 RELEASED ");
-		if (sbtn.clicked) printf("button2 CLICKED ");
-		if (sbtn.released || sbtn.clicked) printf("\n");
+		sui_button(&sui, &sbtn, "button2", &bst2);
+		if (bst2.pressed) printf("button2 PRESSED ");
+		if (bst2.released) printf("button2 RELEASED ");
+		if (bst2.clicked) printf("button2 CLICKED ");
+		if (bst2.released || bst2.clicked) printf("\n");
 		sui_end(&sui);
 		sui_render(&sui);
 

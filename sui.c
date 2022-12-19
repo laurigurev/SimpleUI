@@ -421,7 +421,6 @@ struct sui_widget sui_create_widget(char* str, struct sui_color color, struct su
                                     struct sui_color bg_color, struct sui_color hover_bg_color)
 {
         struct sui_widget widget;
-        widget.str = str;
         widget.color = color;
         widget.hover_color = hover_color;
         widget.bg_color = bg_color;
@@ -434,11 +433,6 @@ struct sui_widget sui_create_widget(char* str, struct sui_color color, struct su
         widget.margin_right = 10.0f;
         widget.margin_top = 10.0f;
         widget.margin_bottom = 10.0f;
-	widget.held = 0;
-        widget.pressed = 0;
-        widget.released = 0;
-        widget.hovering = 0;
-        widget.clicked = 0;
         return widget;
 }
 
@@ -564,14 +558,6 @@ f32 sui_putc(struct sui_vertex* vertex, char c, f32 x, f32 y, struct sui_color c
         return (f32)glyph.xadvance;
 }
 
-i32 sui_overlap(union sui_rect bbox, f32 mx, f32 my)
-{
-	if (bbox.x0 < mx && bbox.x1 > mx && bbox.y0 < my && bbox.y1 > my) {
-		return 1;
-	}
-	return 0;
-}
-
 i64 sui_time_begin()
 {
 	LARGE_INTEGER frequency;
@@ -594,18 +580,37 @@ i64 sui_time_end(i64 begin)
 	return res;
 }
 
-void sui_button(struct sui_context* sui, struct sui_widget* widget)
+struct sui_state sui_handle_state(union sui_rect bbox, struct sui_state prev, struct sui_io io)
+{
+	struct sui_state state = { 0, 0, 0, 0, 0 };
+	if (!(bbox.x0 < io.mx && bbox.x1 > io.mx && bbox.y0 < io.my && bbox.y1 > io.my)) {
+		return state;
+	}
+	
+	state.pressed = io.ldown;
+	state.held = prev.held;
+	if (io.ldown) state.held = 1;
+	if (io.lup && state.held) state.released = 1;
+	// if (io.lup) state.held = 0;
+	state.hovering = 1;
+	if (state.released && io.lclicked) state.clicked = 1;
+	
+	return state;
+}
+
+void sui_button(struct sui_context* sui, struct sui_widget* widget, const char* str, struct sui_state* state)
 {
 	// TODO: refactor this function
 	
         sui_assert(sui);
         sui_assert(widget);
+	sui_assert(state);
 
 	struct sui_window* root = sui->current_window;
         union sui_rect root_rect = root->rect;
 	
 	// TODO: sui_get_params(widget, root);
-	char* aux = widget->str;
+	char* aux = (char*)str;
 	f32 x = root_rect.x + root->current_w + widget->margin_left;
 	f32 y = root_rect.y + root->current_h + widget->margin_top;
 	f32 w = widget->pad_left + widget->pad_right;
@@ -614,21 +619,13 @@ void sui_button(struct sui_context* sui, struct sui_widget* widget)
 	union sui_rect rect = (union sui_rect){ x, y, w, h };
 	union sui_rect bbox = (union sui_rect){ x, x + w, y, y + h };
 
-	// TODO: sui_handle_state(widget, sui->io);
-	i32 overlap = sui_overlap(bbox, (f32)sui->io.mx, (f32)sui->io.my);
+	*state = sui_handle_state(bbox, *state, sui->io);
         struct sui_color bg_color = widget->bg_color;
 	struct sui_color color = widget->color;
-	memset(&widget->pressed, 0, 4);
-	if (overlap) {
-		if (sui->io.ldown) { widget->pressed = 1; widget->held = 1; }
-		if (sui->io.lup && widget->held) { widget->released = 1; widget->held = 0; }
-		widget->hovering = 1;
-	}
-	if (widget->hovering) {
+	if (state->hovering) {
 		bg_color = widget->hover_bg_color;
 		color = widget->hover_color;
 	}
-	if (widget->released && sui->io.lclicked) widget->clicked = 1;
 	
 	// TODO: sui_draw_rect(sui, rect);
 	struct sui_vertex* vertex = sui->vertices + sui->vlen;
@@ -636,7 +633,7 @@ void sui_button(struct sui_context* sui, struct sui_widget* widget)
 	sui_putr(vertex, rect, bg_color);
 	
 	vertex += 4;
-	aux = widget->str;
+	aux = (char*)str;
 	
 	// TODO: sui_draw_str(sui, widget);
 	x += widget->pad_left;
