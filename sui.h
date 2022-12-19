@@ -38,16 +38,11 @@ typedef double d64;
 #endif
 
 #include <stdio.h>
-#define sui_todo(x)                                                            \
-        puts("feature '" x "' not implemented yet");                           \
-        assert(0);
-
 #define WIN32_MEAN_AND_LEAN
 #define COBJMACROS
 #include <d3d11.h>
 #include <windows.h>
 
-#define CLICK_DELTA_RESET 9223372036854775807
 #define sui_max(a, b) ((a) > (b) ? (a) : (b))
 
 /*
@@ -64,6 +59,7 @@ struct sui_color;
 union sui_rect;
 // struct sui_image;
 struct sui_io;
+// struct sui_state;
 
 /*
  *	USER FUNCTIONS
@@ -73,6 +69,7 @@ void sui_init(struct sui_context *sui, ID3D11Device *d11device, i32 w, i32 h);
 void sui_terminate(struct sui_context *sui);
 
 void sui_input(struct sui_context* sui, i16 mx, i16 my, u8 rdown, u8 rup, u8 ldown, u8 lup);
+// TODO: attempt to remove these two functions
 struct sui_widget sui_create_widget(char* str, struct sui_color color, struct sui_color hover_color,
                                     struct sui_color bg_color, struct sui_color hover_bg_color);
 
@@ -87,6 +84,8 @@ f32 sui_putc(struct sui_vertex* vertex, char c, f32 x, f32 y, struct sui_color c
 i32 sui_overlap(union sui_rect bbox, f32 mx, f32 my);
 i64 sui_time_begin();
 i64 sui_time_end(i64 begin);
+// TODO: redo sui_button as:
+//       struct sui_state sui_button(struct sui_context* sui, struct sui_widget* widget, const char* str);
 void sui_button(struct sui_context* sui, struct sui_widget* widget);
 
 // void sui_slider(struct sui_context* sui);
@@ -147,6 +146,7 @@ struct sui_vertex {
 };
 
 struct sui_widget {
+        // TODO: separate public and private data into different structures
         // user fields
         char* str;
         struct sui_color color;
@@ -167,11 +167,6 @@ struct sui_widget {
         // f32 size;
         
         // generated fields
-        // TODO: figure out, if we need to save root, rect and bbox
-        struct sui_window* root;
-        union sui_rect rect;
-        union sui_rect bbox;
-        
         u8 held;
         u8 pressed;
         u8 released;
@@ -182,6 +177,9 @@ struct sui_widget {
 struct sui_window {
         struct sui_widget widget;
         struct sui_vertex* p_vertex;
+        struct sui_window* root;
+        union sui_rect rect;
+        union sui_rect bbox;
         f32 current_w;
         f32 current_h;
         f32 current_max_h;
