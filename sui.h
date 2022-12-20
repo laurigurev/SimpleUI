@@ -57,7 +57,6 @@ struct sui_window;
 struct sui_widget;
 struct sui_color;
 union sui_rect;
-// struct sui_image;
 struct sui_io;
 struct sui_state;
 
@@ -78,6 +77,7 @@ struct sui_window sui_create_window(char* str, struct sui_color color, struct su
 void sui_begin(struct sui_context* sui, struct sui_window* window, f32 x, f32 y);
 void sui_end(struct sui_context* sui);
 void sui_row(struct sui_context* sui);
+void sui_update_window(struct sui_window* window);
 union sui_rect sui_getuv(char c, f32 w, f32 h);
 void sui_putr(struct sui_vertex* vertex, union sui_rect rect, struct sui_color color);
 f32 sui_putc(struct sui_vertex* vertex, char c, f32 x, f32 y, struct sui_color color);
@@ -94,7 +94,6 @@ void sui_label(struct sui_context* sui, struct sui_widget* widget, const char* s
 void sui_checkbox(struct sui_context* sui, struct sui_widget* widget, struct sui_state* state);
 void sui_slider(struct sui_context* sui, struct sui_widget* widget, struct sui_state* state, f32* value);
 
-// void sui_slider(struct sui_context* sui);
 // void sui_canvas(struct sui_context* sui);
 // void sui_radiobtn(struct sui_context* sui);
 
@@ -188,6 +187,7 @@ struct sui_window {
         f32 current_w;
         f32 current_h;
         f32 current_max_h;
+        struct sui_state state;
 };
 
 struct sui_glyph {

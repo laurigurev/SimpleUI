@@ -448,6 +448,7 @@ struct sui_window sui_create_window(char* str, struct sui_color color, struct su
 	window.current_w = 0.0f;
 	window.current_h = 0.0f;
 	window.current_max_h = 0.0f;
+	window.state = (struct sui_state){ 0, 0, 0, 0, 0, 0, 0 };
         return window;
 }
 
@@ -457,10 +458,21 @@ void sui_begin(struct sui_context* sui, struct sui_window* window, f32 x, f32 y)
         sui_assert(window);
         
         window->root = sui->current_window;
-	/* if (sui->current_window) {
-		x += sui->current_window->root->rect.x;
-		y += sui->current_window->root->rect.y;
-	} */
+	if (sui->current_window) {
+		// update root
+		x += window->widget.margin_left;
+		y += window->widget.margin_top;
+		sui->current_window->current_w += x;
+		sui->current_window->current_h += y;
+		sui_update_window(sui->current_window);
+		
+		// update position relative to root window
+		x += sui->current_window->rect.x;
+		x += sui->current_window->current_w;
+		y += sui->current_window->rect.y;
+		y += sui->current_window->current_h;
+
+	}
         window->rect.x = x;
         window->rect.y = y;
         window->p_vertex = sui->vertices + sui->vlen;
@@ -477,22 +489,53 @@ void sui_end(struct sui_context* sui)
         sui_assert(sui);
         
         struct sui_window* window = sui->current_window;
-	window->rect.w = sui_max(window->current_w, window->rect.w);
-	// window->widget.rect.h = sui_max(window->current_h, window->widget.rect.h);
-	window->rect.h += window->current_max_h;
-        sui_putr(window->p_vertex, window->rect, window->widget.color);
+	sui_update_window(window);
+	
+	union sui_rect rect, bbox;
+	rect = window->rect;
+	bbox = (union sui_rect){ rect.x, rect.x + rect.w, rect.y, rect.y + rect.h };
+	
+	window->state = sui_handle_state(bbox, window->state, sui->io);
+	
+	struct sui_color color = window->widget.color;
+	if (window->state.hovering) {
+		color = window->widget.hover_color;
+	}
+	
+        sui_putr(window->p_vertex, window->rect, color);
+	
         window->rect = (union sui_rect){ 0.0f, 0.0f, 0.0f, 0.0f };
+	window->current_w = 0.0f;
+	window->current_h = 0.0f;
+	window->current_max_h = 0.0f;
+	
         sui->current_window = window->root;
+	if (window->root) {
+		// update root
+		sui_update_root(window->root, &window->widget, rect);
+		sui_update_window(window->root);
+		window->root = NULL;
+	}
 }
 
 void sui_row(struct sui_context* sui)
 {
+	sui_assert(sui);
         struct sui_window* window = sui->current_window;
+	sui_update_window(window);
+}
+
+void sui_update_window(struct sui_window* window)
+{
+	sui_assert(window);
 	
+	// update current rect
+	// window->rect.x += window->widget.margin_left;
+	// window->rect.y += window->widget.margin_top;
 	window->rect.w = sui_max(window->current_w, window->rect.w);
-	window->current_w = 0.0f;
-	
 	window->rect.h += window->current_max_h;
+	// reset/update control points
+	window->current_w = 0.0f;
 	window->current_h = window->rect.h;
 	window->current_max_h = 0.0f;
 }
@@ -582,6 +625,7 @@ i64 sui_time_end(i64 begin)
 
 struct sui_state sui_handle_state(union sui_rect bbox, struct sui_state prev, struct sui_io io)
 {
+	// TODO: refactor
 	struct sui_state state = { 0, 0, 0, 0, 0, prev.on, prev.dragged };
 	if (io.lup) state.dragged = 0;
 	if (!(bbox.x0 < io.mx && bbox.x1 > io.mx && bbox.y0 < io.my && bbox.y1 > io.my)) {
@@ -704,6 +748,7 @@ void sui_checkbox(struct sui_context* sui, struct sui_widget* widget, struct sui
         union sui_rect root_rect = root->rect;
 	union sui_rect rect0, rect1, rect2, bbox;
 	
+	// add padding to rects
 	f32 x = root_rect.x + root->current_w + widget->margin_left;
 	f32 y = root_rect.y + root->current_h + widget->margin_top;
 	f32 w = 16.0f + widget->pad_left + widget->pad_right;
@@ -748,6 +793,7 @@ void sui_slider(struct sui_context* sui, struct sui_widget* widget, struct sui_s
 	// slider control offset
 	f32 sco = wsw * *value;
 	
+	// TODO: add padding to rects
 	f32 x = root_rect.x + root->current_w + widget->margin_left;
 	f32 y = root_rect.y + root->current_h + widget->margin_top;
 	f32 w = wsw + widget->pad_left + widget->pad_right;

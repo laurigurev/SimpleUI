@@ -165,11 +165,17 @@ int main()
 	struct sui_context sui;
 	sui_init(&sui, device, 600, 600);
 	char ws[] = "window";
-	struct sui_window swin = sui_create_window(ws, 
+	struct sui_window swin0 = sui_create_window(ws, 
 						   (struct sui_color){ 255, 255, 255, 255 }, 
+						   (struct sui_color){ 230, 230, 230, 255 }, 
 						   (struct sui_color){ 255, 255, 255, 255 }, 
+						   (struct sui_color){ 200, 200, 200, 255 }
+	);
+	struct sui_window swin1 = sui_create_window(ws, 
 						   (struct sui_color){ 255, 255, 255, 255 }, 
-						   (struct sui_color){ 255, 255, 255, 255 }
+						   (struct sui_color){ 100, 100, 255, 255 }, 
+						   (struct sui_color){ 255, 255, 255, 255 }, 
+						   (struct sui_color){ 200, 200, 200, 255 }
 	);
 	char bs[] = "button";
 	struct sui_widget sbtn = sui_create_widget(bs, 
@@ -178,12 +184,24 @@ int main()
 						   (struct sui_color){ 0, 0, 0, 255 }, 
 						   (struct sui_color){ 0, 0, 100, 255 }
 	);
-	struct sui_state bst0 = { 0, 0, 0, 0, 0, 0 };
-	struct sui_state bst1 = { 0, 0, 0, 0, 0, 0 };
-	struct sui_state bst2 = { 0, 0, 0, 0, 0, 0 };
-	struct sui_state cst = { 0, 0, 0, 0, 0, 0 };
-	struct sui_state sst = { 0, 0, 0, 0, 0, 0, 0 };
-	f32 val = 0.5f;
+	struct sui_state btn00, btn01, btn02, cbox00, slid00;
+	memset(&btn00, 0, sizeof(struct sui_state));
+	memset(&btn01, 0, sizeof(struct sui_state));
+	memset(&btn02, 0, sizeof(struct sui_state));
+	memset(&cbox00, 0, sizeof(struct sui_state));
+	memset(&slid00, 0, sizeof(struct sui_state));
+	struct sui_state btn10, btn11, btn12, cbox10, slid10;
+	memset(&btn10, 0, sizeof(struct sui_state));
+	memset(&btn11, 0, sizeof(struct sui_state));
+	memset(&btn12, 0, sizeof(struct sui_state));
+	memset(&cbox10, 0, sizeof(struct sui_state));
+	memset(&slid10, 0, sizeof(struct sui_state));
+	f32 val0 = 0.5f;
+	f32 val1 = 0.5f;
+	char lbuf0[64];
+	memset(lbuf0, 0, 64);
+	char lbuf1[64];
+	memset(lbuf1, 0, 64);
 
 	f32 colors[] = { 0.0f, 0.0f, 0.2f, 1.0f };
 	
@@ -202,32 +220,36 @@ int main()
 		ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
 
 		sui_input(&sui, mouse.x, mouse.y, mouse.rdown, mouse.rup, mouse.ldown, mouse.lup);
-		sui_begin(&sui, &swin, 100, 100);
-		sui_button(&sui, &sbtn, "button0", &bst0);
-		if (bst0.pressed) printf("button0 PRESSED ");
-		if (bst0.released) printf("button0 RELEASED ");
-		if (bst0.clicked) printf("button0 CLICKED ");
-		if (bst0.released || bst0.clicked) printf("\n");
+		// window 0
+		sui_begin(&sui, &swin1, 100, 50);
 		
-		sui_button(&sui, &sbtn, "button1", &bst1);
-		if (bst1.pressed) printf("button1 PRESSED ");
-		if (bst1.released) printf("button1 RELEASED ");
-		if (bst1.clicked) printf("button1 CLICKED ");
-		if (bst1.released || bst1.clicked) printf("\n");
-		
+		// window 0.1
+		sui_begin(&sui, &swin0, 0, 20);
+		sui_button(&sui, &sbtn, "button00", &btn00);
+		sui_button(&sui, &sbtn, "button01", &btn01);
 		sui_row(&sui);
-		
-		sui_button(&sui, &sbtn, "button2", &bst2);
-		if (bst2.pressed) printf("button2 PRESSED ");
-		if (bst2.released) printf("button2 RELEASED ");
-		if (bst2.clicked) printf("button2 CLICKED ");
-		if (bst2.released || bst2.clicked) printf("\n");
-
-		sui_slider(&sui, &sbtn, &sst, &val);
-
+		sui_button(&sui, &sbtn, "button02", &btn02);
+		sui_slider(&sui, &sbtn, &slid00, &val0);
 		sui_row(&sui);
+		sui_checkbox(&sui, &sbtn, &cbox00);
+		_gcvt_s(lbuf0, 64, (d64)val0, 2);
+		sui_label(&sui, &sbtn, lbuf0);
+		memset(lbuf0, 0, 64);
+		sui_end(&sui);
 		
-		sui_checkbox(&sui, &sbtn, &cst);
+		// window 0.2
+		sui_begin(&sui, &swin0, 0, 0);
+		sui_button(&sui, &sbtn, "button10", &btn10);
+		sui_button(&sui, &sbtn, "button11", &btn11);
+		sui_row(&sui);
+		sui_button(&sui, &sbtn, "button12", &btn12);
+		sui_slider(&sui, &sbtn, &slid10, &val1);
+		sui_row(&sui);
+		sui_checkbox(&sui, &sbtn, &cbox10);
+		_gcvt_s(lbuf1, 64, (d64)val1, 2);
+		sui_label(&sui, &sbtn, lbuf1);
+		memset(lbuf1, 0, 64);
+		sui_end(&sui);
 		
 		sui_end(&sui);
 		sui_render(&sui);
