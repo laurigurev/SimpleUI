@@ -106,6 +106,42 @@ struct sui_glyph cdata[] = {
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+// INTERNAL FUNCTION
+
+i64 sui_time_begin()
+{
+	LARGE_INTEGER frequency;
+	QueryPerformanceFrequency(&frequency);
+	LARGE_INTEGER t;
+	QueryPerformanceCounter(&t);
+	return t.QuadPart;
+}
+
+i64 sui_time_end(i64 begin)
+{
+	LARGE_INTEGER frequency;
+	QueryPerformanceFrequency(&frequency);
+	LARGE_INTEGER time;
+	QueryPerformanceCounter(&time);
+	i64 res = time.QuadPart;
+	res -= begin;
+	res *= 1000000;
+	res /= frequency.QuadPart;
+	return res;
+}
+
+i32 sui_hash(char* str, i32 mask)
+{
+	i32 hash = 0x4e910a7c;
+	while (*str) {
+		hash += ((hash << 11) + (hash << 7) - (mask ^ str) + (i32)*str << 3);
+		hash ^= mask;
+	}
+	return hash;
+}
+
+// USER FUNCTIONS
+
 void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 {
 	memset(sui, 0, sizeof(struct sui_context));
@@ -114,9 +150,6 @@ void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 	sui->vlen = 0;
 
 	sui->viewport = (struct sui_viewport){ w, h };
-
-	/* sui->io.rclick_delta = CLICK_DELTA_RESET;
-	sui->io.lclick_delta = CLICK_DELTA_RESET; */
 
 	sui->d11device = d11device;
 	ID3D11Device_GetImmediateContext(d11device, &sui->d11context);
@@ -417,7 +450,122 @@ void sui_input(struct sui_context* sui, i16 mx, i16 my, u8 rdown, u8 rup, u8 ldo
 	}
 }
 
-struct sui_widget sui_create_widget(char* str, struct sui_color color, struct sui_color hover_color,
+void sui_begin(struct sui_context* sui, const char* name)
+{
+	i32 id = sui_hash(name, sui->mask) % sui->items_len;
+	if (!sui->layouts[id]) sui_create_layout(sui, name, id);
+	sui->current_layout = id;
+}
+
+void sui_end(struct sui_context* sui)
+{
+	struct sui_layout* layout = sui->layouts[sui->current_id];
+	// sui_draw_rect(layout->rect, layout->color);
+	sui_draw_layout(sui, layout);
+	sui->current_layout = -1;
+}
+
+void sui_style(struct sui_context* sui, struct sui_style* style)
+{
+	sui->style = *style;
+}
+
+void sui_row(struct sui_context* sui)
+{
+	// add a new row and/or change item insertion mode into row oriented
+}
+
+void sui_empty_row(struct sui_context* sui)
+{
+	// add a new empty row
+}
+
+void sui_column(struct sui_context* sui)
+{
+	// add a new column and/or change item insertion mode into column oriented
+}
+
+void sui_empty_column(struct sui_context* sui)
+{
+	// add a new empty column
+}
+
+void sui_label(struct sui_context* sui, const char* name)
+{
+	i32 id = sui_hash(name, sui->mask) % sui->items_len;
+	if (!sui->items[id]) sui_create_button(sui, name, id);
+	struct sui_item* item = sui->items[id];
+	sui_draw_text(sui, item, name);
+}
+
+void sui_text(struct sui_context* sui, const char* text, ...)
+{
+	i32 id = sui_hash(name, sui->mask) % sui->items_len;
+	if (!sui->items[id]) sui_create_button(sui, name, id);
+	struct sui_item* item = sui->items[id];
+	char buffer[SUI_BUFFER_SIZE];
+	// memset(buffer, 0, SUI_BUFFER_SIZE);
+	snprintf(buffer, SUI_BUFFER_SIZE, name, ...);
+	sui_draw_text(sui, item, buffer);
+}
+
+i32 sui_button(struct sui_context* sui, const char* name)
+{
+	i32 id = sui_hash(name, sui->mask) % sui->items_len;
+	if (!sui->items[id]) sui_create_button(sui, name, id);
+	struct sui_item* item = sui->items[id];
+
+	if (sui_region_hit(sui->io, item) && sui->active_item == -1) {
+		sui->hot_item = id;
+		if (sui->io.pressed) sui->active_item = id;
+	}
+	i32 ret = 0;
+	if (sui->io.released && sui->hot_item == id && sui->active_item == id) { 
+		ret = 1;
+		sui->active_item = -1;
+	}
+	sui_draw_button(sui, item, ret);
+	return 1;
+}
+
+void sui_checkbox(struct sui_context* sui, const char* name, i32* bool)
+{
+	i32 id = sui_hash(name, sui->mask) % sui->items_len;
+	if (!sui->items[id]) sui_create_checkbox(sui, name, id);
+	struct sui_item* item = sui->items[id];
+
+	if (sui_region_hit(sui->io, item) && sui->active_item == -1) {
+		sui->hot_item = id;
+		if (sui->io.pressed) sui->active_item = id;
+	}
+	if (sui->io.released && sui->hot_item == id && sui->active_item == id) {
+		if (*bool) *bool = 0;
+		else *bool = 1;
+		sui->active_item = -1;
+	}
+	sui_draw_checkbox(sui, item, *bool);
+}
+
+void sui_slider(struct sui_context* sui, const char* name, f32* value)
+{
+	i32 id = sui_hash(name, sui->mask) % sui->items_len;
+	if (!sui->items[id]) sui_create_slider(sui, name, id);
+	struct sui_item* item = sui->items[id];
+
+	if (sui_region_hit(sui->io, item) && sui->active_item == -1) {
+		sui->hot_item = id;
+		if (sui->io.pressed) sui->active_item = id;
+	}
+	if (sui->hot_item == id && sui->active_item == i) {
+		value = sui_slide_value(sui, *value);
+	}
+	if (sui->io.released && sui->hot_item == id && sui->active_item == id) {
+		sui->active_item = -1;
+	}
+	sui_draw_slider(sui, item, *value);
+}
+
+/* struct sui_widget sui_create_widget(char* str, struct sui_color color, struct sui_color hover_color,
                                     struct sui_color bg_color, struct sui_color hover_bg_color)
 {
         struct sui_widget widget;
@@ -599,31 +747,9 @@ f32 sui_putc(struct sui_vertex* vertex, char c, f32 x, f32 y, struct sui_color c
 	*vertex++ = (struct sui_vertex){ rect.x + rect.w, rect.y, uv.u1, uv.v0, color.r, color.g, color.b, color.a };
 
         return (f32)glyph.xadvance;
-}
+} */
 
-i64 sui_time_begin()
-{
-	LARGE_INTEGER frequency;
-	QueryPerformanceFrequency(&frequency);
-	LARGE_INTEGER t;
-	QueryPerformanceCounter(&t);
-	return t.QuadPart;
-}
-
-i64 sui_time_end(i64 begin)
-{
-	LARGE_INTEGER frequency;
-	QueryPerformanceFrequency(&frequency);
-	LARGE_INTEGER time;
-	QueryPerformanceCounter(&time);
-	i64 res = time.QuadPart;
-	res -= begin;
-	res *= 1000000;
-	res /= frequency.QuadPart;
-	return res;
-}
-
-struct sui_state sui_handle_state(union sui_rect bbox, struct sui_state prev, struct sui_io io)
+/* struct sui_state sui_handle_state(union sui_rect bbox, struct sui_state prev, struct sui_io io)
 {
 	// TODO: refactor
 	struct sui_state state = { 0, 0, 0, 0, 0, prev.on, prev.dragged };
@@ -825,7 +951,7 @@ void sui_slider(struct sui_context* sui, struct sui_widget* widget, struct sui_s
 	sui_draw_rect(sui, slider1, hover_bg_color);
 	sui_draw_rect(sui, control, color);
 	sui_update_root(root, widget, rect);
-}
+} */
 
 void sui_render(struct sui_context* sui)
 {

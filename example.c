@@ -164,45 +164,6 @@ int main()
 
 	struct sui_context sui;
 	sui_init(&sui, device, 600, 600);
-	char ws[] = "window";
-	struct sui_window swin0 = sui_create_window(ws, 
-						   (struct sui_color){ 255, 255, 255, 255 }, 
-						   (struct sui_color){ 230, 230, 230, 255 }, 
-						   (struct sui_color){ 255, 255, 255, 255 }, 
-						   (struct sui_color){ 200, 200, 200, 255 }
-	);
-	struct sui_window swin1 = sui_create_window(ws, 
-						   (struct sui_color){ 255, 255, 255, 255 }, 
-						   (struct sui_color){ 100, 100, 255, 255 }, 
-						   (struct sui_color){ 255, 255, 255, 255 }, 
-						   (struct sui_color){ 200, 200, 200, 255 }
-	);
-	char bs[] = "button";
-	struct sui_widget sbtn = sui_create_widget(bs, 
-						   (struct sui_color){ 200, 200, 200, 255 }, 
-						   (struct sui_color){ 255, 0, 255, 255 }, 
-						   (struct sui_color){ 0, 0, 0, 255 }, 
-						   (struct sui_color){ 0, 0, 100, 255 }
-	);
-	struct sui_state btn00, btn01, btn02, cbox00, slid00;
-	memset(&btn00, 0, sizeof(struct sui_state));
-	memset(&btn01, 0, sizeof(struct sui_state));
-	memset(&btn02, 0, sizeof(struct sui_state));
-	memset(&cbox00, 0, sizeof(struct sui_state));
-	memset(&slid00, 0, sizeof(struct sui_state));
-	struct sui_state btn10, btn11, btn12, cbox10, slid10;
-	memset(&btn10, 0, sizeof(struct sui_state));
-	memset(&btn11, 0, sizeof(struct sui_state));
-	memset(&btn12, 0, sizeof(struct sui_state));
-	memset(&cbox10, 0, sizeof(struct sui_state));
-	memset(&slid10, 0, sizeof(struct sui_state));
-	f32 val0 = 0.5f;
-	f32 val1 = 0.5f;
-	char lbuf0[64];
-	memset(lbuf0, 0, 64);
-	char lbuf1[64];
-	memset(lbuf1, 0, 64);
-
 	f32 colors[] = { 0.0f, 0.0f, 0.2f, 1.0f };
 	
 	while (1) {
@@ -219,39 +180,6 @@ int main()
 
 		ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
 
-		sui_input(&sui, mouse.x, mouse.y, mouse.rdown, mouse.rup, mouse.ldown, mouse.lup);
-		// window 0
-		sui_begin(&sui, &swin1, 100, 50);
-		
-		// window 0.1
-		sui_begin(&sui, &swin0, 0, 20);
-		sui_button(&sui, &sbtn, "button00", &btn00);
-		sui_button(&sui, &sbtn, "button01", &btn01);
-		sui_row(&sui);
-		sui_button(&sui, &sbtn, "button02", &btn02);
-		sui_slider(&sui, &sbtn, &slid00, &val0);
-		sui_row(&sui);
-		sui_checkbox(&sui, &sbtn, &cbox00);
-		_gcvt_s(lbuf0, 64, (d64)val0, 2);
-		sui_label(&sui, &sbtn, lbuf0);
-		memset(lbuf0, 0, 64);
-		sui_end(&sui);
-		
-		// window 0.2
-		sui_begin(&sui, &swin0, 0, 0);
-		sui_button(&sui, &sbtn, "button10", &btn10);
-		sui_button(&sui, &sbtn, "button11", &btn11);
-		sui_row(&sui);
-		sui_button(&sui, &sbtn, "button12", &btn12);
-		sui_slider(&sui, &sbtn, &slid10, &val1);
-		sui_row(&sui);
-		sui_checkbox(&sui, &sbtn, &cbox10);
-		_gcvt_s(lbuf1, 64, (d64)val1, 2);
-		sui_label(&sui, &sbtn, lbuf1);
-		memset(lbuf1, 0, 64);
-		sui_end(&sui);
-		
-		sui_end(&sui);
 		sui_render(&sui);
 
 		IDXGISwapChain_Present(swapchain, 1, 0);
