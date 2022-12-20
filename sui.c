@@ -808,11 +808,14 @@ void sui_slider(struct sui_context* sui, struct sui_widget* widget, struct sui_s
 	*state = sui_handle_state(bbox, *state, sui->io);
 
 	if (state->dragged) {
+		if (sui->io.mx < x && 0.0f == *value) goto SUI_SLIDER_FINAL;
+		if (x + w < sui->io.mx && 1.0f == *value) goto SUI_SLIDER_FINAL;
 		*value = (sco - sui->io.dmx) / wsw;
 		if (*value < 0.0f) *value = 0.0f;
 		if (1.0f < *value) *value = 1.0f;
 	}
 	
+	SUI_SLIDER_FINAL:
         struct sui_color bg_color = widget->bg_color;
         struct sui_color hover_bg_color = widget->hover_bg_color;
 	struct sui_color color = widget->color;
