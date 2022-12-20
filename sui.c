@@ -425,10 +425,10 @@ struct sui_widget sui_create_widget(char* str, struct sui_color color, struct su
         widget.hover_color = hover_color;
         widget.bg_color = bg_color;
         widget.hover_bg_color = hover_bg_color;
-        widget.pad_left = 50.0f;
-        widget.pad_right = 50.0f;
-        widget.pad_top = 20.0f;
-        widget.pad_bottom = 20.0f;
+        widget.pad_left = 0.0f;
+        widget.pad_right = 0.0f;
+        widget.pad_top = 0.0f;
+        widget.pad_bottom = 0.0f;
         widget.margin_left = 10.0f;
         widget.margin_right = 10.0f;
         widget.margin_top = 10.0f;
@@ -582,7 +582,7 @@ i64 sui_time_end(i64 begin)
 
 struct sui_state sui_handle_state(union sui_rect bbox, struct sui_state prev, struct sui_io io)
 {
-	struct sui_state state = { 0, 0, 0, 0, 0 };
+	struct sui_state state = { 0, 0, 0, 0, 0, prev.on };
 	if (!(bbox.x0 < io.mx && bbox.x1 > io.mx && bbox.y0 < io.my && bbox.y1 > io.my)) {
 		return state;
 	}
@@ -591,9 +591,11 @@ struct sui_state sui_handle_state(union sui_rect bbox, struct sui_state prev, st
 	state.held = prev.held;
 	if (io.ldown) state.held = 1;
 	if (io.lup && state.held) state.released = 1;
-	// if (io.lup) state.held = 0;
 	state.hovering = 1;
 	if (state.released && io.lclicked) state.clicked = 1;
+	
+	if (state.clicked && state.on == 0) state.on = 1;
+	else if (state.clicked && state.on == 1) state.on = 0;
 	
 	return state;
 }
@@ -656,7 +658,6 @@ void sui_button(struct sui_context* sui, struct sui_widget* widget, const char* 
 
 	struct sui_window* root = sui->current_window;
 	
-        union sui_rect root_rect = root->rect;
 	union sui_rect rect, bbox;
 	sui_get_params(root, widget, (char*)str, &rect, &bbox);
 
@@ -671,6 +672,59 @@ void sui_button(struct sui_context* sui, struct sui_widget* widget, const char* 
 	sui_draw_rect(sui, rect, bg_color);
 	sui_draw_string((char*)str, sui, widget, rect, color);
 	sui_update_root(root, widget, rect);
+}
+
+void sui_label(struct sui_context* sui, struct sui_widget* widget, const char* str)
+{
+        sui_assert(sui);
+        sui_assert(widget);
+
+	struct sui_window* root = sui->current_window;
+	
+	union sui_rect rect, bbox;
+	sui_get_params(root, widget, (char*)str, &rect, &bbox);
+
+        struct sui_color bg_color = widget->bg_color;
+	struct sui_color color = widget->color;
+	
+	sui_draw_rect(sui, rect, bg_color);
+	sui_draw_string((char*)str, sui, widget, rect, color);
+	sui_update_root(root, widget, rect);
+}
+
+void sui_checkbox(struct sui_context* sui, struct sui_widget* widget, struct sui_state* state)
+{
+        sui_assert(sui);
+        sui_assert(widget);
+	sui_assert(state);
+
+	struct sui_window* root = sui->current_window;
+	
+        union sui_rect root_rect = root->rect;
+	union sui_rect rect0, rect1, rect2, bbox;
+	
+	f32 x = root_rect.x + root->current_w + widget->margin_left;
+	f32 y = root_rect.y + root->current_h + widget->margin_top;
+	f32 w = 16.0f + widget->pad_left + widget->pad_right;
+	f32 h = 16.0f + widget->pad_top + widget->pad_bottom;
+	rect0 = (union sui_rect){ x, y, w, h };
+	rect1 = (union sui_rect){ x + 2.0f, y + 2.0f, w - 4.0f, h - 4.0f };
+	rect2 = (union sui_rect){ x + 3.0f, y + 3.0f, w - 6.0f, h - 6.0f };
+	bbox = (union sui_rect){ rect1.x, rect1.x + rect1.w, rect1.y, rect1.y + rect1.h };
+	
+	*state = sui_handle_state(bbox, *state, sui->io);
+	
+        struct sui_color bg_color = widget->bg_color;
+	struct sui_color color = widget->color;
+	if (state->hovering) {
+		bg_color = widget->hover_bg_color;
+		color = widget->hover_color;
+	}
+	
+	sui_draw_rect(sui, rect0, bg_color);
+	sui_draw_rect(sui, rect1, color);
+	if (state->on) sui_draw_rect(sui, rect2, bg_color);
+	sui_update_root(root, widget, rect0);
 }
 
 void sui_render(struct sui_context* sui)

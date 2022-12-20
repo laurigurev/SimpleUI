@@ -178,9 +178,10 @@ int main()
 						   (struct sui_color){ 0, 0, 0, 255 }, 
 						   (struct sui_color){ 0, 0, 100, 255 }
 	);
-	struct sui_state bst0 = { 0, 0, 0, 0, 0 };
-	struct sui_state bst1 = { 0, 0, 0, 0, 0 };
-	struct sui_state bst2 = { 0, 0, 0, 0, 0 };
+	struct sui_state bst0 = { 0, 0, 0, 0, 0, 0 };
+	struct sui_state bst1 = { 0, 0, 0, 0, 0, 0 };
+	struct sui_state bst2 = { 0, 0, 0, 0, 0, 0 };
+	struct sui_state cst = { 0, 0, 0, 0, 0, 0 };
 
 	f32 colors[] = { 0.0f, 0.0f, 0.2f, 1.0f };
 	
@@ -219,6 +220,8 @@ int main()
 		if (bst2.released) printf("button2 RELEASED ");
 		if (bst2.clicked) printf("button2 CLICKED ");
 		if (bst2.released || bst2.clicked) printf("\n");
+
+		sui_checkbox(&sui, &sbtn, &cst);
 		
 		sui_end(&sui);
 		sui_render(&sui);

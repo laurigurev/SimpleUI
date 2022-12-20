@@ -90,6 +90,8 @@ void sui_draw_rect(struct sui_context* sui, union sui_rect rect, struct sui_colo
 void sui_draw_string(char* str, struct sui_context* sui, struct sui_widget* widget, union sui_rect rect, struct sui_color color);
 void sui_update_root(struct sui_window* root, struct sui_widget* widget, union sui_rect rect);
 void sui_button(struct sui_context* sui, struct sui_widget* widget, const char* str, struct sui_state* state);
+void sui_label(struct sui_context* sui, struct sui_widget* widget, const char* str);
+void sui_checkbox(struct sui_context* sui, struct sui_widget* widget, struct sui_state* state);
 
 // void sui_slider(struct sui_context* sui);
 // void sui_canvas(struct sui_context* sui);
@@ -109,6 +111,7 @@ struct sui_state {
         u8 hovering;
         u8 clicked;
         u8 held;
+        u8 on;
 };
 
 struct sui_io {
