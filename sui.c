@@ -648,7 +648,7 @@ struct sui_state sui_handle_state(union sui_rect bbox, struct sui_state prev, st
 i32 sui_string_len(char* str)
 {
 	i32 len = 0;
-	while (*str) len += cdata[*str++ - 32].xadvance;
+	while (*str) { len += cdata[*str++ - 32].xadvance; }
 	return len;
 }
 
