@@ -92,11 +92,11 @@ void sui_update_root(struct sui_window* root, struct sui_widget* widget, union s
 void sui_button(struct sui_context* sui, struct sui_widget* widget, const char* str, struct sui_state* state);
 void sui_label(struct sui_context* sui, struct sui_widget* widget, const char* str);
 void sui_checkbox(struct sui_context* sui, struct sui_widget* widget, struct sui_state* state);
+void sui_slider(struct sui_context* sui, struct sui_widget* widget, struct sui_state* state, f32* value);
 
 // void sui_slider(struct sui_context* sui);
 // void sui_canvas(struct sui_context* sui);
 // void sui_radiobtn(struct sui_context* sui);
-// void sui_checkbox(struct sui_context* sui);
 
 void sui_render(struct sui_context *sui);
 
@@ -112,6 +112,7 @@ struct sui_state {
         u8 clicked;
         u8 held;
         u8 on;
+        u8 dragged;
 };
 
 struct sui_io {

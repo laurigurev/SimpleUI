@@ -582,14 +582,15 @@ i64 sui_time_end(i64 begin)
 
 struct sui_state sui_handle_state(union sui_rect bbox, struct sui_state prev, struct sui_io io)
 {
-	struct sui_state state = { 0, 0, 0, 0, 0, prev.on };
+	struct sui_state state = { 0, 0, 0, 0, 0, prev.on, prev.dragged };
+	if (io.lup) state.dragged = 0;
 	if (!(bbox.x0 < io.mx && bbox.x1 > io.mx && bbox.y0 < io.my && bbox.y1 > io.my)) {
 		return state;
 	}
 	
 	state.pressed = io.ldown;
 	state.held = prev.held;
-	if (io.ldown) state.held = 1;
+	if (io.ldown) { state.held = 1; state.dragged = 1; }
 	if (io.lup && state.held) state.released = 1;
 	state.hovering = 1;
 	if (state.released && io.lclicked) state.clicked = 1;
@@ -725,6 +726,56 @@ void sui_checkbox(struct sui_context* sui, struct sui_widget* widget, struct sui
 	sui_draw_rect(sui, rect1, color);
 	if (state->on) sui_draw_rect(sui, rect2, bg_color);
 	sui_update_root(root, widget, rect0);
+}
+
+void sui_slider(struct sui_context* sui, struct sui_widget* widget, struct sui_state* state, f32* value)
+{
+        sui_assert(sui);
+        sui_assert(widget);
+	sui_assert(state);
+	sui_assert(value);
+	sui_assert(0.0f <= *value && *value <= 1.0f);
+
+	struct sui_window* root = sui->current_window;
+	
+        union sui_rect root_rect = root->rect;
+	union sui_rect rect, slider0, slider1, control, bbox;
+
+	// whole slider width
+	f32 wsw = 150.0f;
+	// whole slider height
+	f32 wsh = 16.0f;
+	// slider control offset
+	f32 sco = wsw * *value;
+	
+	f32 x = root_rect.x + root->current_w + widget->margin_left;
+	f32 y = root_rect.y + root->current_h + widget->margin_top;
+	f32 w = wsw + widget->pad_left + widget->pad_right;
+	f32 h = wsh + widget->pad_top + widget->pad_bottom;
+	// rect is a box, in where slider resides
+	rect = (union sui_rect){ x, y, w, h };
+	slider0 = (union sui_rect){ x, y + 6.0f, w, 4.0f };
+	slider1 = (union sui_rect){ x + sco, y + 6.0f, w - sco, 4.0f };
+	control = (union sui_rect){ x + sco - 8.0f, y, 16.0f, 16.0f };
+	bbox = (union sui_rect){ control.x, control.x + control.w, control.y, control.y + control.h };
+	
+	*state = sui_handle_state(bbox, *state, sui->io);
+
+	if (state->dragged) {
+		*value = (sco - sui->io.dmx) / wsw;
+		if (*value < 0.0f) *value = 0.0f;
+		if (1.0f < *value) *value = 1.0f;
+	}
+	
+        struct sui_color bg_color = widget->bg_color;
+        struct sui_color hover_bg_color = widget->hover_bg_color;
+	struct sui_color color = widget->color;
+	if (state->hovering) color = widget->hover_color;
+	
+	sui_draw_rect(sui, slider0, bg_color);
+	sui_draw_rect(sui, slider1, hover_bg_color);
+	sui_draw_rect(sui, control, color);
+	sui_update_root(root, widget, rect);
 }
 
 void sui_render(struct sui_context* sui)
