@@ -1,5 +1,8 @@
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
 # this modifier can't see header files
 # Language: C
+
 AlignAfterOpenBracket: Align
 AlignArrayOfStructures: Left
 AlignConsecutiveMacros: Consecutive
@@ -9,3 +12,10 @@ AlignTrailingComments: true
 PointerAlignment: Left
 IndentWidth: 8
 ColumnLimit: 120
+SpaceBeforeParens: ControlStatements
+AllowShortFunctionsOnASingleLine: Empty
+BreakBeforeBraces: Custom
+BraceWrapping:
+	AfterFunction: true
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse 
+AllowShortLoopsOnASingleLine: true

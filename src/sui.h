@@ -4,17 +4,6 @@
  *	DECLARATIONS
  */
 
-#ifdef DEBUG
-
-#include <assert.h>
-#define sui_assert(x) assert(x)
-
-#else
-
-#define sui_assert(x)
-
-#endif
-
 #include <stdio.h>
 #define WIN32_MEAN_AND_LEAN
 #define COBJMACROS
@@ -164,24 +153,6 @@ struct sui_io {
         struct { f32 u0; f32 u1; f32 v0; f32 v1; };
 };
 
-struct sui_color {
-        u8 r;
-        u8 g;
-        u8 b;
-        u8 a;
-};
-
-struct sui_vertex {
-        f32 x;
-        f32 y;
-        f32 u;
-        f32 v;
-        u8 r;
-        u8 g;
-        u8 b;
-        u8 a;
-};
-
 struct sui_widget {
         struct sui_color color;
         struct sui_color hover_color;
@@ -212,17 +183,6 @@ struct sui_window {
         f32 current_max_h;
         struct sui_state state;
 }; */
-
-struct sui_glyph {
-        i16 id;
-        i16 x;
-        i16 y;
-        i16 width;
-        i16 height;
-        i16 xoffset;
-        i16 yoffset;
-        i16 xadvance;
-};
 
 struct sui_viewport {
         i32 w;
