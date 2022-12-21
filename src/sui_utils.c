@@ -86,54 +86,97 @@ u64 sui_hash(char* c)
         return hash;
 }
 
-struct sui_htable sui_htable_init(void* mem, i32 len)
+u64 sui_hti_mem(i32 n)
 {
-        struct sui_htable ht = (struct sui_htable){(void**)mem, len};
-        memset(ht.table, 0, len * sizeof(void*));
+        return n * sizeof(struct sui_ht_item);
+}
+
+struct sui_ht sui_ht_init(void* mem, i32 n)
+{
+        sui_assert(mem);
+        struct sui_ht ht = (struct sui_ht){(struct sui_ht_item*)mem, n};
+        memset(ht.items, 0, n * sizeof(struct sui_ht_item));
         return ht;
 }
 
-i32 sui_htable_lookup(struct sui_htable* ht, char* key)
+i32 sui_ht_insert(struct sui_ht* ht, char* key, void* data)
 {
-        i32 i = sui_hash(key) % (u64)ht->len;
-        return i;
-}
-
-void* sui_htable_find(struct sui_htable* ht, char* key)
-{
-        i32 i = sui_htable_lookup(ht, key);
-        i32 len = ht->len;
-        while (len--) {
-                if (!ht->table[i % ht->len]) {
-                        return ht->table[i];
-                }
-                i++;
+        sui_assert(ht);
+        sui_assert(data);
+        u64 hash = sui_hash(key);
+        i32 i = hash % ht->len;
+        if (!ht->items[i].ptr) {
+                ht->items[i] = (struct sui_ht_item){hash, key, data};
+                return 1;
         }
-        return NULL;
-}
-
-i32 sui_htable_insert(struct sui_htable* ht, char* key, void* item)
-{
-        i32 i = sui_htable_lookup(ht, key);
+        // collision handling uses linear probing
         i32 len = ht->len;
         while (len--) {
-                if (!ht->table[i % ht->len]) {
-                        ht->table[i % ht->len] = item;
+                i++;
+                i %= ht->len;
+                if (!ht->items[i].ptr) {
+                        ht->items[i] = (struct sui_ht_item){hash, key, data};
                         return 1;
                 }
-                i++;
         }
+        // failed to find empty spots
         return 0;
 }
 
-void sui_htable_delete(struct sui_htable* ht, char* key)
+i32 sui_ht_delete(struct sui_ht* ht, char* key)
 {
-        i32 i = sui_htable_lookup(ht, key);
+        sui_assert(ht);
+        u64 hash = sui_hash(key);
+        i32 i = hash % ht->len;
+        // could also compare key and string saved in item
+        if (ht->items[i].hash == hash) {
+                memset(ht->items + i, 0, sizeof(struct sui_ht_item));
+                return 1;
+        }
         i32 len = ht->len;
         while (len--) {
-                if (!ht->table[i % ht->len]) {
-                        ht->table[i % ht->len] = NULL;
-                }
                 i++;
+                i %= ht->len;
+                // could also compare key and string saved in item
+                if (ht->items[i].hash == hash) {
+                        memset(ht->items + i, 0, sizeof(struct sui_ht_item));
+                        return 1;
+                }
+        }
+        // failed to find item
+        return 0;
+}
+
+void* sui_ht_find(struct sui_ht* ht, char* key)
+{
+        sui_assert(ht);
+        u64 hash = sui_hash(key);
+        i32 i = hash % ht->len;
+        // could also compare key and string saved in item
+        if (ht->items[i].hash == hash) return ht->items[i].ptr;
+        i32 len = ht->len;
+        while (len--) {
+                i++;
+                i %= ht->len;
+                // could also compare key and string saved in item
+                if (ht->items[i].hash == hash) return ht->items[i].ptr;
+        }
+        // failed to find item
+        return NULL;
+}
+
+void sui_ht_rehash(struct sui_ht* ht, void* mem, i32 n)
+{
+        sui_assert(ht);
+        sui_assert(mem);
+        struct sui_ht_item* old_items = ht->items;
+        i32                 old_len = ht->len;
+        ht->items = (struct sui_ht_item*)mem;
+        ht->len = n;
+        memset(ht->items, 0, n * sizeof(struct sui_ht_item));
+        for (struct sui_ht_item* item = old_items; item < old_items + old_len; item++) {
+                if (item->hash) {
+                        sui_ht_insert(ht, item->key, item->ptr);
+                }
         }
 }
