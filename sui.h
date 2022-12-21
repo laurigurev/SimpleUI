@@ -119,7 +119,7 @@ void sui_render(struct sui_context *sui);
 
 struct sui_color { u8 r; u8 g; u8 b; u8 a; };
 struct sui_rect { f32 x; f32 y; f32 w; f32 h; };
-struct sui_layout { struct sui_rect rect; struct sui_color color; };
+struct sui_layout { struct sui_rect rect; struct sui_color color; i32 root; };
 
 struct sui_item {
         char* name;
@@ -252,6 +252,12 @@ struct sui_context {
         i32 vlen;
 
         // backend
+        i32 mask;
+        i32 layouts_len;
+        struct sui_layout* layouts;
+        i32 items_len;
+        struct sui_item* items;
+        
         struct sui_io io;
         struct sui_viewport viewport;
         i32 img_w;

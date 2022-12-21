@@ -149,6 +149,11 @@ void sui_init(struct sui_context* sui, ID3D11Device* d11device, i32 w, i32 h)
 	sui->vertices = (struct sui_vertex*)malloc(sizeof(struct sui_vertex) * 2048);
 	sui->vlen = 0;
 
+	sui->mask = 0x11335577;
+	sui->layouts_len = 32;
+	sui->layouts = (struct sui_layout*)malloc(32 * sizeof(struct sui_layout));
+	sui->items_len = 128;
+	sui->items = (struct sui_item*)malloc(128 * sizeof(struct sui_item));
 	sui->viewport = (struct sui_viewport){ w, h };
 
 	sui->d11device = d11device;
@@ -452,7 +457,7 @@ void sui_input(struct sui_context* sui, i16 mx, i16 my, u8 rdown, u8 rup, u8 ldo
 
 void sui_begin(struct sui_context* sui, const char* name)
 {
-	i32 id = sui_hash(name, sui->mask) % sui->items_len;
+	i32 id = sui_hash((char*)name, sui->mask) % sui->items_len;
 	if (!sui->layouts[id]) sui_create_layout(sui, name, id);
 	sui->current_layout = id;
 }
