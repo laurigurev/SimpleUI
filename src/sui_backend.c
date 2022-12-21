@@ -18,7 +18,7 @@ void sui_backend_init(struct sui_backend* backend, ID3D11Device* device, i32 w, 
 
         sui_assert(fopen_s(&fstream, "shaders\\sui_vertex.txt", "r") == 0);
         // TODO: fread_s
-        fread(buffer, 1, 4096, fstream);
+        fread(buffer, 1, 4095, fstream);
         hr = D3DCompile(buffer, strlen(buffer), NULL, NULL, NULL, "main", "vs_4_0",
                         0 /* deal with shader flags later */, 0, &blob, NULL);
         sui_assert(hr == 0);
@@ -38,7 +38,7 @@ void sui_backend_init(struct sui_backend* backend, ID3D11Device* device, i32 w, 
 
         memset(buffer, 0, 4096);
         sui_assert(fopen_s(&fstream, "shaders\\sui_pixel.txt", "r") == 0);
-        fread(buffer, 1, 4096, fstream);
+        fread(buffer, 1, 4095, fstream);
         hr = D3DCompile(buffer, strlen(buffer), NULL, NULL, NULL, "main", "ps_4_0",
                         0 /* deal with shader flags later */, 0, &blob, NULL);
         sui_assert(hr == 0);
@@ -118,7 +118,7 @@ void sui_backend_init(struct sui_backend* backend, ID3D11Device* device, i32 w, 
         stbi_image_free(bmp);
         
         D3D11_BUFFER_DESC bufdsc;
-        bufdsc.ByteWidth = sizeof(struct sui_vertex) * 2048;
+        bufdsc.ByteWidth = sizeof(struct sui_vertex) * 2048; // TODO: figure out a better way
         bufdsc.Usage = D3D11_USAGE_DYNAMIC;
         bufdsc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
         bufdsc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -147,9 +147,9 @@ void sui_backend_init(struct sui_backend* backend, ID3D11Device* device, i32 w, 
 
         // orthographic projection matrix
         float L = 0;
-        float R = w;
+        float R = (f32)w;
         float T = 0;
-        float B = h;
+        float B = (f32)h;
         float proj[4][4] = {
             {2.0f / (R - L),    0.0f,              0.0f, 0.0f},
             {0.0f,              2.0f / (T - B),    0.0f, 0.0f},
@@ -199,7 +199,7 @@ void sui_backend_push_vertices(struct sui_backend* backend, i32 n, struct sui_ve
         D3D11_MAPPED_SUBRESOURCE vtx_rsc;
         hr = ID3D11DeviceContext_Map(backend->context, backend->vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &vtx_rsc);
         sui_assert(hr == 0);
-        memcpy(vtx_rsc.pData + n * sizeof(struct sui_vertex), vertices, n * sizeof(struct sui_vertex));
+        memcpy((char*)vtx_rsc.pData + backend->n * sizeof(struct sui_vertex), vertices, n * sizeof(struct sui_vertex));
         ID3D11DeviceContext_Unmap(backend->context, backend->vb, 0);
         backend->n += n;
 }

@@ -4,13 +4,13 @@
 
 struct sui_arena sui_arena_init(void* mem, u64 n)
 {
-        return (struct sui_arena){mem, mem, mem + n, NULL, NULL};
+        return (struct sui_arena){mem, mem, (char*)mem + n, NULL, NULL};
 }
 
 void* sui_arena_push(struct sui_arena* arena, u64 n)
 {
         sui_assert(arena);
-        if (arena->end < arena->pointer + n) return NULL;
+        if (arena->end < (char*)arena->pointer + n) return NULL;
         void* ret = arena->pointer;
         arena->pointer += n;
         arena->prev = ret;

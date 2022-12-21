@@ -1,4 +1,4 @@
-const char* ps = "Texture2D tex;
+Texture2D tex;
 SamplerState samp;
 
 struct PS_INPUT {

@@ -11,7 +11,7 @@ AlignEscapedNewlines: Left
 AlignTrailingComments: true
 PointerAlignment: Left
 IndentWidth: 8
-ColumnLimit: 120
+ColumnLimit: 160
 SpaceBeforeParens: ControlStatements
 AllowShortFunctionsOnASingleLine: Empty
 BreakBeforeBraces: Custom

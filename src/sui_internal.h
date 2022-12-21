@@ -1,13 +1,20 @@
 #pragma once
 
+#include "sui_backend.h"
 #include "sui_types.h"
+#include "sui_utils.h"
 
 struct sui_glyph;
 struct sui_color;
 struct sui_vertex;
 struct sui_viewport;
+struct sui_rect;
+struct sui_widget;
 // struct sui_recti;
 // struct sui_rectf;
+
+i64 sui_time_begin();
+i64 sui_time_end(i64 begin);
 
 struct sui_glyph {
         i16 id;
@@ -39,3 +46,19 @@ struct sui_viewport {
         i16 w;
         i16 h;
 };
+
+struct sui_rect {
+        i32 x;
+        i32 y;
+        i32 w;
+        i32 h;
+};
+
+struct sui_widget {
+        struct sui_rect  rect;
+        struct sui_rect  bbox;
+        struct sui_color color;
+};
+
+struct sui_widget* sui_widget_create(struct sui_arena* arena, struct sui_ht* ht, char* name, i32 x, i32 y, i32 w, i32 h);
+void               sui_widget_to_vertices(struct sui_widget* widget, i32* n, struct sui_vertex* vertices);

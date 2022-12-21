@@ -7,8 +7,8 @@ struct sui_htable;
 
 struct sui_arena {
         void* start;
-        void* pointer;
-        void* end;
+        char* pointer;
+        char* end;
         void* prev;
         void* root_prev;
 };
