@@ -2,7 +2,7 @@
 
 // THIS IS A TEMPORARY FILE
 
-#include "sui_utils.h"
+#include "sui_internal.h"
 
 struct sui_glyph cdata[] = {
     {32,  63,  48, 24, 1,  -8, 14, 8},

@@ -5,12 +5,6 @@
  */
 
 #include <stdio.h>
-#define WIN32_MEAN_AND_LEAN
-#define COBJMACROS
-#include <d3d11.h>
-#include <windows.h>
-
-#define sui_max(a, b) ((a) > (b) ? (a) : (b))
 
 /*
  *	FORWARD DECLARATIONS
@@ -184,11 +178,6 @@ struct sui_window {
         struct sui_state state;
 }; */
 
-struct sui_viewport {
-        i32 w;
-        i32 h;
-};
-
 struct sui_context {
         // window
         struct sui_window* current_window;
@@ -210,17 +199,4 @@ struct sui_context {
         i32 img_h;
         f32 img_wf;
         f32 img_hf;
-
-        // graphics api backend
-        ID3D11Device *d11device;
-        ID3D11DeviceContext *d11context;
-        ID3D11VertexShader *d11vs;
-        ID3D11InputLayout *d11il;
-        ID3D11PixelShader *d11ps;
-        ID3D11Buffer *d11vb;
-        ID3D11Buffer *d11ib;
-        ID3D11Buffer *d11cb;
-        ID3D11BlendState *d11bs;
-        ID3D11ShaderResourceView *view;
-        ID3D11SamplerState *sampler;
 };
