@@ -1,11 +1,14 @@
 -- SimpleUI build file
 workspace "SimpleUI"
+	architecture "x64"
+	language "C"
+	cdialect "C99"
 	toolset "msc"
 	configurations { "Debug", "Release" }
+	flags { "MultiProcessorCompile" }
 
 project "SimpleUI"
 	kind "ConsoleApp"
-	language "C"
 	targetdir "bin/%{cfg.buildcfg}"
 	links { "d3d11", "dxgi", "dxguid", "d3dcompiler" }
 

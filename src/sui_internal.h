@@ -4,6 +4,7 @@
 #include "sui_types.h"
 #include "sui_utils.h"
 
+struct sui_uvmap;
 struct sui_glyph;
 struct sui_color;
 struct sui_vertex;
@@ -16,6 +17,13 @@ struct sui_widget;
 i64 sui_time_begin();
 i64 sui_time_end(i64 begin);
 
+struct sui_uvmap {
+        f32 u0;
+        f32 u1;
+        f32 v0;
+        f32 v1; 
+};
+
 struct sui_glyph {
         i16 id;
         i16 x;
@@ -26,6 +34,8 @@ struct sui_glyph {
         i16 yoffset;
         i16 xadvance;
 };
+
+struct sui_uvmap sui_glyph_get_uv(char c, i32 w, i32 h);
 
 struct sui_color {
         u8 r;

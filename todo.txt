@@ -3,5 +3,6 @@ todos:
  - [DONE] add sui_arena
  - [DONE] add working hash table
  - [DONE] add backend
- - add draw rect
+ - [DONE] add draw rect
  - add logging
+ - fix msbuild errors

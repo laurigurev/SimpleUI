@@ -35,6 +35,7 @@ void sui_backend_init(struct sui_backend* backend, ID3D11Device* device, i32 w, 
         hr = ID3D11Device_CreateInputLayout(device, ieds, 3, ID3D10Blob_GetBufferPointer(blob),
                                             ID3D10Blob_GetBufferSize(blob), &backend->il);
         sui_assert(hr == 0);
+        fclose(fstream);
 
         memset(buffer, 0, 4096);
         sui_assert(fopen_s(&fstream, "shaders\\sui_pixel.txt", "r") == 0);
@@ -48,6 +49,7 @@ void sui_backend_init(struct sui_backend* backend, ID3D11Device* device, i32 w, 
         sui_assert(hr == 0);
 
         ID3D10Blob_Release(blob);
+        fclose(fstream);
 
         // blending
         D3D11_BLEND_DESC bdesc;

@@ -134,7 +134,12 @@ int main()
 
                 ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
 
-                sui_test(&sui, "TEST", 100, 100, 100, 100);
+                sui_test(&sui, "TEST0", 0, 0, 100, 100);
+                sui_test(&sui, "TEST1", 100, 100, 100, 100);
+                sui_test(&sui, "TEST2", 200, 200, 100, 100);
+                sui_test(&sui, "TEST3", 300, 300, 100, 100);
+                sui_test(&sui, "TEST4", 400, 400, 100, 100);
+                sui_test(&sui, "TEST6", 500, 500, 100, 100);
                 sui_render(&sui);
 
                 IDXGISwapChain_Present(swapchain, 1, 0);
