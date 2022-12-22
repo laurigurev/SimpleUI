@@ -6,7 +6,7 @@ void sui_init(struct sui_context* sui, ID3D11Device* device, i32 w, i32 h)
         sui_assert(sui);
         sui->active_widget = -1;
         sui->hot_widget = -1;
-        const u64 megabyte = 1024 * 1024 * 1024;
+        const u64 megabyte = 1024 * 1024;
         sui->arena = sui_arena_init(malloc(megabyte), megabyte);
         const u64 size = sui_hti_mem(128);
         void*     mem = malloc(size);
