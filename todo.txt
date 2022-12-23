@@ -5,4 +5,5 @@ todos:
  - [DONE] add backend
  - [DONE] add draw rect
  - add logging
- - fix msbuild errors
+ - [DONE] fix msbuild errors
+ - fix window creation

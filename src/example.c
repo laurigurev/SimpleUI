@@ -134,12 +134,11 @@ int main()
 
                 ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
 
-                sui_test(&sui, "TEST0", 0, 0, 100, 100);
-                sui_test(&sui, "TEST1", 100, 100, 100, 100);
-                sui_test(&sui, "TEST2", 200, 200, 100, 100);
-                sui_test(&sui, "TEST3", 300, 300, 100, 100);
-                sui_test(&sui, "TEST4", 400, 400, 100, 100);
-                sui_test(&sui, "TEST6", 500, 500, 100, 100);
+                sui_inputs(&sui, mouse.x, mouse.y, mouse.ldown, mouse.lup, mouse.rdown, mouse.rup);
+                sui_begin(&sui, "window0", 100, 100);
+                if (sui_button(&sui, "button00")) printf("button00 pressed\n");
+                if (sui_button(&sui, "button01")) printf("button01 pressed\n");
+                sui_end(&sui);
                 sui_render(&sui);
 
                 IDXGISwapChain_Present(swapchain, 1, 0);
