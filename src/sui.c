@@ -35,13 +35,13 @@ void sui_inputs(struct sui_context* sui, i32 mx, i32 my, u8 ldown, u8 lup, u8 rd
         sui->io.rup = rup;
 }
 
-void sui_begin(struct sui_context* sui, char* name, i32 x, i32 y, i32 w, i32 h)
+void sui_begin(struct sui_context* sui, char* name)
 {
         sui_assert(sui);
-        struct sui_widget* widget = sui_ht_find(&sui->ht, name);
+        /* struct sui_widget* widget = sui_ht_find(&sui->ht, name);
         if (!widget) widget = sui_widget_create(&sui->arena, &sui->ht, name, x, y, w, h, (struct sui_color){255, 255, 255, 255});
         sui_widget_to_vertices(widget, &sui->vertices_len, sui->vertices + sui->vertices_len);
-        sui->current_window = widget;
+        sui->current_window = widget; */
 }
 
 void sui_end(struct sui_context* sui)
@@ -51,17 +51,21 @@ void sui_end(struct sui_context* sui)
         sui->current_h = 0;
 }
 
+void sui_row(struct sui_context* sui)
+{
+        sui->current_h += 16;
+}
+
 i32 sui_button(struct sui_context* sui, char* name)
 {
         sui_assert(sui);
-        sui_assert(sui->current_window);
+        // sui_assert(sui->current_window);
 
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
         if (!widget) {
-                struct sui_rect* rect = &sui->current_window->rect;
-                i32              x = rect->x + sui->current_w;
-                i32              y = rect->y + sui->current_h;
-
+                i32 x = sui->current_w;
+                i32 y = sui->current_h;
+                printf("button, x %i, y %i\n", x, y);
                 widget = sui_button_create(&sui->arena, &sui->ht, name, x, y);
                 sui->current_w += widget->rect.w;
         }
@@ -77,6 +81,29 @@ i32 sui_button(struct sui_context* sui, char* name)
 
         if (sui->active_widget == widget) return 1;
         return 0;
+}
+
+void sui_checkbox(struct sui_context* sui, char* name, i32* value)
+{
+        sui_assert(sui);
+        struct sui_widget* widget = sui_ht_find(&sui->ht, name);
+        if (!widget) {
+                i32 x = sui->current_w;
+                i32 y = sui->current_h;
+                printf("checkbox, x %i, y %i\n", x, y);
+                widget = sui_checkbox_create(&sui->arena, &sui->ht, name, x, y);
+                sui->current_w += widget->rect.w;
+        }
+
+        if (sui_overlap(sui->io, widget->bbox)) {
+                if (sui->io.ldown) sui->hot_widget = widget;
+                if (sui->io.lup && sui->hot_widget == widget) sui->active_widget = widget;
+        }
+        sui_checkbox_to_vertices(widget, *value, &sui->vertices_len, sui->vertices + sui->vertices_len);
+        if (sui->active_widget == widget) {
+                if (*value) *value = 0;
+                else *value = 1;
+        }
 }
 
 void sui_render(struct sui_context* sui)

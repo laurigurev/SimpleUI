@@ -119,6 +119,7 @@ int main()
         struct sui_context sui;
         sui_init(&sui, device, 600, 600);
         f32 colors[] = {0.0f, 0.0f, 0.2f, 1.0f};
+        i32 value = 0;
 
         while (1) {
                 memset(&mouse.ldown, 0, 4);
@@ -135,9 +136,11 @@ int main()
                 ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
 
                 sui_inputs(&sui, mouse.x, mouse.y, mouse.ldown, mouse.lup, mouse.rdown, mouse.rup);
-                sui_begin(&sui, "window0", 100, 100, 150, 100);
+                sui_begin(&sui, "window0");
                 if (sui_button(&sui, "button00")) printf("button00 pressed\n");
                 if (sui_button(&sui, "button01")) printf("button01 pressed\n");
+                sui_checkbox(&sui, "checkbox00", &value);
+                if (value) printf("checkbox00 on\n");
                 sui_end(&sui);
                 sui_render(&sui);
 
