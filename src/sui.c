@@ -5,10 +5,12 @@
 void sui_init(struct sui_context* sui, ID3D11Device* device, i32 w, i32 h)
 {
         sui_assert(sui);
+        memset(&sui->io, 0, sizeof(struct sui_io));
         sui->active_widget = NULL;
         sui->hot_widget = NULL;
         sui->current_window = NULL;
-        sui->new_row = 0;
+        sui->current_w = 0;
+        sui->current_h = 0;
         const u64 megabyte = 1024 * 1024;
         sui->arena = sui_arena_init(malloc(megabyte), megabyte);
         const u64 size = sui_hti_mem(128);
@@ -33,18 +35,20 @@ void sui_inputs(struct sui_context* sui, i32 mx, i32 my, u8 ldown, u8 lup, u8 rd
         sui->io.rup = rup;
 }
 
-void sui_begin(struct sui_context* sui, char* name, i32 x, i32 y)
+void sui_begin(struct sui_context* sui, char* name, i32 x, i32 y, i32 w, i32 h)
 {
         sui_assert(sui);
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
-        if (!widget) widget = sui_widget_create(&sui->arena, &sui->ht, name, x, y, 0, 0, (struct sui_color){255, 255, 255, 255});
+        if (!widget) widget = sui_widget_create(&sui->arena, &sui->ht, name, x, y, w, h, (struct sui_color){255, 255, 255, 255});
+        sui_widget_to_vertices(widget, &sui->vertices_len, sui->vertices + sui->vertices_len);
         sui->current_window = widget;
 }
 
 void sui_end(struct sui_context* sui)
 {
-        sui_widget_to_vertices(sui->current_window, &sui->vertices_len, sui->vertices + sui->vertices_len);
         sui->current_window = NULL;
+        sui->current_w = 0;
+        sui->current_h = 0;
 }
 
 i32 sui_button(struct sui_context* sui, char* name)
@@ -55,16 +59,11 @@ i32 sui_button(struct sui_context* sui, char* name)
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
         if (!widget) {
                 struct sui_rect* rect = &sui->current_window->rect;
-                i32              x = rect->x + rect->w;
-                i32              y = rect->y + rect->h;
+                i32              x = rect->x + sui->current_w;
+                i32              y = rect->y + sui->current_h;
 
                 widget = sui_button_create(&sui->arena, &sui->ht, name, x, y);
-
-                rect->w += widget->rect.w;
-                if (sui->new_row) {
-                        rect->h += sui->new_row * 16;
-                        sui->new_row = 0;
-                }
+                sui->current_w += widget->rect.w;
         }
 
         widget->color = (struct sui_color){0, 0, 0, 255};

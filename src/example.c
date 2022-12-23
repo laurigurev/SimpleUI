@@ -135,7 +135,7 @@ int main()
                 ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
 
                 sui_inputs(&sui, mouse.x, mouse.y, mouse.ldown, mouse.lup, mouse.rdown, mouse.rup);
-                sui_begin(&sui, "window0", 100, 100);
+                sui_begin(&sui, "window0", 100, 100, 150, 100);
                 if (sui_button(&sui, "button00")) printf("button00 pressed\n");
                 if (sui_button(&sui, "button01")) printf("button01 pressed\n");
                 sui_end(&sui);
