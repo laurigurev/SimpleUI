@@ -9,7 +9,7 @@ void sui_init(struct sui_context* sui, ID3D11Device* device, i32 w, i32 h)
         sui->active_widget = NULL;
         sui->hot_widget = NULL;
         sui->current_window = NULL;
-        memset(&sui->row, 0, sizeof(struct sui_row));
+        sui->row = (struct sui_row){0, 0, 0, 0};
         const u64 megabyte = 1024 * 1024;
         sui->arena = sui_arena_init(malloc(megabyte), megabyte);
         const u64 size = sui_hti_mem(128);
@@ -40,15 +40,18 @@ void sui_begin(struct sui_context* sui, char* name, i32 x, i32 y)
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
         // TODO: add window style
         if (!widget) widget = sui_widget_create(&sui->arena, &sui->ht, name, x, y, 0, 0, (struct sui_color){255, 255, 255, 255});
+        else widget->rect = (struct sui_rect){x, y, 0, 0};
         sui->current_window = widget;
+        sui->row = (struct sui_row){x, y, 0, 0};
 }
 
 void sui_end(struct sui_context* sui)
 {
         sui_assert(sui);
         sui_row(sui);
-        sui_widget_to_vertices(sui->current_window, &sui->vertices_len, sui->vertices + sui->vertices_len);
+        // sui_widget_to_vertices(sui->current_window, &sui->vertices_len, sui->vertices + sui->vertices_len);
         sui->current_window = NULL;
+        sui->row = (struct sui_row){0, 0, 0, 0};
 }
 
 void sui_row(struct sui_context* sui)
@@ -61,8 +64,7 @@ void sui_row(struct sui_context* sui)
 
         // reset row to new row
         struct sui_rect rect = window->rect;
-        // width of every row is always 16
-        sui->row = (struct sui_row){rect.x + rect.w, rect.y + rect.h, 0, 16};
+        sui->row = (struct sui_row){rect.x, rect.y + rect.h, 0, 0};
 }
 
 i32 sui_button(struct sui_context* sui, char* name)
@@ -72,12 +74,10 @@ i32 sui_button(struct sui_context* sui, char* name)
 
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
         if (!widget) {
-                i32 x = sui->current_w;
-                i32 y = sui->current_h;
-                printf("button, x %i, y %i\n", x, y);
-                widget = sui_button_create(&sui->arena, &sui->ht, name, x, y);
-                sui->current_w += widget->rect.w;
+                widget = sui_button_create(&sui->arena, &sui->ht, name, sui->row.x + sui->row.width, sui->row.y);
         }
+        sui->row.width += widget->rect.w;
+        sui->row.height = 16;
 
         widget->color = (struct sui_color){0, 0, 0, 255};
         if (sui_overlap(sui->io, widget->bbox)) {
@@ -97,12 +97,10 @@ void sui_checkbox(struct sui_context* sui, char* name, i32* value)
         sui_assert(sui);
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
         if (!widget) {
-                i32 x = sui->current_w;
-                i32 y = sui->current_h;
-                printf("checkbox, x %i, y %i\n", x, y);
-                widget = sui_checkbox_create(&sui->arena, &sui->ht, name, x, y);
-                sui->current_w += widget->rect.w;
+                widget = sui_checkbox_create(&sui->arena, &sui->ht, name, sui->row.x + sui->row.width, sui->row.y);
         }
+        sui->row.width += widget->rect.w;
+        sui->row.height = 16;
 
         if (sui_overlap(sui->io, widget->bbox)) {
                 if (sui->io.ldown) sui->hot_widget = widget;

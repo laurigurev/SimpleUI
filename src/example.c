@@ -136,11 +136,12 @@ int main()
                 ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
 
                 sui_inputs(&sui, mouse.x, mouse.y, mouse.ldown, mouse.lup, mouse.rdown, mouse.rup);
-                sui_begin(&sui, "window0");
+                sui_begin(&sui, "window0", 0, 0);
                 if (sui_button(&sui, "button00")) printf("button00 pressed\n");
                 if (sui_button(&sui, "button01")) printf("button01 pressed\n");
                 sui_checkbox(&sui, "checkbox00", &value);
                 if (value) printf("checkbox00 on\n");
+                if (value) { sui_row(&sui); sui_button(&sui, "button02");}
                 sui_end(&sui);
                 sui_render(&sui);
 
