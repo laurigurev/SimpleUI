@@ -12,6 +12,7 @@ struct sui_viewport;
 struct sui_rect;
 struct sui_widget;
 struct sui_io;
+struct sui_row;
 // struct sui_recti;
 // struct sui_rectf;
 
@@ -93,3 +94,10 @@ struct sui_io {
 };
 
 i32 sui_overlap(struct sui_io io, struct sui_rect bbox);
+
+struct sui_row {
+        i32 x;
+        i32 y;
+        i32 width;
+        i32 height;
+};

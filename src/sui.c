@@ -9,8 +9,7 @@ void sui_init(struct sui_context* sui, ID3D11Device* device, i32 w, i32 h)
         sui->active_widget = NULL;
         sui->hot_widget = NULL;
         sui->current_window = NULL;
-        sui->current_w = 0;
-        sui->current_h = 0;
+        memset(&sui->row, 0, sizeof(struct sui_row));
         const u64 megabyte = 1024 * 1024;
         sui->arena = sui_arena_init(malloc(megabyte), megabyte);
         const u64 size = sui_hti_mem(128);
@@ -35,25 +34,35 @@ void sui_inputs(struct sui_context* sui, i32 mx, i32 my, u8 ldown, u8 lup, u8 rd
         sui->io.rup = rup;
 }
 
-void sui_begin(struct sui_context* sui, char* name)
+void sui_begin(struct sui_context* sui, char* name, i32 x, i32 y)
 {
         sui_assert(sui);
-        /* struct sui_widget* widget = sui_ht_find(&sui->ht, name);
-        if (!widget) widget = sui_widget_create(&sui->arena, &sui->ht, name, x, y, w, h, (struct sui_color){255, 255, 255, 255});
-        sui_widget_to_vertices(widget, &sui->vertices_len, sui->vertices + sui->vertices_len);
-        sui->current_window = widget; */
+        struct sui_widget* widget = sui_ht_find(&sui->ht, name);
+        // TODO: add window style
+        if (!widget) widget = sui_widget_create(&sui->arena, &sui->ht, name, x, y, 0, 0, (struct sui_color){255, 255, 255, 255});
+        sui->current_window = widget;
 }
 
 void sui_end(struct sui_context* sui)
 {
+        sui_assert(sui);
+        sui_row(sui);
+        sui_widget_to_vertices(sui->current_window, &sui->vertices_len, sui->vertices + sui->vertices_len);
         sui->current_window = NULL;
-        sui->current_w = 0;
-        sui->current_h = 0;
 }
 
 void sui_row(struct sui_context* sui)
 {
-        sui->current_h += 16;
+        sui_assert(sui);
+        // update current window
+        struct sui_widget* window = sui->current_window;
+        window->rect.w = sui_max(window->rect.w, sui->row.width);
+        window->rect.h += sui->row.height;
+
+        // reset row to new row
+        struct sui_rect rect = window->rect;
+        // width of every row is always 16
+        sui->row = (struct sui_row){rect.x + rect.w, rect.y + rect.h, 0, 16};
 }
 
 i32 sui_button(struct sui_context* sui, char* name)
@@ -105,6 +114,8 @@ void sui_checkbox(struct sui_context* sui, char* name, i32* value)
                 else *value = 1;
         }
 }
+
+void sui_slider(struct sui_context* sui, char* name, f32 value) {}
 
 void sui_render(struct sui_context* sui)
 {
