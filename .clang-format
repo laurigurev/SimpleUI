@@ -19,3 +19,4 @@ BraceWrapping:
 	AfterFunction: true
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse 
 AllowShortLoopsOnASingleLine: true
+BreakBeforeBraces: Stroustrup

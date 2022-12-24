@@ -13,8 +13,14 @@ struct sui_rect;
 struct sui_widget;
 struct sui_io;
 struct sui_row;
+struct sui_column;
 // struct sui_recti;
 // struct sui_rectf;
+
+enum sui_layout_type {
+        SUI_LAYOUT_TYPE_ROW,
+        SUI_LAYOUT_TYPE_COLUMN
+};
 
 i64 sui_time_begin();
 i64 sui_time_end(i64 begin);
@@ -96,6 +102,14 @@ struct sui_io {
 i32 sui_overlap(struct sui_io io, struct sui_rect bbox);
 
 struct sui_row {
+        i32 x;
+        i32 y;
+        i32 width;
+        i32 height;
+};
+
+struct sui_column {
+        i32 row_count;
         i32 x;
         i32 y;
         i32 width;

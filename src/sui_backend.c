@@ -220,8 +220,8 @@ void sui_backend_draw(struct sui_backend* backend)
 
         u32 stride = sizeof(struct sui_vertex);
         u32 offset = 0;
-        for (i32 i = 0; i < backend->n; i += 4) {
-        // for (i32 i = backend->n; 0 <= i; i -= 4) {
+        // for (i32 i = 0; i < backend->n; i += 4) {
+        for (i32 i = backend->n - 4; 0 <= i; i -= 4) {
                 offset = i * stride;
                 ID3D11DeviceContext_IASetVertexBuffers(backend->context, 0, 1, &backend->vb, &stride, &offset);
                 ID3D11DeviceContext_DrawIndexed(backend->context, 6, 0, 0);
