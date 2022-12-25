@@ -87,6 +87,16 @@ void sui_checkbox_set(struct sui_widget* widget, i32 x, i32 y)
         widget->color = (struct sui_color){0, 0, 0, 255};
 }
 
+void sui_slider_set(struct sui_widget* widget, f32 value, i32 x, i32 y)
+{
+        sui_assert(widget);
+        const f32 w = 160.0f;
+        f32       bbx = 160.0f * value - 8.0f;
+        widget->rect = (struct sui_rect){x, y, (i32)w, 16};
+        widget->bbox = (struct sui_rect){x + (i32)bbx, y, 16, 16};
+        widget->color = (struct sui_color){0, 0, 0, 255};
+}
+
 void sui_widget_to_vertices(struct sui_widget* widget, i32* n, struct sui_vertex* vertices)
 {
         sui_assert(widget);
@@ -107,6 +117,7 @@ void sui_widget_to_vertices(struct sui_widget* widget, i32* n, struct sui_vertex
         *vertices++ = (struct sui_vertex){x1, y0, uv.u1, uv.v0, widget->color};
         *n += 4;
 }
+
 i32 sui_glyph_to_vertices(char c, i32 x, i32 y, i32* n, struct sui_vertex* vertices)
 {
         struct sui_glyph glyph = cdata[c - 32];
@@ -189,6 +200,40 @@ void sui_checkbox_to_vertices(struct sui_widget* widget, i32 value, i32* n, stru
         *vertices++ = (struct sui_vertex){x1, y1, uv.u1, uv.v1, widget->color};
         *vertices++ = (struct sui_vertex){x0, y1, uv.u0, uv.v1, widget->color};
         *vertices++ = (struct sui_vertex){x1, y0, uv.u1, uv.v0, widget->color};
+        *n += 4;
+}
+
+void sui_slider_to_vertices(struct sui_widget* widget, f32 value, i32* n, struct sui_vertex* vertices)
+{
+        sui_assert(widget);
+        sui_assert(vertices);
+
+        // control
+        // TODO: generate control from bbox
+        f32 x0 = widget->rect.x + widget->rect.w * value - 8.0f;
+        f32 x1 = widget->rect.x + widget->rect.w * value + 8.0f;
+        f32 y0 = (f32)widget->rect.y;
+        f32 y1 = (f32)widget->rect.y + widget->rect.h;
+        
+        // TODO: figure a good way to bring font atlas dimensions to this function
+        struct sui_uvmap uv = sui_glyph_get_uv(127, 128, 64);
+
+        *vertices++ = (struct sui_vertex){x0, y0, uv.u0, uv.v0, widget->color};
+        *vertices++ = (struct sui_vertex){x1, y1, uv.u1, uv.v1, widget->color};
+        *vertices++ = (struct sui_vertex){x0, y1, uv.u0, uv.v1, widget->color};
+        *vertices++ = (struct sui_vertex){x1, y0, uv.u1, uv.v0, widget->color};
+        *n += 4;
+
+        // slider
+        x0 = (f32)widget->rect.x;
+        x1 = (f32)widget->rect.x + (f32)widget->rect.w;
+        y0 = (f32)widget->rect.y + 7.0f;
+        y1 = (f32)widget->rect.y + 9.0f;
+        
+        *vertices++ = (struct sui_vertex){x0, y0, uv.u0, uv.v0, (struct sui_color){0, 0, 0, 255}};
+        *vertices++ = (struct sui_vertex){x1, y1, uv.u1, uv.v1, (struct sui_color){0, 0, 0, 255}};
+        *vertices++ = (struct sui_vertex){x0, y1, uv.u0, uv.v1, (struct sui_color){0, 0, 0, 255}};
+        *vertices++ = (struct sui_vertex){x1, y0, uv.u1, uv.v0, (struct sui_color){0, 0, 0, 255}};
         *n += 4;
 }
 

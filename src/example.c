@@ -121,6 +121,7 @@ int main()
         f32 colors[] = {0.0f, 0.0f, 0.2f, 1.0f};
         i32 value0 = 0;
         i32 value1 = 0;
+        f32 value2 = 0.5f;
 
         while (1) {
                 memset(&mouse.ldown, 0, 4);
@@ -157,6 +158,8 @@ int main()
                 sui_checkbox(&sui, "checkbox10", &value1);
                 if (value0) sui_column(&sui);
                 if (value1) sui_button(&sui, "button40");
+                sui_row(&sui);
+                sui_slider(&sui, "slider00", &value2);
                 sui_end(&sui);
                 sui_render(&sui);
 

@@ -79,10 +79,12 @@ struct sui_widget* sui_widget_create(struct sui_arena* arena, struct sui_ht* ht,
 void               sui_widget_set(struct sui_widget* widget, i32 x, i32 y, i32 w, i32 h, struct sui_color color);
 void               sui_button_set(struct sui_widget* widget, char* name, i32 x, i32 y);
 void               sui_checkbox_set(struct sui_widget* widget, i32 x, i32 y);
+void               sui_slider_set(struct sui_widget* widget, f32 value, i32 x, i32 y);
 void               sui_widget_to_vertices(struct sui_widget* widget, i32* n, struct sui_vertex* vertices);
 i32                sui_glyph_to_vertices(char c, i32 x, i32 y, i32* n, struct sui_vertex* vertices);
 void               sui_button_to_vertices(struct sui_widget* widget, char* str, i32* n, struct sui_vertex* vertices);
 void               sui_checkbox_to_vertices(struct sui_widget* widget, i32 value, i32* n, struct sui_vertex* vertices);
+void               sui_slider_to_vertices(struct sui_widget* widget, f32 value, i32* n, struct sui_vertex* vertices);
 
 struct sui_io {
         i32 mx;

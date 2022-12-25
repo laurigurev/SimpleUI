@@ -38,8 +38,6 @@ void sui_begin(struct sui_context* sui, char* name, i32 x, i32 y)
 {
         sui_assert(sui);
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
-        // if (!widget) widget = sui_widget_create_ex(&sui->arena, &sui->ht, name, x, y, 0, 0, (struct sui_color){255, 255, 255, 255});
-        // else widget->rect = (struct sui_rect){x, y, 0, 0};
         if (!widget) widget = sui_widget_create(&sui->arena, &sui->ht, name);
         sui_widget_set(widget, x, y, 0, 0, (struct sui_color){255, 255, 255, 255});
         sui->current_window = widget;
@@ -90,7 +88,6 @@ i32 sui_button(struct sui_context* sui, char* name)
         sui_assert(sui->current_window);
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
         if (!widget) {
-                // widget = sui_button_create(&sui->arena, &sui->ht, name, sui->layout.x, sui->layout.y);
                 widget = sui_widget_create(&sui->arena, &sui->ht, name);
         }
         sui_button_set(widget, name, sui->layout.x, sui->layout.y);
@@ -113,9 +110,9 @@ void sui_checkbox(struct sui_context* sui, char* name, i32* value)
 {
         sui_assert(sui);
         sui_assert(sui->current_window);
+        sui_assert(value);
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
         if (!widget) {
-                // widget = sui_checkbox_create(&sui->arena, &sui->ht, name, sui->layout.x, sui->layout.y);
                 widget = sui_widget_create(&sui->arena, &sui->ht, name);
         }
         sui_checkbox_set(widget, sui->layout.x, sui->layout.y);
@@ -132,12 +129,45 @@ void sui_checkbox(struct sui_context* sui, char* name, i32* value)
         }
 }
 
+void sui_slider(struct sui_context* sui, char* name, f32* value)
+{
+        sui_assert(sui);
+        sui_assert(sui->current_window);
+        sui_assert(value);
+        struct sui_widget* widget = sui_ht_find(&sui->ht, name);
+        if (!widget) {
+                widget = sui_widget_create(&sui->arena, &sui->ht, name);
+        }
+        sui_slider_set(widget, *value, sui->layout.x, sui->layout.y);
+        sui_handle_layout(&sui->layout, widget->rect.w, widget->rect.h);
+
+        widget->color = (struct sui_color){0, 0, 0, 255};
+        if (sui_overlap(sui->io, widget->bbox)) {
+                widget->color = (struct sui_color){100, 100, 100, 255};
+                if (sui->io.ldown) {
+                        sui->hot_widget = widget;
+                        sui->active_widget = widget;
+                }
+        }
+        sui_slider_to_vertices(widget, *value, &sui->vertices_len, sui->vertices + sui->vertices_len);
+        if (sui->active_widget == widget) {
+                if (sui->io.lup) sui->active_widget = NULL;
+                *value -= (sui->io.dmx / 160.0f);
+                if (*value < 0.0f) *value = 0.0f;
+                if (1.0f < *value) *value = 1.0f;
+                if (sui->io.mx < widget->rect.x) *value = 0.0f;
+                if (widget->rect.x + 160.0f < sui->io.mx) *value = 1.0f;
+        }
+}
+
 void sui_render(struct sui_context* sui)
 {
         sui_assert(sui);
         sui_backend_push_vertices(&sui->backend, sui->vertices_len, sui->vertices);
         sui_backend_draw(&sui->backend);
         sui->vertices_len = 0;
+        // TODO: fix this into something sustainable
         if (sui->io.lup) sui->hot_widget = NULL;
-        sui->active_widget = NULL;
+        if (sui->io.lup) sui->active_widget = NULL;
+        // sui->active_widget = NULL;
 }
