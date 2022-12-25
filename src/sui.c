@@ -9,9 +9,7 @@ void sui_init(struct sui_context* sui, ID3D11Device* device, i32 w, i32 h)
         sui->active_widget = NULL;
         sui->hot_widget = NULL;
         sui->current_window = NULL;
-        sui->type = SUI_LAYOUT_TYPE_ROW;
-        sui->row = (struct sui_row){0, 0, 0, 0};
-        sui->column = (struct sui_column){0, 0, 0, 0, 0};
+        sui->layout = (struct sui_layout){SUI_LAYOUT_TYPE_ROW, 0, 0, 0, 0};
         const u64 megabyte = 1024 * 1024;
         sui->arena = sui_arena_init(malloc(megabyte), megabyte);
         const u64 size = sui_hti_mem(128);
@@ -43,69 +41,47 @@ void sui_begin(struct sui_context* sui, char* name, i32 x, i32 y)
         if (!widget) widget = sui_widget_create(&sui->arena, &sui->ht, name, x, y, 0, 0, (struct sui_color){255, 255, 255, 255});
         else widget->rect = (struct sui_rect){x, y, 0, 0};
         sui->current_window = widget;
-        sui->row = (struct sui_row){x, y, 0, 0};
-        sui->column = (struct sui_column){-1, 0, 0, 0, 0};
+        sui->layout = (struct sui_layout){SUI_LAYOUT_TYPE_ROW, widget->rect.x, widget->rect.y, 0, 0};
 }
 
 void sui_end(struct sui_context* sui)
 {
         sui_assert(sui);
+        sui_row(sui);
         struct sui_widget* window = sui->current_window;
-        if (sui->type == SUI_LAYOUT_TYPE_ROW) {
-                window->rect.w = sui_max(window->rect.w, sui->row.width);
-                window->rect.h += sui->row.height;
-        }
-        else if (sui->type == SUI_LAYOUT_TYPE_COLUMN) {
-                window->rect.w = sui_max(window->rect.w, sui->column.width);
-                window->rect.h += sui->column.height;
-        }
         sui_widget_to_vertices(window, &sui->vertices_len, sui->vertices + sui->vertices_len);
         sui->current_window = NULL;
-        sui->row = (struct sui_row){0, 0, 0, 0};
-        sui->column = (struct sui_column){-1, 0, 0, 0, 0};
+        sui->layout = (struct sui_layout){SUI_LAYOUT_TYPE_ROW, 0, 0, 0, 0};
 }
 
 void sui_row(struct sui_context* sui)
 {
         sui_assert(sui);
-        // update current window
-        struct sui_widget* window = sui->current_window;
-        if (sui->type == SUI_LAYOUT_TYPE_ROW) {
-                window->rect.w = sui_max(window->rect.w, sui->row.width);
-                window->rect.h += sui->row.height;
-        }
-        else if (sui->type == SUI_LAYOUT_TYPE_COLUMN) {
-                window->rect.w = sui_max(window->rect.w, sui->column.width);
-                window->rect.h += sui->column.height;
-        }
-
-        // reset row to new row
-        sui->type = SUI_LAYOUT_TYPE_ROW;
-        struct sui_rect rect = window->rect;
-        sui->row = (struct sui_row){rect.x, rect.y + rect.h, 0, 0};
-        sui->column = (struct sui_column){-1, 0, 0, 0, 0};
+        struct sui_rect* rect = &sui->current_window->rect;
+        if (sui->layout.type == SUI_LAYOUT_TYPE_ROW) rect->w = sui_max(rect->w, sui->layout.w);
+        else if (sui->layout.type == SUI_LAYOUT_TYPE_COLUMN) rect->w = sui_max(rect->w, sui->layout.x + sui->layout.w - rect->x);
+        rect->h += sui->layout.h;
+        sui->layout = (struct sui_layout){SUI_LAYOUT_TYPE_ROW, rect->x, rect->y + rect->h, 0, 0};
 }
 
-void sui_column(struct sui_context* sui, i32 rows)
+void sui_column(struct sui_context* sui)
 {
         sui_assert(sui);
-        sui_assert(0 <= rows);
-        // update current window
-        struct sui_widget* window = sui->current_window;
-        if (sui->type == SUI_LAYOUT_TYPE_ROW) {
-                window->rect.w = sui_max(window->rect.w, sui->row.width);
-                window->rect.h += sui->row.height;
+        struct sui_rect* rect = &sui->current_window->rect;
+        i32              w;
+        if (sui->layout.type == SUI_LAYOUT_TYPE_ROW) {
+                rect->w = sui_max(rect->w, sui->layout.w);
+                rect->h += sui->layout.h;
+
+                w = 0;
         }
-        else if (sui->type == SUI_LAYOUT_TYPE_COLUMN) {
-                window->rect.w = sui_max(window->rect.w, sui->column.width);
-                // TODO: should not be a lasting solution to a problem
-                window->rect.h = sui_max(sui->column.height, rows * 16);
+        else if (sui->layout.type == SUI_LAYOUT_TYPE_COLUMN) {
+                rect->w = sui_max(rect->w, sui->layout.w);
+                // printf("ROW COUNT must be the same for two or more columns!\n");
+
+                w = sui->layout.w;
         }
-        // handle layout
-        sui->type = SUI_LAYOUT_TYPE_COLUMN;
-        struct sui_rect rect = window->rect;
-        sui->row = (struct sui_row){0, 0, 0, 0};
-        sui->column = (struct sui_column){rows, rect.x, rect.y + rect.h, 0, 0};
+        sui->layout = (struct sui_layout){SUI_LAYOUT_TYPE_COLUMN, rect->x + w, rect->y + rect->h, 0, 0};
 }
 
 i32 sui_button(struct sui_context* sui, char* name)
@@ -114,29 +90,10 @@ i32 sui_button(struct sui_context* sui, char* name)
         sui_assert(sui->current_window);
 
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
-        if (sui->type == SUI_LAYOUT_TYPE_ROW) {
-                if (!widget) {
-                        widget = sui_button_create(&sui->arena, &sui->ht, name, sui->row.x + sui->row.width, sui->row.y);
-                }
-                sui->row.width += widget->rect.w;
-                sui->row.height = 16;
+        if (!widget) {
+                widget = sui_button_create(&sui->arena, &sui->ht, name, sui->layout.x, sui->layout.y);
         }
-        else if (sui->type == SUI_LAYOUT_TYPE_COLUMN) {
-                if (!widget) {
-                        widget = sui_button_create(&sui->arena, &sui->ht, name, sui->row.x, sui->column.y + sui->column.height);
-                }
-                sui->column.row_count--;
-                sui->column.width = sui_max(sui->column.width, widget->rect.w);
-                sui->column.height += 16;
-                if (sui->column.row_count == 0) {
-                        sui->type = SUI_LAYOUT_TYPE_ROW;
-                        // TODO: update window
-                        sui->current_window->rect.w = sui_max(sui->current_window->rect.w, sui->column.width);
-                        sui->current_window->rect.h += sui->column.height;
-                        sui->row = (struct sui_row){0, 0, 0, 0};
-                        sui->column = (struct sui_column){-1, 0, 0, 0, 0};
-                }
-        }
+        sui_handle_layout(&sui->layout, widget->rect.w, widget->rect.h);
 
         widget->color = (struct sui_color){0, 0, 0, 255};
         if (sui_overlap(sui->io, widget->bbox)) {

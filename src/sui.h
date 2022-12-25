@@ -9,19 +9,17 @@ struct sui_context;
 
 struct sui_context {
         // TODO: add styles
-        struct sui_io        io;
-        struct sui_widget*   hot_widget;
-        struct sui_widget*   active_widget;
-        struct sui_widget*   current_window;
-        enum sui_layout_type type;
-        struct sui_row       row;
-        struct sui_column    column;
-        struct sui_arena     arena;
-        struct sui_ht        ht;
-        struct sui_viewport  viewport;
-        struct sui_backend   backend;
-        i32                  vertices_len;
-        struct sui_vertex*   vertices;
+        struct sui_io       io;
+        struct sui_widget*  hot_widget;
+        struct sui_widget*  active_widget;
+        struct sui_widget*  current_window;
+        struct sui_layout   layout;
+        struct sui_arena    arena;
+        struct sui_ht       ht;
+        struct sui_viewport viewport;
+        struct sui_backend  backend;
+        i32                 vertices_len;
+        struct sui_vertex*  vertices;
 };
 
 void sui_init(struct sui_context* sui, ID3D11Device* device, i32 w, i32 h);
@@ -29,7 +27,7 @@ void sui_inputs(struct sui_context* sui, i32 mx, i32 my, u8 ldown, u8 lup, u8 rd
 void sui_begin(struct sui_context* sui, char* name, i32 x, i32 y);
 void sui_end(struct sui_context* sui);
 void sui_row(struct sui_context* sui);
-void sui_column(struct sui_context* sui, i32 rows);
+void sui_column(struct sui_context* sui);
 i32  sui_button(struct sui_context* sui, char* name);
 // void sui_text(struct sui_context* sui, char* text, ...);
 /* void sui_checkbox(struct sui_context* sui, char* name, i32* value); */

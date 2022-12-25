@@ -139,9 +139,16 @@ int main()
                 sui_begin(&sui, "window0", 0, 0);
                 if (sui_button(&sui, "button00")) printf("button00 pressed\n");
                 if (sui_button(&sui, "button01")) printf("button01 pressed\n");
-                sui_column(&sui, 2);
+                if (sui_button(&sui, "button02")) printf("button02 pressed\n");
+                sui_column(&sui);
                 if (sui_button(&sui, "button10")) printf("button10 pressed\n");
                 if (sui_button(&sui, "button20")) printf("button20 pressed\n");
+                sui_column(&sui);
+                if (sui_button(&sui, "button11")) printf("button11 pressed\n");
+                if (sui_button(&sui, "button21                    ")) printf("button21 pressed\n");
+                sui_row(&sui);
+                if (sui_button(&sui, "button30")) printf("button30 pressed\n");
+                if (sui_button(&sui, "button31")) printf("button31 pressed\n");
                 // sui_checkbox(&sui, "checkbox00", &value);
                 // if (value) printf("checkbox00 on\n");
                 // if (value) { sui_row(&sui); sui_button(&sui, "button02");}

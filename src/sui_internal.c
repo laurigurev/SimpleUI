@@ -203,3 +203,17 @@ i32 sui_overlap(struct sui_io io, struct sui_rect bbox)
         if (x0 < io.mx && io.mx < x1 && y0 < io.my && io.my < y1) return 1;
         return 0;
 }
+
+void sui_handle_layout(struct sui_layout* layout, i32 w, i32 h)
+{
+        if (layout->type == SUI_LAYOUT_TYPE_ROW) {
+                layout->x += w;
+                layout->w += w;
+                layout->h = sui_max(layout->h, h);
+        }
+        else if (layout->type == SUI_LAYOUT_TYPE_COLUMN) {
+                layout->y += h;
+                layout->w = sui_max(layout->w, w);
+                layout->h += h;
+        }
+}
