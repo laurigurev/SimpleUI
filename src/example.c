@@ -119,7 +119,8 @@ int main()
         struct sui_context sui;
         sui_init(&sui, device, 600, 600);
         f32 colors[] = {0.0f, 0.0f, 0.2f, 1.0f};
-        i32 value = 0;
+        i32 value0 = 0;
+        i32 value1 = 0;
 
         while (1) {
                 memset(&mouse.ldown, 0, 4);
@@ -136,22 +137,26 @@ int main()
                 ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
 
                 sui_inputs(&sui, mouse.x, mouse.y, mouse.ldown, mouse.lup, mouse.rdown, mouse.rup);
-                sui_begin(&sui, "window0", 0, 0);
+                sui_begin(&sui, "window0", 100, 100);
                 if (sui_button(&sui, "button00")) printf("button00 pressed\n");
                 if (sui_button(&sui, "button01")) printf("button01 pressed\n");
                 if (sui_button(&sui, "button02")) printf("button02 pressed\n");
                 sui_column(&sui);
                 if (sui_button(&sui, "button10")) printf("button10 pressed\n");
-                if (sui_button(&sui, "button20")) printf("button20 pressed\n");
-                sui_column(&sui);
                 if (sui_button(&sui, "button11")) printf("button11 pressed\n");
+                if (sui_button(&sui, "button12")) printf("button12 pressed\n");
+                sui_column(&sui);
+                if (sui_button(&sui, "button20")) printf("button20 pressed\n");
                 if (sui_button(&sui, "button21                    ")) printf("button21 pressed\n");
+                if (sui_button(&sui, "button22")) printf("button22 pressed\n");
                 sui_row(&sui);
                 if (sui_button(&sui, "button30")) printf("button30 pressed\n");
                 if (sui_button(&sui, "button31")) printf("button31 pressed\n");
-                // sui_checkbox(&sui, "checkbox00", &value);
-                // if (value) printf("checkbox00 on\n");
-                // if (value) { sui_row(&sui); sui_button(&sui, "button02");}
+                sui_column(&sui);
+                sui_checkbox(&sui, "checkbox00", &value0);
+                sui_checkbox(&sui, "checkbox10", &value1);
+                if (value0) sui_column(&sui);
+                if (value1) sui_button(&sui, "button40");
                 sui_end(&sui);
                 sui_render(&sui);
 

@@ -30,7 +30,7 @@ void sui_row(struct sui_context* sui);
 void sui_column(struct sui_context* sui);
 i32  sui_button(struct sui_context* sui, char* name);
 // void sui_text(struct sui_context* sui, char* text, ...);
-/* void sui_checkbox(struct sui_context* sui, char* name, i32* value); */
+void sui_checkbox(struct sui_context* sui, char* name, i32* value);
 // void sui_slider(struct sui_context* sui, char* name, f32 value);
 void sui_render(struct sui_context* sui);
 
@@ -71,13 +71,10 @@ struct sui_style {
 
 struct sui_context {
         ...
-        struct sui_row row;
-        struct sui_column column;
-        i32 rows_on;
         struct sui_style style;
+        ... 
 };
 
-void sui_button(struct sui_context* sui, char* name);
 void sui_checkbox(struct sui_context* sui, char* name);
 void sui_label(struct sui_context* sui, char* name);
 void sui_text(struct sui_context* sui, char* txt, ...);

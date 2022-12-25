@@ -48,45 +48,43 @@ i32 sui_glyphs_width(char* str)
         return w;
 }
 
-struct sui_widget* sui_widget_create(struct sui_arena* arena, struct sui_ht* ht, char* name, i32 x, i32 y, i32 w, i32 h, struct sui_color color)
+struct sui_widget* sui_widget_create(struct sui_arena* arena, struct sui_ht* ht, char* name)
 {
         sui_assert(arena);
         sui_assert(ht);
         struct sui_widget* widget = sui_arena_push(arena, sizeof(struct sui_widget));
         sui_assert(widget);
         sui_assert(sui_ht_insert(ht, name, widget));
+        widget->rect = (struct sui_rect){0, 0, 0, 0};
+        widget->bbox = (struct sui_rect){0, 0, 0, 0};
+        widget->color = (struct sui_color){255, 255, 255, 255};
+        return widget;
+}
+
+void sui_widget_set(struct sui_widget* widget, i32 x, i32 y, i32 w, i32 h, struct sui_color color)
+{
+        sui_assert(widget);
         widget->rect = (struct sui_rect){x, y, w, h};
         widget->bbox = (struct sui_rect){x, y, w, h};
         widget->color = color;
-        return widget;
 }
 
-struct sui_widget* sui_button_create(struct sui_arena* arena, struct sui_ht* ht, char* name, i32 x, i32 y)
+void sui_button_set(struct sui_widget* widget, char* name, i32 x, i32 y)
 {
-        sui_assert(arena);
-        sui_assert(ht);
-        struct sui_widget* widget = sui_arena_push(arena, sizeof(struct sui_widget));
         sui_assert(widget);
-        sui_assert(sui_ht_insert(ht, name, widget));
-        i32 w = sui_glyphs_width(name);
+        i32 w = widget->rect.w;
+        if (!w) w = sui_glyphs_width(name);
         widget->rect = (struct sui_rect){x, y, w, 16};
         widget->bbox = (struct sui_rect){x, y, w, 16};
-        widget->color = (struct sui_color){0, 0, 0, 255};
-        return widget;
+        // widget->color = (struct sui_color){0, 0, 0, 255};
 }
 
-struct sui_widget* sui_checkbox_create(struct sui_arena* arena, struct sui_ht* ht, char* name, i32 x, i32 y)
+void sui_checkbox_set(struct sui_widget* widget, i32 x, i32 y)
 {
-
-        sui_assert(arena);
-        sui_assert(ht);
-        struct sui_widget* widget = sui_arena_push(arena, sizeof(struct sui_widget));
         sui_assert(widget);
-        sui_assert(sui_ht_insert(ht, name, widget));
         widget->rect = (struct sui_rect){x, y, 16, 16};
         widget->bbox = (struct sui_rect){x, y, 16, 16};
         widget->color = (struct sui_color){0, 0, 0, 255};
-        return widget;
 }
 
 void sui_widget_to_vertices(struct sui_widget* widget, i32* n, struct sui_vertex* vertices)

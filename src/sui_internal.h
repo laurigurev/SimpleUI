@@ -16,10 +16,7 @@ struct sui_layout;
 // struct sui_recti;
 // struct sui_rectf;
 
-enum sui_layout_type {
-        SUI_LAYOUT_TYPE_ROW,
-        SUI_LAYOUT_TYPE_COLUMN
-};
+enum sui_layout_type { SUI_LAYOUT_TYPE_ROW, SUI_LAYOUT_TYPE_COLUMN };
 
 i64 sui_time_begin();
 i64 sui_time_end(i64 begin);
@@ -78,9 +75,10 @@ struct sui_widget {
         struct sui_color color;
 };
 
-struct sui_widget* sui_widget_create(struct sui_arena* arena, struct sui_ht* ht, char* name, i32 x, i32 y, i32 w, i32 h, struct sui_color color);
-struct sui_widget* sui_button_create(struct sui_arena* arena, struct sui_ht* ht, char* name, i32 x, i32 y);
-struct sui_widget* sui_checkbox_create(struct sui_arena* arena, struct sui_ht* ht, char* name, i32 x, i32 y);
+struct sui_widget* sui_widget_create(struct sui_arena* arena, struct sui_ht* ht, char* name);
+void               sui_widget_set(struct sui_widget* widget, i32 x, i32 y, i32 w, i32 h, struct sui_color color);
+void               sui_button_set(struct sui_widget* widget, char* name, i32 x, i32 y);
+void               sui_checkbox_set(struct sui_widget* widget, i32 x, i32 y);
 void               sui_widget_to_vertices(struct sui_widget* widget, i32* n, struct sui_vertex* vertices);
 i32                sui_glyph_to_vertices(char c, i32 x, i32 y, i32* n, struct sui_vertex* vertices);
 void               sui_button_to_vertices(struct sui_widget* widget, char* str, i32* n, struct sui_vertex* vertices);
@@ -102,10 +100,11 @@ i32 sui_overlap(struct sui_io io, struct sui_rect bbox);
 
 struct sui_layout {
         enum sui_layout_type type;
-        i32 x;
-        i32 y;
-        i32 w;
-        i32 h;
+        i32                  acc;
+        i32                  x;
+        i32                  y;
+        i32                  w;
+        i32                  h;
 };
 
 void sui_handle_layout(struct sui_layout* layout, i32 w, i32 h);
