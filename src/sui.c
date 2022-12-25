@@ -60,14 +60,9 @@ void sui_row(struct sui_context* sui)
 {
         sui_assert(sui);
         struct sui_rect* rect = &sui->current_window->rect;
-        if (sui->layout.type == SUI_LAYOUT_TYPE_ROW) {
-                rect->w = sui_max(rect->w, sui->layout.w);
-        }
-        else if (sui->layout.type == SUI_LAYOUT_TYPE_COLUMN) {
-                sui->layout.acc = sui_max(sui->layout.acc, sui->layout.h);
-                rect->w = sui_max(rect->w, sui->layout.x + sui->layout.w - rect->x);
-        }
-        rect->h += sui->layout.acc;
+        if (sui->layout.type == SUI_LAYOUT_TYPE_ROW) rect->w = sui_max(rect->w, sui->layout.w);
+        else if (sui->layout.type == SUI_LAYOUT_TYPE_COLUMN) rect->w = sui_max(rect->w, sui->layout.x + sui->layout.w - rect->x);
+        rect->h += sui_max(sui->layout.acc, sui->layout.h);
         sui->layout = (struct sui_layout){SUI_LAYOUT_TYPE_ROW, 0, rect->x, rect->y + rect->h, 0, 0};
 }
 
@@ -86,8 +81,7 @@ void sui_column(struct sui_context* sui)
                 sui->layout.acc = sui_max(sui->layout.acc, sui->layout.h);
                 w = sui->layout.w;
         }
-        // sui->layout = (struct sui_layout){SUI_LAYOUT_TYPE_COLUMN, rect->x + w, rect->y + rect->h, 0, 0};
-        sui->layout = (struct sui_layout){SUI_LAYOUT_TYPE_COLUMN, sui->layout.acc, rect->x + w, rect->y + rect->y, 0, 0};
+        sui->layout = (struct sui_layout){SUI_LAYOUT_TYPE_COLUMN, sui->layout.acc, rect->x + w, rect->y + rect->h, 0, 0};
 }
 
 i32 sui_button(struct sui_context* sui, char* name)
