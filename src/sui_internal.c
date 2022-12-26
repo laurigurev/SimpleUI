@@ -57,7 +57,8 @@ struct sui_widget* sui_widget_create(struct sui_arena* arena, struct sui_ht* ht,
         sui_assert(sui_ht_insert(ht, name, widget));
         widget->rect = (struct sui_rect){0, 0, 0, 0};
         widget->bbox = (struct sui_rect){0, 0, 0, 0};
-        widget->color = (struct sui_color){255, 255, 255, 255};
+        widget->color0 = (struct sui_color){0, 0, 0, 0};
+        widget->color1 = (struct sui_color){0, 0, 0, 0};
         return widget;
 }
 
@@ -66,7 +67,8 @@ void sui_widget_set(struct sui_widget* widget, i32 x, i32 y, i32 w, i32 h, struc
         sui_assert(widget);
         widget->rect = (struct sui_rect){x, y, w, h};
         widget->bbox = (struct sui_rect){x, y, w, h};
-        widget->color = color;
+        widget->color0 = color;
+        widget->color1 = (struct sui_color){0, 0, 0, 0};
 }
 
 void sui_button_set(struct sui_widget* widget, char* name, i32 x, i32 y)
@@ -76,7 +78,8 @@ void sui_button_set(struct sui_widget* widget, char* name, i32 x, i32 y)
         if (!w) w = sui_glyphs_width(name);
         widget->rect = (struct sui_rect){x, y, w, 16};
         widget->bbox = (struct sui_rect){x, y, w, 16};
-        // widget->color = (struct sui_color){0, 0, 0, 255};
+        widget->color0 = (struct sui_color){0, 0, 0, 255};
+        widget->color1 = (struct sui_color){255, 255, 255, 255};
 }
 
 void sui_checkbox_set(struct sui_widget* widget, i32 x, i32 y)
@@ -84,7 +87,8 @@ void sui_checkbox_set(struct sui_widget* widget, i32 x, i32 y)
         sui_assert(widget);
         widget->rect = (struct sui_rect){x, y, 16, 16};
         widget->bbox = (struct sui_rect){x, y, 16, 16};
-        widget->color = (struct sui_color){0, 0, 0, 255};
+        // widget->color0 = (struct sui_color){0, 0, 0, 255};
+        // widget->color1 = (struct sui_color){255, 255, 255, 255};
 }
 
 void sui_slider_set(struct sui_widget* widget, f32 value, i32 x, i32 y)
@@ -94,7 +98,8 @@ void sui_slider_set(struct sui_widget* widget, f32 value, i32 x, i32 y)
         f32       bbx = 160.0f * value - 8.0f;
         widget->rect = (struct sui_rect){x, y, (i32)w, 16};
         widget->bbox = (struct sui_rect){x + (i32)bbx, y, 16, 16};
-        widget->color = (struct sui_color){0, 0, 0, 255};
+        widget->color0 = (struct sui_color){0, 0, 0, 255};
+        widget->color1 = (struct sui_color){255, 255, 255, 255};
 }
 
 void sui_widget_to_vertices(struct sui_widget* widget, i32* n, struct sui_vertex* vertices)
@@ -111,14 +116,14 @@ void sui_widget_to_vertices(struct sui_widget* widget, i32* n, struct sui_vertex
         // TODO: figure a good way to bring font atlas dimensions to this function
         struct sui_uvmap uv = sui_glyph_get_uv(127, 128, 64);
 
-        *vertices++ = (struct sui_vertex){x0, y0, uv.u0, uv.v0, widget->color};
-        *vertices++ = (struct sui_vertex){x1, y1, uv.u1, uv.v1, widget->color};
-        *vertices++ = (struct sui_vertex){x0, y1, uv.u0, uv.v1, widget->color};
-        *vertices++ = (struct sui_vertex){x1, y0, uv.u1, uv.v0, widget->color};
+        *vertices++ = (struct sui_vertex){x0, y0, uv.u0, uv.v0, widget->color0};
+        *vertices++ = (struct sui_vertex){x1, y1, uv.u1, uv.v1, widget->color0};
+        *vertices++ = (struct sui_vertex){x0, y1, uv.u0, uv.v1, widget->color0};
+        *vertices++ = (struct sui_vertex){x1, y0, uv.u1, uv.v0, widget->color0};
         *n += 4;
 }
 
-i32 sui_glyph_to_vertices(char c, i32 x, i32 y, i32* n, struct sui_vertex* vertices)
+i32 sui_glyph_to_vertices(char c, i32 x, i32 y, struct sui_color color, i32* n, struct sui_vertex* vertices)
 {
         struct sui_glyph glyph = cdata[c - 32];
         f32              x0 = (f32)x + glyph.xoffset;
@@ -127,7 +132,7 @@ i32 sui_glyph_to_vertices(char c, i32 x, i32 y, i32* n, struct sui_vertex* verti
         f32              y1 = y0 + glyph.height;
         // TODO: figure a good way to bring font atlas dimensions to this function
         struct sui_uvmap uv = sui_glyph_get_uv(c, 128, 64);
-        struct sui_color color = (struct sui_color){200, 200, 200, 255};
+        // TODO: bring color from widget
         *vertices++ = (struct sui_vertex){x0, y0, uv.u0, uv.v0, color};
         *vertices++ = (struct sui_vertex){x1, y1, uv.u1, uv.v1, color};
         *vertices++ = (struct sui_vertex){x0, y1, uv.u0, uv.v1, color};
@@ -149,7 +154,7 @@ void sui_button_to_vertices(struct sui_widget* widget, char* str, i32* n, struct
 
         i32 xadvance = 0;
         while (*str) {
-                xadvance += sui_glyph_to_vertices(*str, rect.x + xadvance, rect.y, n, vertices);
+                xadvance += sui_glyph_to_vertices(*str, rect.x + xadvance, rect.y, widget->color1, n, vertices);
                 vertices += 4;
                 str++;
         }
@@ -157,10 +162,10 @@ void sui_button_to_vertices(struct sui_widget* widget, char* str, i32* n, struct
         // TODO: figure a good way to bring font atlas dimensions to this function
         struct sui_uvmap uv = sui_glyph_get_uv(127, 128, 64);
 
-        *vertices++ = (struct sui_vertex){x0, y0, uv.u0, uv.v0, widget->color};
-        *vertices++ = (struct sui_vertex){x1, y1, uv.u1, uv.v1, widget->color};
-        *vertices++ = (struct sui_vertex){x0, y1, uv.u0, uv.v1, widget->color};
-        *vertices++ = (struct sui_vertex){x1, y0, uv.u1, uv.v0, widget->color};
+        *vertices++ = (struct sui_vertex){x0, y0, uv.u0, uv.v0, widget->color0};
+        *vertices++ = (struct sui_vertex){x1, y1, uv.u1, uv.v1, widget->color0};
+        *vertices++ = (struct sui_vertex){x0, y1, uv.u0, uv.v1, widget->color0};
+        *vertices++ = (struct sui_vertex){x1, y0, uv.u1, uv.v0, widget->color0};
         *n += 4;
 }
 
@@ -181,25 +186,24 @@ void sui_checkbox_to_vertices(struct sui_widget* widget, i32 value, i32* n, stru
         f32 pad = 0.0f;
         if (value) {
                 pad = 4.0f;
-                *vertices++ = (struct sui_vertex){x0 + pad, y0 + pad, uv.u0, uv.v0, widget->color};
-                *vertices++ = (struct sui_vertex){x1 - pad, y1 - pad, uv.u1, uv.v1, widget->color};
-                *vertices++ = (struct sui_vertex){x0 + pad, y1 - pad, uv.u0, uv.v1, widget->color};
-                *vertices++ = (struct sui_vertex){x1 - pad, y0 + pad, uv.u1, uv.v0, widget->color};
+                *vertices++ = (struct sui_vertex){x0 + pad, y0 + pad, uv.u0, uv.v0, widget->color0};
+                *vertices++ = (struct sui_vertex){x1 - pad, y1 - pad, uv.u1, uv.v1, widget->color0};
+                *vertices++ = (struct sui_vertex){x0 + pad, y1 - pad, uv.u0, uv.v1, widget->color0};
+                *vertices++ = (struct sui_vertex){x1 - pad, y0 + pad, uv.u1, uv.v0, widget->color0};
                 *n += 4;
         }
 
-        struct sui_color color = (struct sui_color){255, 255, 255, 255};
         pad = 2.0f;
-        *vertices++ = (struct sui_vertex){x0 + pad, y0 + pad, uv.u0, uv.v0, color};
-        *vertices++ = (struct sui_vertex){x1 - pad, y1 - pad, uv.u1, uv.v1, color};
-        *vertices++ = (struct sui_vertex){x0 + pad, y1 - pad, uv.u0, uv.v1, color};
-        *vertices++ = (struct sui_vertex){x1 - pad, y0 + pad, uv.u1, uv.v0, color};
+        *vertices++ = (struct sui_vertex){x0 + pad, y0 + pad, uv.u0, uv.v0, widget->color1};
+        *vertices++ = (struct sui_vertex){x1 - pad, y1 - pad, uv.u1, uv.v1, widget->color1};
+        *vertices++ = (struct sui_vertex){x0 + pad, y1 - pad, uv.u0, uv.v1, widget->color1};
+        *vertices++ = (struct sui_vertex){x1 - pad, y0 + pad, uv.u1, uv.v0, widget->color1};
         *n += 4;
 
-        *vertices++ = (struct sui_vertex){x0, y0, uv.u0, uv.v0, widget->color};
-        *vertices++ = (struct sui_vertex){x1, y1, uv.u1, uv.v1, widget->color};
-        *vertices++ = (struct sui_vertex){x0, y1, uv.u0, uv.v1, widget->color};
-        *vertices++ = (struct sui_vertex){x1, y0, uv.u1, uv.v0, widget->color};
+        *vertices++ = (struct sui_vertex){x0, y0, uv.u0, uv.v0, widget->color0};
+        *vertices++ = (struct sui_vertex){x1, y1, uv.u1, uv.v1, widget->color0};
+        *vertices++ = (struct sui_vertex){x0, y1, uv.u0, uv.v1, widget->color0};
+        *vertices++ = (struct sui_vertex){x1, y0, uv.u1, uv.v0, widget->color0};
         *n += 4;
 }
 
@@ -214,14 +218,14 @@ void sui_slider_to_vertices(struct sui_widget* widget, f32 value, i32* n, struct
         f32 x1 = widget->rect.x + widget->rect.w * value + 8.0f;
         f32 y0 = (f32)widget->rect.y;
         f32 y1 = (f32)widget->rect.y + widget->rect.h;
-        
+
         // TODO: figure a good way to bring font atlas dimensions to this function
         struct sui_uvmap uv = sui_glyph_get_uv(127, 128, 64);
 
-        *vertices++ = (struct sui_vertex){x0, y0, uv.u0, uv.v0, widget->color};
-        *vertices++ = (struct sui_vertex){x1, y1, uv.u1, uv.v1, widget->color};
-        *vertices++ = (struct sui_vertex){x0, y1, uv.u0, uv.v1, widget->color};
-        *vertices++ = (struct sui_vertex){x1, y0, uv.u1, uv.v0, widget->color};
+        *vertices++ = (struct sui_vertex){x0, y0, uv.u0, uv.v0, widget->color0};
+        *vertices++ = (struct sui_vertex){x1, y1, uv.u1, uv.v1, widget->color0};
+        *vertices++ = (struct sui_vertex){x0, y1, uv.u0, uv.v1, widget->color0};
+        *vertices++ = (struct sui_vertex){x1, y0, uv.u1, uv.v0, widget->color0};
         *n += 4;
 
         // slider
@@ -229,11 +233,11 @@ void sui_slider_to_vertices(struct sui_widget* widget, f32 value, i32* n, struct
         x1 = (f32)widget->rect.x + (f32)widget->rect.w;
         y0 = (f32)widget->rect.y + 7.0f;
         y1 = (f32)widget->rect.y + 9.0f;
-        
-        *vertices++ = (struct sui_vertex){x0, y0, uv.u0, uv.v0, (struct sui_color){0, 0, 0, 255}};
-        *vertices++ = (struct sui_vertex){x1, y1, uv.u1, uv.v1, (struct sui_color){0, 0, 0, 255}};
-        *vertices++ = (struct sui_vertex){x0, y1, uv.u0, uv.v1, (struct sui_color){0, 0, 0, 255}};
-        *vertices++ = (struct sui_vertex){x1, y0, uv.u1, uv.v0, (struct sui_color){0, 0, 0, 255}};
+
+        *vertices++ = (struct sui_vertex){x0, y0, uv.u0, uv.v0, widget->color0};
+        *vertices++ = (struct sui_vertex){x1, y1, uv.u1, uv.v1, widget->color0};
+        *vertices++ = (struct sui_vertex){x0, y1, uv.u0, uv.v1, widget->color0};
+        *vertices++ = (struct sui_vertex){x1, y0, uv.u1, uv.v0, widget->color0};
         *n += 4;
 }
 

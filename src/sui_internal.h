@@ -71,7 +71,8 @@ struct sui_rect {
 struct sui_widget {
         struct sui_rect  rect;
         struct sui_rect  bbox;
-        struct sui_color color;
+        struct sui_color color0;
+        struct sui_color color1;
 };
 
 struct sui_widget* sui_widget_create(struct sui_arena* arena, struct sui_ht* ht, char* name);
@@ -80,7 +81,7 @@ void               sui_button_set(struct sui_widget* widget, char* name, i32 x, 
 void               sui_checkbox_set(struct sui_widget* widget, i32 x, i32 y);
 void               sui_slider_set(struct sui_widget* widget, f32 value, i32 x, i32 y);
 void               sui_widget_to_vertices(struct sui_widget* widget, i32* n, struct sui_vertex* vertices);
-i32                sui_glyph_to_vertices(char c, i32 x, i32 y, i32* n, struct sui_vertex* vertices);
+i32                sui_glyph_to_vertices(char c, i32 x, i32 y, struct sui_color color, i32* n, struct sui_vertex* vertices);
 void               sui_button_to_vertices(struct sui_widget* widget, char* str, i32* n, struct sui_vertex* vertices);
 void               sui_checkbox_to_vertices(struct sui_widget* widget, i32 value, i32* n, struct sui_vertex* vertices);
 void               sui_slider_to_vertices(struct sui_widget* widget, f32 value, i32* n, struct sui_vertex* vertices);
@@ -125,8 +126,8 @@ struct sui_style {
         struct sui_color slider_color;
         struct sui_color slider_hover_color;
         struct sui_color checkbox_color;
-        struct sui_color checkbox_hover_color;
-        i32 margin;
+        struct sui_color checkbox_bg_color;
+        i32              margin;
         // i32 max_button_width;
         // i32 min_button_width;
         // i32 max_label_width;
