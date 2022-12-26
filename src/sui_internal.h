@@ -13,8 +13,7 @@ struct sui_rect;
 struct sui_widget;
 struct sui_io;
 struct sui_layout;
-// struct sui_recti;
-// struct sui_rectf;
+struct sui_style;
 
 enum sui_layout_type { SUI_LAYOUT_TYPE_ROW, SUI_LAYOUT_TYPE_COLUMN };
 
@@ -110,3 +109,37 @@ struct sui_layout {
 };
 
 void sui_handle_layout(struct sui_layout* layout, i32 w, i32 h);
+
+struct sui_style {
+        struct sui_color window_color;
+        struct sui_color button_bg_color;
+        struct sui_color button_hover_bg_color;
+        struct sui_color button_color;
+        struct sui_color button_hover_color;
+        struct sui_color label_bg_color;
+        struct sui_color label_hover_bg_color;
+        struct sui_color label_color;
+        struct sui_color label_hover_color;
+        struct sui_color text_bg_color;
+        struct sui_color text_color;
+        struct sui_color slider_color;
+        struct sui_color slider_hover_color;
+        struct sui_color checkbox_color;
+        struct sui_color checkbox_hover_color;
+        i32 margin;
+        // i32 max_button_width;
+        // i32 min_button_width;
+        // i32 max_label_width;
+        // i32 min_label_width;
+        i32 slider_width;
+        i32 max_text_width;
+        i32 max_text_rows;
+        i32 min_text_width;
+        i32 min_text_rows;
+        // i32 max_column_width;
+        // i32 max_window_width;
+        // i32 max_window_height;
+        // i32 min_window_width;
+        // i32 min_window_height;
+        // f32 scale;
+};

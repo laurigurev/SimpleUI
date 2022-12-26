@@ -19,6 +19,29 @@ void sui_init(struct sui_context* sui, ID3D11Device* device, i32 w, i32 h)
         sui_backend_init(&sui->backend, device, w, h);
         sui->vertices_len = 0;
         sui->vertices = (struct sui_vertex*)malloc(2048 * sizeof(struct sui_vertex));
+        sui->style = (struct sui_style){
+            (struct sui_color){255, 255, 255, 255}, // struct sui_color window_color
+            (struct sui_color){0,   0,   0,   255}, // struct sui_color button_bg_color
+            (struct sui_color){100, 100, 100, 255}, // struct sui_color button_hover_bg_color
+            (struct sui_color){255, 255, 255, 255}, // struct sui_color button_color
+            (struct sui_color){255, 255, 255, 255}, // struct sui_color button_hover_color
+            (struct sui_color){0,   0,   0,   255}, // struct sui_color label_bg_color
+            (struct sui_color){100, 100, 100, 255}, // struct sui_color label_hover_bg_color
+            (struct sui_color){255, 255, 255, 255}, // struct sui_color label_color
+            (struct sui_color){255, 255, 255, 255}, // struct sui_color label_hover_color
+            (struct sui_color){0,   0,   0,   255}, // struct sui_color text_bg_color
+            (struct sui_color){255, 255, 255, 255}, // struct sui_color text_color
+            (struct sui_color){0,   0,   0,   255}, // struct sui_color slider_color
+            (struct sui_color){100, 100, 100, 255}, // struct sui_color slider_hover_color
+            (struct sui_color){0,   0,   0,   255}, // struct sui_color checkbox_color
+            (struct sui_color){0,   0,   0,   255}, // struct sui_color checkbox_hover_color
+            0, // i32 margin
+            160, // i32 slider_width
+            200, // i32 max_text_width
+            4, // i32 max_text_rows
+            100, // i32 min_text_width
+            1  // i32 min_text_rows
+        };
 }
 
 void sui_inputs(struct sui_context* sui, i32 mx, i32 my, u8 ldown, u8 lup, u8 rdown, u8 rup)
@@ -93,9 +116,9 @@ i32 sui_button(struct sui_context* sui, char* name)
         sui_button_set(widget, name, sui->layout.x, sui->layout.y);
         sui_handle_layout(&sui->layout, widget->rect.w, widget->rect.h);
 
-        widget->color = (struct sui_color){0, 0, 0, 255};
+        widget->color = sui->style.button_bg_color;
         if (sui_overlap(sui->io, widget->bbox)) {
-                widget->color = (struct sui_color){100, 100, 100, 255};
+                widget->color = sui->style.button_hover_bg_color;
                 if (sui->io.ldown) sui->hot_widget = widget;
                 if (sui->io.lup && sui->hot_widget == widget) sui->active_widget = widget;
         }
@@ -141,9 +164,9 @@ void sui_slider(struct sui_context* sui, char* name, f32* value)
         sui_slider_set(widget, *value, sui->layout.x, sui->layout.y);
         sui_handle_layout(&sui->layout, widget->rect.w, widget->rect.h);
 
-        widget->color = (struct sui_color){0, 0, 0, 255};
+        widget->color = sui->style.slider_color;
         if (sui_overlap(sui->io, widget->bbox)) {
-                widget->color = (struct sui_color){100, 100, 100, 255};
+                widget->color = sui->style.slider_hover_color;
                 if (sui->io.ldown) {
                         sui->hot_widget = widget;
                         sui->active_widget = widget;
