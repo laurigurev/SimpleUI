@@ -13,7 +13,7 @@ todos:
    can be changed by user 
  - add button padding(l/r/t/b) to
    style
- - fix slider max and min movement
+ - [DONE] fix slider max and min movement
    for control
  - add overlayed windows
  - add statistics that follow memory used,

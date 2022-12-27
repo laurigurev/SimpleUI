@@ -91,13 +91,15 @@ void sui_checkbox_set(struct sui_widget* widget, i32 x, i32 y)
         // widget->color1 = (struct sui_color){255, 255, 255, 255};
 }
 
-void sui_slider_set(struct sui_widget* widget, f32 value, i32 x, i32 y)
+void sui_slider_set(struct sui_widget* widget, f32 value, i32 x, i32 y, i32 w)
 {
         sui_assert(widget);
-        const f32 w = 160.0f;
-        f32       bbx = 160.0f * value - 8.0f;
-        widget->rect = (struct sui_rect){x, y, (i32)w, 16};
-        widget->bbox = (struct sui_rect){x + (i32)bbx, y, 16, 16};
+        // TODO: control width and height
+        i32       bbx = (f32)w * value - 8.0f;
+        if (value <= 0.0f) bbx = 0;
+        if (value >= 1.0f) bbx = w - 16;
+        widget->rect = (struct sui_rect){x, y, w, 16};
+        widget->bbox = (struct sui_rect){x + bbx, y, 16, 16};
         widget->color0 = (struct sui_color){0, 0, 0, 255};
         widget->color1 = (struct sui_color){255, 255, 255, 255};
 }
@@ -213,11 +215,10 @@ void sui_slider_to_vertices(struct sui_widget* widget, f32 value, i32* n, struct
         sui_assert(vertices);
 
         // control
-        // TODO: generate control from bbox
-        f32 x0 = widget->rect.x + widget->rect.w * value - 8.0f;
-        f32 x1 = widget->rect.x + widget->rect.w * value + 8.0f;
-        f32 y0 = (f32)widget->rect.y;
-        f32 y1 = (f32)widget->rect.y + widget->rect.h;
+        f32 x0 = (f32)widget->bbox.x;
+        f32 x1 = (f32)widget->bbox.x + (f32)widget->bbox.w;
+        f32 y0 = (f32)widget->bbox.y;       
+        f32 y1 = (f32)widget->bbox.y + widget->bbox.h;
 
         // TODO: figure a good way to bring font atlas dimensions to this function
         struct sui_uvmap uv = sui_glyph_get_uv(127, 128, 64);

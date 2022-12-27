@@ -36,7 +36,7 @@ void sui_init(struct sui_context* sui, ID3D11Device* device, i32 w, i32 h)
             (struct sui_color){255, 255, 255, 255}, // struct sui_color checkbox_color
             (struct sui_color){0,   0,   0,   255}, // struct sui_color checkbox_bg_color
             2, // i32 margin
-            160, // i32 slider_width
+            400, // i32 slider_width
             200, // i32 max_text_width
             4, // i32 max_text_rows
             100, // i32 min_text_width
@@ -169,7 +169,8 @@ void sui_slider(struct sui_context* sui, char* name, f32* value)
         if (!widget) {
                 widget = sui_widget_create(&sui->arena, &sui->ht, name);
         }
-        sui_slider_set(widget, *value, sui->layout.x + sui->style.margin, sui->layout.y + sui->style.margin);
+        i32 w = sui->style.slider_width;
+        sui_slider_set(widget, *value, sui->layout.x + sui->style.margin, sui->layout.y + sui->style.margin, w);
         sui_handle_layout(&sui->layout, widget->rect.w + sui->style.margin, widget->rect.h + sui->style.margin);
 
         widget->color0 = sui->style.slider_color;
@@ -184,11 +185,11 @@ void sui_slider(struct sui_context* sui, char* name, f32* value)
         
         if (sui->active_widget == widget) {
                 if (sui->io.lup) sui->active_widget = NULL;
-                *value -= (sui->io.dmx / 160.0f);
+                *value -= (sui->io.dmx / (f32)w);
                 if (*value < 0.0f) { *value = 0.0f; return; }
                 if (1.0f < *value) { *value = 1.0f; return; }
-                if (sui->io.mx < widget->rect.x) *value = 0.0f;
-                if (widget->rect.x + 160.0f < sui->io.mx) *value = 1.0f;
+                if (sui->io.mx < widget->rect.x) { *value = 0.0f; return; }
+                if (widget->rect.x + (f32)w < sui->io.mx) { *value = 1.0f; return; }
         }
 }
 
