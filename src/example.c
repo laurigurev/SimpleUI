@@ -159,7 +159,10 @@ int main()
                 if (value0) sui_column(&sui);
                 if (value1) sui_button(&sui, "button40");
                 sui_row(&sui);
+                sui_label(&sui, "slider");
                 sui_slider(&sui, "slider00", &value2);
+                sui_row(&sui);
+                sui_text(&sui, "slider_value: %.2f", value2);
                 sui_end(&sui);
                 sui_render(&sui);
 

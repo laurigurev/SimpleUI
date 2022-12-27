@@ -31,10 +31,10 @@ void sui_column(struct sui_context* sui);
 i32  sui_button(struct sui_context* sui, char* name);
 void sui_checkbox(struct sui_context* sui, char* name, i32* value);
 void sui_slider(struct sui_context* sui, char* name, f32* value);
+void sui_label(struct sui_context* sui, char* name);
+void sui_text(struct sui_context* sui, char* txt, ...);
 void sui_render(struct sui_context* sui);
 
 /*
-void sui_label(struct sui_context* sui, char* name);
-void sui_text(struct sui_context* sui, char* txt, ...);
 void sui_empty(struct sui_context* sui, i32 space);
  */

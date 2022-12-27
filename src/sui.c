@@ -36,7 +36,7 @@ void sui_init(struct sui_context* sui, ID3D11Device* device, i32 w, i32 h)
             (struct sui_color){255, 255, 255, 255}, // struct sui_color checkbox_color
             (struct sui_color){0,   0,   0,   255}, // struct sui_color checkbox_bg_color
             2, // i32 margin
-            400, // i32 slider_width
+            160, // i32 slider_width
             200, // i32 max_text_width
             4, // i32 max_text_rows
             100, // i32 min_text_width
@@ -182,15 +182,64 @@ void sui_slider(struct sui_context* sui, char* name, f32* value)
                 }
         }
         sui_slider_to_vertices(widget, *value, &sui->vertices_len, sui->vertices + sui->vertices_len);
-        
+
         if (sui->active_widget == widget) {
                 if (sui->io.lup) sui->active_widget = NULL;
                 *value -= (sui->io.dmx / (f32)w);
-                if (*value < 0.0f) { *value = 0.0f; return; }
-                if (1.0f < *value) { *value = 1.0f; return; }
-                if (sui->io.mx < widget->rect.x) { *value = 0.0f; return; }
-                if (widget->rect.x + (f32)w < sui->io.mx) { *value = 1.0f; return; }
+                if (*value < 0.0f) {
+                        *value = 0.0f;
+                        return;
+                }
+                if (1.0f < *value) {
+                        *value = 1.0f;
+                        return;
+                }
+                if (sui->io.mx < widget->rect.x) {
+                        *value = 0.0f;
+                        return;
+                }
+                if (widget->rect.x + (f32)w < sui->io.mx) {
+                        *value = 1.0f;
+                        return;
+                }
         }
+}
+
+void sui_label(struct sui_context* sui, char* name)
+{
+        sui_assert(sui);
+        sui_assert(sui->current_window);
+        struct sui_widget* widget = sui_ht_find(&sui->ht, name);
+        if (!widget) {
+                widget = sui_widget_create(&sui->arena, &sui->ht, name);
+                widget->color0 = sui->style.label_color;
+                widget->color1 = sui->style.label_bg_color;
+        }
+        sui_button_set(widget, name, sui->layout.x + sui->style.margin, sui->layout.y + sui->style.margin);
+        sui_handle_layout(&sui->layout, widget->rect.w + sui->style.margin, widget->rect.h + sui->style.margin);
+        sui_button_to_vertices(widget, name, &sui->vertices_len, sui->vertices + sui->vertices_len);
+}
+
+void sui_text(struct sui_context* sui, char* txt, ...)
+{
+        sui_assert(sui);
+        sui_assert(sui->current_window);
+        struct sui_widget* widget = sui_ht_find(&sui->ht, txt);
+        if (!widget) {
+                widget = sui_widget_create(&sui->arena, &sui->ht, txt);
+                widget->color0 = sui->style.label_color;
+                widget->color1 = sui->style.label_bg_color;
+        }
+        char buffer[1000];
+        memset(buffer, 0, 1000);
+        va_list args;
+        va_start(args, txt);
+        i32 n = vsnprintf(buffer, 1000 - 1, txt, args);
+        sui_assert(n != -1);
+        va_end(args);
+        sui_button_set(widget, buffer, sui->layout.x + sui->style.margin, sui->layout.y + sui->style.margin);
+        sui_handle_layout(&sui->layout, widget->rect.w + sui->style.margin, widget->rect.h + sui->style.margin);
+        sui_button_to_vertices(widget, buffer, &sui->vertices_len, sui->vertices + sui->vertices_len);
 }
 
 void sui_render(struct sui_context* sui)
