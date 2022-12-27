@@ -222,6 +222,7 @@ void sui_label(struct sui_context* sui, char* name)
 
 void sui_text(struct sui_context* sui, char* txt, ...)
 {
+        // TODO: hadle text with style params
         sui_assert(sui);
         sui_assert(sui->current_window);
         struct sui_widget* widget = sui_ht_find(&sui->ht, txt);
@@ -231,7 +232,6 @@ void sui_text(struct sui_context* sui, char* txt, ...)
                 widget->color1 = sui->style.label_bg_color;
         }
         char buffer[1000];
-        // memset(buffer, 0, 1000);
         va_list args;
         va_start(args, txt);
         i32 n = vsnprintf(buffer, 1000 - 1, txt, args);
