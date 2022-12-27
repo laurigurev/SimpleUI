@@ -231,7 +231,7 @@ void sui_text(struct sui_context* sui, char* txt, ...)
                 widget->color1 = sui->style.label_bg_color;
         }
         char buffer[1000];
-        memset(buffer, 0, 1000);
+        // memset(buffer, 0, 1000);
         va_list args;
         va_start(args, txt);
         i32 n = vsnprintf(buffer, 1000 - 1, txt, args);
