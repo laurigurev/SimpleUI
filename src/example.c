@@ -144,7 +144,7 @@ int main()
                 if (sui_button(&sui, "button02")) printf("button02 pressed\n");
                 sui_column(&sui);
                 if (sui_button(&sui, "button10")) printf("button10 pressed\n");
-                if (sui_button(&sui, "button11")) printf("button11 pressed\n");
+                if (sui_button(&sui, "--button11--")) printf("button11 pressed\n");
                 if (sui_button(&sui, "button12")) printf("button12 pressed\n");
                 sui_column(&sui);
                 if (sui_button(&sui, "button20")) printf("button20 pressed\n");

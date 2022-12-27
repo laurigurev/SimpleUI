@@ -34,12 +34,6 @@ void sui_slider(struct sui_context* sui, char* name, f32* value);
 void sui_render(struct sui_context* sui);
 
 /*
-struct sui_context {
-        ...
-        struct sui_style style;
-        ...
-};
-
 void sui_label(struct sui_context* sui, char* name);
 void sui_text(struct sui_context* sui, char* txt, ...);
 void sui_empty(struct sui_context* sui, i32 space);
