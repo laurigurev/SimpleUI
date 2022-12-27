@@ -54,7 +54,8 @@ struct sui_widget* sui_widget_create(struct sui_arena* arena, struct sui_ht* ht,
         sui_assert(ht);
         struct sui_widget* widget = sui_arena_push(arena, sizeof(struct sui_widget));
         sui_assert(widget);
-        sui_assert(sui_ht_insert(ht, name, widget));
+        i32 r = sui_ht_insert(ht, name, widget);
+        sui_assert(r != 0);
         widget->rect = (struct sui_rect){0, 0, 0, 0};
         widget->bbox = (struct sui_rect){0, 0, 0, 0};
         widget->color0 = (struct sui_color){0, 0, 0, 0};
@@ -95,13 +96,23 @@ void sui_slider_set(struct sui_widget* widget, f32 value, i32 x, i32 y, i32 w)
 {
         sui_assert(widget);
         // TODO: control width and height
-        i32       bbx = (f32)w * value - 8.0f;
+        i32 bbx = w * value - 8.0f;
         if (value <= 0.0f) bbx = 0;
         if (value >= 1.0f) bbx = w - 16;
         widget->rect = (struct sui_rect){x, y, w, 16};
         widget->bbox = (struct sui_rect){x + bbx, y, 16, 16};
         widget->color0 = (struct sui_color){0, 0, 0, 255};
         widget->color1 = (struct sui_color){255, 255, 255, 255};
+}
+
+void sui_text_set(struct sui_widget* widget, char* text, i32 x, i32 y)
+{
+        sui_assert(widget);
+        i32 w = sui_glyphs_width(text);
+        widget->rect = (struct sui_rect){x, y, w, 16};
+        widget->bbox = (struct sui_rect){x, y, w, 16};
+        // widget->color0 = (struct sui_color){0, 0, 0, 255};
+        // widget->color1 = (struct sui_color){255, 255, 255, 255};
 }
 
 void sui_widget_to_vertices(struct sui_widget* widget, i32* n, struct sui_vertex* vertices)
@@ -217,7 +228,7 @@ void sui_slider_to_vertices(struct sui_widget* widget, f32 value, i32* n, struct
         // control
         f32 x0 = (f32)widget->bbox.x;
         f32 x1 = (f32)widget->bbox.x + (f32)widget->bbox.w;
-        f32 y0 = (f32)widget->bbox.y;       
+        f32 y0 = (f32)widget->bbox.y;
         f32 y1 = (f32)widget->bbox.y + widget->bbox.h;
 
         // TODO: figure a good way to bring font atlas dimensions to this function

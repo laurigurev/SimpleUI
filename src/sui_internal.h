@@ -14,6 +14,7 @@ struct sui_widget;
 struct sui_io;
 struct sui_layout;
 struct sui_style;
+struct sui_profile;
 
 enum sui_layout_type { SUI_LAYOUT_TYPE_ROW, SUI_LAYOUT_TYPE_COLUMN };
 
@@ -80,6 +81,7 @@ void               sui_widget_set(struct sui_widget* widget, i32 x, i32 y, i32 w
 void               sui_button_set(struct sui_widget* widget, char* name, i32 x, i32 y);
 void               sui_checkbox_set(struct sui_widget* widget, i32 x, i32 y);
 void               sui_slider_set(struct sui_widget* widget, f32 value, i32 x, i32 y, i32 w);
+void               sui_text_set(struct sui_widget* widget, char* text, i32 x, i32 y);
 void               sui_widget_to_vertices(struct sui_widget* widget, i32* n, struct sui_vertex* vertices);
 i32                sui_glyph_to_vertices(char c, i32 x, i32 y, struct sui_color color, i32* n, struct sui_vertex* vertices);
 void               sui_button_to_vertices(struct sui_widget* widget, char* str, i32* n, struct sui_vertex* vertices);
@@ -143,4 +145,43 @@ struct sui_style {
         // i32 min_window_width;
         // i32 min_window_height;
         // f32 scale;
+};
+
+struct sui_profile {
+        i32 frame_count;
+        
+        i32 button_count;
+        i64 button_delta;
+        i64 button_total_time;
+        i64 button_avg_time;
+        
+        i32 checkbox_count;
+        i64 checkbox_delta;
+        i64 checkbox_total_time;
+        i64 checkbox_avg_time;
+        
+        i32 slider_count;
+        i64 slider_delta;
+        i64 slider_total_time;
+        i64 slider_avg_time;
+        
+        i32 label_count;
+        i64 label_delta;
+        i64 label_total_time;
+        i64 label_avg_time;
+        
+        i32 text_count;
+        i64 text_delta;
+        i64 text_total_time;
+        i64 text_avg_time;
+        
+        u64 memory_allocated;
+        u64 memory_used;
+        u64 memory_pushed;
+        
+        i32 hash_table_item_count;
+        i32 hash_table_misses; // TODO
+        
+        i32 vertex_count;
+        i32 draw_calls;
 };

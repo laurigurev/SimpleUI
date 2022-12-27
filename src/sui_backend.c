@@ -11,18 +11,9 @@ void sui_backend_init(struct sui_backend* backend, ID3D11Device* device, i32 w, 
         ID3D11Device_GetImmediateContext(device, &backend->context);
 
         HRESULT   hr;
-        FILE*     fstream;
         ID3DBlob* blob = NULL;
-        char      buffer[4096];
-        memset(buffer, 0, 4096);
-
-        sui_assert(fopen_s(&fstream, "shaders\\sui_vertex.txt", "r") == 0);
-        // TODO: fread_s
-        fread(buffer, 1, 4095, fstream);
-        hr = D3DCompile(buffer, strlen(buffer), NULL, NULL, NULL, "main", "vs_4_0",
-                        0 /* deal with shader flags later */, 0, &blob, NULL);
+        hr = D3DCompileFromFile(L"shaders\\sui_vertex.hlsl", NULL, NULL, "main", "vs_4_0", 0, 0, &blob, NULL);
         sui_assert(hr == 0);
-
         hr = ID3D11Device_CreateVertexShader(device, (void*)ID3D10Blob_GetBufferPointer(blob),
                                              ID3D10Blob_GetBufferSize(blob), NULL, &backend->vs);
         sui_assert(hr == 0);
@@ -35,21 +26,14 @@ void sui_backend_init(struct sui_backend* backend, ID3D11Device* device, i32 w, 
         hr = ID3D11Device_CreateInputLayout(device, ieds, 3, ID3D10Blob_GetBufferPointer(blob),
                                             ID3D10Blob_GetBufferSize(blob), &backend->il);
         sui_assert(hr == 0);
-        fclose(fstream);
 
-        memset(buffer, 0, 4096);
-        sui_assert(fopen_s(&fstream, "shaders\\sui_pixel.txt", "r") == 0);
-        fread(buffer, 1, 4095, fstream);
-        hr = D3DCompile(buffer, strlen(buffer), NULL, NULL, NULL, "main", "ps_4_0",
-                        0 /* deal with shader flags later */, 0, &blob, NULL);
+        hr = D3DCompileFromFile(L"shaders\\sui_pixel.hlsl", NULL, NULL, "main", "ps_4_0", 0, 0, &blob, NULL);
         sui_assert(hr == 0);
-
         hr = ID3D11Device_CreatePixelShader(device, ID3D10Blob_GetBufferPointer(blob), ID3D10Blob_GetBufferSize(blob),
                                             NULL, &backend->ps);
         sui_assert(hr == 0);
 
         ID3D10Blob_Release(blob);
-        fclose(fstream);
 
         // blending
         D3D11_BLEND_DESC bdesc;

@@ -1,24 +1,11 @@
 todos:
- - [DONE] finish clang-format
- - [DONE] add sui_arena
- - [DONE] add working hash table
- - [DONE] add backend
- - [DONE] add draw rect
  - add logging
- - [DONE] fix msbuild errors
- - [DONE] fix window creation
  - figure out how to pass style into 
    internal functions, note style must
    be passed on every loop, because it 
    can be changed by user 
  - add button padding(l/r/t/b) to
    style
- - [DONE] fix slider max and min movement
-   for control
  - add overlayed windows
- - add statistics that follow memory used,
-   allocated, draw calls pre frame, time
-   taken by certain functions, hash collisions,
-   etc ...
  - user api for font change
  - internal abstraction for fonts 

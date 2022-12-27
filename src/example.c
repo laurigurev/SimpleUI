@@ -122,6 +122,10 @@ int main()
         f32 red = 0.0f;
         f32 green = 0.0f;
         f32 blue = 0.2f;
+        i64 start, time = 0;
+        i64 avg = 0;
+        d64 davg = 0.0;
+        i32 counter = 0;
 
         while (1) {
                 memset(&mouse.ldown, 0, 4);
@@ -136,6 +140,11 @@ int main()
                 }
 
                 ID3D11DeviceContext_ClearRenderTargetView(context, target, colors);
+
+                struct sui_profile profile = sui.profile;
+                sui_profile_new(&sui);
+
+                start = sui_time_begin();
 
                 sui_inputs(&sui, mouse.x, mouse.y, mouse.ldown, mouse.lup, mouse.rdown, mouse.rup);
                 sui_begin(&sui, "clear_color_settings", 200, 250);
@@ -157,7 +166,43 @@ int main()
                         colors[2] = blue;
                 }
                 sui_end(&sui);
+
+                // us is mikroseconds
+                
+                sui_begin(&sui, "sui profile", 0, 0);
+                sui_text(&sui, "[%i] sui_button() time %llius", profile.button_count, profile.button_avg_time);
+                sui_row(&sui);
+                sui_text(&sui, "[%i] sui_checkbox() time %llius", profile.checkbox_count, profile.checkbox_avg_time);
+                sui_row(&sui);
+                sui_text(&sui, "[%i] sui_slider() time %llius", profile.slider_count, profile.slider_avg_time);
+                sui_row(&sui);
+                sui_text(&sui, "[%i] sui_label() time %llius", profile.label_count, profile.label_avg_time);
+                sui_row(&sui);
+                sui_text(&sui, "[%i] sui_text() time %llius", profile.text_count, profile.text_avg_time);
+                sui_row(&sui);
+                sui_text(&sui, "memory [a/u/p] [%llu/%llu/%llu]", profile.memory_allocated, profile.memory_used, profile.memory_pushed);
+                sui_row(&sui);
+                sui_text(&sui, "widget count %i", profile.hash_table_item_count);
+                sui_row(&sui);
+                sui_text(&sui, "vertex count %i", profile.vertex_count);
+                sui_row(&sui);
+                sui_text(&sui, "draw calls %i", profile.draw_calls);
+                // sui_row(&sui);
+                // sui_text(&sui, "frame time %ius", avg);
+                sui_row(&sui);
+                sui_text(&sui, "frame time %.3lfms", davg);
+                sui_end(&sui);
+                
                 sui_render(&sui);
+
+                time += sui_time_end(start);
+                if (counter == 20) {
+                        avg = time / 20;
+                        davg = (d64)avg / 1000.0;
+                        time = 0;
+                        counter = 0;
+                }
+                counter++;
 
                 IDXGISwapChain_Present(swapchain, 1, 0);
         }

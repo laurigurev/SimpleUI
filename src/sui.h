@@ -20,6 +20,7 @@ struct sui_context {
         i32                 vertices_len;
         struct sui_vertex*  vertices;
         struct sui_style    style;
+        struct sui_profile  profile;
 };
 
 void sui_init(struct sui_context* sui, ID3D11Device* device, i32 w, i32 h);
@@ -34,6 +35,7 @@ void sui_slider(struct sui_context* sui, char* name, f32* value);
 void sui_label(struct sui_context* sui, char* name);
 void sui_text(struct sui_context* sui, char* txt, ...);
 void sui_render(struct sui_context* sui);
+void sui_profile_new(struct sui_context* sui);
 
 /*
 void sui_empty(struct sui_context* sui, i32 space);

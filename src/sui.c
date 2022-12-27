@@ -42,6 +42,36 @@ void sui_init(struct sui_context* sui, ID3D11Device* device, i32 w, i32 h)
             100, // i32 min_text_width
             1  // i32 min_text_rows
         };
+        sui->profile = (struct sui_profile){
+            0, // i32 frame_count
+            0, // i32 button_count
+            0, // i64 button_delta
+            0, // i64 button_total_time
+            0, // i64 button_avg_time
+            0, // i32 checkbox_count
+            0, // i64 checkbox_delta
+            0, // i64 checkbox_total_time
+            0, // i64 checkbox_avg_time
+            0, // i32 slider_count
+            0, // i64 slider_delta
+            0, // i64 slider_total_time
+            0, // i64 slider_avg_time
+            0, // i32 label_count
+            0, // i64 label_delta
+            0, // i64 label_total_time
+            0, // i64 label_avg_time
+            0, // i32 text_count
+            0, // i64 text_delta
+            0, // i64 text_total_time
+            0, // i64 text_avg_time
+            0, // u64 memory_allocated
+            0, // u64 memory_used
+            0, // u64 memory_pushed
+            0, // i32 hash_table_item_count
+            0, // i32 hash_table_misses
+            0, // i32 vertex_count
+            0  // i32 draw_calls
+        };
 }
 
 void sui_inputs(struct sui_context* sui, i32 mx, i32 my, u8 ldown, u8 lup, u8 rdown, u8 rup)
@@ -62,7 +92,10 @@ void sui_begin(struct sui_context* sui, char* name, i32 x, i32 y)
         sui_assert(sui);
         sui_assert(!sui->current_window); // this does not support sub windows
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
-        if (!widget) widget = sui_widget_create(&sui->arena, &sui->ht, name);
+        if (!widget) {
+                sui->profile.hash_table_item_count++;
+                widget = sui_widget_create(&sui->arena, &sui->ht, name);
+        }
         sui_widget_set(widget, x, y, 0, 0, sui->style.window_color);
         sui->current_window = widget;
         sui->layout = (struct sui_layout){SUI_LAYOUT_TYPE_ROW, 0, widget->rect.x, widget->rect.y, 0, 0};
@@ -113,8 +146,13 @@ i32 sui_button(struct sui_context* sui, char* name)
 {
         sui_assert(sui);
         sui_assert(sui->current_window);
+
+        sui->profile.button_count++;
+        sui->profile.button_delta = sui_time_begin();
+
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
         if (!widget) {
+                sui->profile.hash_table_item_count++;
                 widget = sui_widget_create(&sui->arena, &sui->ht, name);
         }
         sui_button_set(widget, name, sui->layout.x + sui->style.margin, sui->layout.y + sui->style.margin);
@@ -131,6 +169,8 @@ i32 sui_button(struct sui_context* sui, char* name)
 
         sui_button_to_vertices(widget, name, &sui->vertices_len, sui->vertices + sui->vertices_len);
 
+        sui->profile.button_total_time += sui_time_end(sui->profile.button_delta);
+
         if (sui->active_widget == widget) return 1;
         return 0;
 }
@@ -140,8 +180,13 @@ void sui_checkbox(struct sui_context* sui, char* name, i32* value)
         sui_assert(sui);
         sui_assert(sui->current_window);
         sui_assert(value);
+
+        sui->profile.checkbox_count++;
+        sui->profile.checkbox_delta = sui_time_begin();
+
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
         if (!widget) {
+                sui->profile.hash_table_item_count++;
                 widget = sui_widget_create(&sui->arena, &sui->ht, name);
         }
         sui_checkbox_set(widget, sui->layout.x + sui->style.margin, sui->layout.y + sui->style.margin);
@@ -158,6 +203,8 @@ void sui_checkbox(struct sui_context* sui, char* name, i32* value)
                 if (*value) *value = 0;
                 else *value = 1;
         }
+
+        sui->profile.checkbox_total_time += sui_time_end(sui->profile.checkbox_delta);
 }
 
 void sui_slider(struct sui_context* sui, char* name, f32* value)
@@ -165,8 +212,13 @@ void sui_slider(struct sui_context* sui, char* name, f32* value)
         sui_assert(sui);
         sui_assert(sui->current_window);
         sui_assert(value);
+
+        sui->profile.slider_count++;
+        sui->profile.slider_delta = sui_time_begin();
+
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
         if (!widget) {
+                sui->profile.hash_table_item_count++;
                 widget = sui_widget_create(&sui->arena, &sui->ht, name);
         }
         i32 w = sui->style.slider_width;
@@ -188,29 +240,36 @@ void sui_slider(struct sui_context* sui, char* name, f32* value)
                 *value -= (sui->io.dmx / (f32)w);
                 if (*value < 0.0f) {
                         *value = 0.0f;
-                        return;
+                        // return;
                 }
                 if (1.0f < *value) {
                         *value = 1.0f;
-                        return;
+                        // return;
                 }
                 if (sui->io.mx < widget->rect.x) {
                         *value = 0.0f;
-                        return;
+                        // return;
                 }
                 if (widget->rect.x + (f32)w < sui->io.mx) {
                         *value = 1.0f;
-                        return;
+                        // return;
                 }
         }
+
+        sui->profile.slider_total_time += sui_time_end(sui->profile.slider_delta);
 }
 
 void sui_label(struct sui_context* sui, char* name)
 {
         sui_assert(sui);
         sui_assert(sui->current_window);
+
+        sui->profile.label_count++;
+        sui->profile.label_delta = sui_time_begin();
+
         struct sui_widget* widget = sui_ht_find(&sui->ht, name);
         if (!widget) {
+                sui->profile.hash_table_item_count++;
                 widget = sui_widget_create(&sui->arena, &sui->ht, name);
                 widget->color0 = sui->style.label_color;
                 widget->color1 = sui->style.label_bg_color;
@@ -218,6 +277,8 @@ void sui_label(struct sui_context* sui, char* name)
         sui_button_set(widget, name, sui->layout.x + sui->style.margin, sui->layout.y + sui->style.margin);
         sui_handle_layout(&sui->layout, widget->rect.w + sui->style.margin, widget->rect.h + sui->style.margin);
         sui_button_to_vertices(widget, name, &sui->vertices_len, sui->vertices + sui->vertices_len);
+
+        sui->profile.label_total_time += sui_time_end(sui->profile.label_delta);
 }
 
 void sui_text(struct sui_context* sui, char* txt, ...)
@@ -225,26 +286,59 @@ void sui_text(struct sui_context* sui, char* txt, ...)
         // TODO: hadle text with style params
         sui_assert(sui);
         sui_assert(sui->current_window);
+
+        sui->profile.text_count++;
+        sui->profile.text_delta = sui_time_begin();
+
         struct sui_widget* widget = sui_ht_find(&sui->ht, txt);
         if (!widget) {
+                sui->profile.hash_table_item_count++;
                 widget = sui_widget_create(&sui->arena, &sui->ht, txt);
-                widget->color0 = sui->style.label_color;
-                widget->color1 = sui->style.label_bg_color;
+                widget->color0 = sui->style.label_bg_color;
+                widget->color1 = sui->style.label_color;
         }
-        char buffer[1000];
+        char    buffer[1000];
         va_list args;
         va_start(args, txt);
         i32 n = vsnprintf(buffer, 1000 - 1, txt, args);
         sui_assert(n != -1);
         va_end(args);
-        sui_button_set(widget, buffer, sui->layout.x + sui->style.margin, sui->layout.y + sui->style.margin);
+        sui_text_set(widget, buffer, sui->layout.x + sui->style.margin, sui->layout.y + sui->style.margin);
         sui_handle_layout(&sui->layout, widget->rect.w + sui->style.margin, widget->rect.h + sui->style.margin);
         sui_button_to_vertices(widget, buffer, &sui->vertices_len, sui->vertices + sui->vertices_len);
+
+        sui->profile.text_total_time += sui_time_end(sui->profile.text_delta);
 }
 
 void sui_render(struct sui_context* sui)
 {
         sui_assert(sui);
+
+        sui->profile.frame_count++;
+        sui->profile.memory_allocated = (u64)sui->arena.end - (u64)sui->arena.start;
+        sui->profile.memory_used = (u64)sui->arena.pointer - (u64)sui->arena.start;
+        sui->profile.memory_pushed = sui->vertices_len * sizeof(struct sui_vertex);
+        sui->profile.vertex_count = sui->vertices_len;
+        sui->profile.draw_calls = sui->vertices_len / 4;
+
+        if (sui->profile.frame_count == 20) {
+                sui->profile.frame_count = 0;
+                
+                sui->profile.button_avg_time = sui->profile.button_total_time / 20;
+                sui->profile.checkbox_avg_time = sui->profile.checkbox_total_time / 20;
+                sui->profile.slider_avg_time = sui->profile.slider_total_time / 20;
+                sui->profile.label_avg_time = sui->profile.label_total_time / 20;
+                sui->profile.text_avg_time = sui->profile.text_total_time / 20;
+                
+                sui->profile.button_total_time = 0;
+                sui->profile.checkbox_total_time = 0;
+                sui->profile.slider_total_time = 0;
+                sui->profile.label_total_time = 0;
+                sui->profile.text_total_time = 0;
+        }
+
+        // printf("mem alloc %llu\n", sui->profile.memory_allocated);
+
         sui_backend_push_vertices(&sui->backend, sui->vertices_len, sui->vertices);
         sui_backend_draw(&sui->backend);
         sui->vertices_len = 0;
@@ -252,4 +346,35 @@ void sui_render(struct sui_context* sui)
         if (sui->io.lup) sui->hot_widget = NULL;
         if (sui->io.lup) sui->active_widget = NULL;
         // sui->active_widget = NULL;
+}
+
+void sui_profile_new(struct sui_context* sui)
+{
+        i32 frame_count = sui->profile.frame_count;
+        i64 button_total_time = sui->profile.button_total_time;
+        i64 button_avg_time = sui->profile.button_avg_time;
+        i64 checkbox_total_time = sui->profile.checkbox_total_time;
+        i64 checkbox_avg_time = sui->profile.checkbox_avg_time;
+        i64 slider_total_time = sui->profile.slider_total_time;
+        i64 slider_avg_time = sui->profile.slider_avg_time;
+        i64 label_total_time = sui->profile.label_total_time;
+        i64 label_avg_time = sui->profile.label_avg_time;
+        i64 text_total_time = sui->profile.text_total_time;
+        i64 text_avg_time = sui->profile.text_avg_time;
+        i32 hash_table_item_count = sui->profile.hash_table_item_count;
+        
+        memset(&sui->profile, 0, sizeof(struct sui_profile));
+        
+        sui->profile.frame_count = frame_count; 
+        sui->profile.button_total_time = button_total_time; 
+        sui->profile.button_avg_time = button_avg_time; 
+        sui->profile.checkbox_total_time = checkbox_total_time; 
+        sui->profile.checkbox_avg_time = checkbox_avg_time; 
+        sui->profile.slider_total_time = slider_total_time; 
+        sui->profile.slider_avg_time = slider_avg_time; 
+        sui->profile.label_total_time = label_total_time; 
+        sui->profile.label_avg_time = label_avg_time; 
+        sui->profile.text_total_time = text_total_time; 
+        sui->profile.text_avg_time = text_avg_time; 
+        sui->profile.hash_table_item_count = hash_table_item_count; 
 }
