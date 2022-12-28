@@ -1,11 +1,4 @@
 todos:
- - add logging
- - figure out how to pass style into 
-   internal functions, note style must
-   be passed on every loop, because it 
-   can be changed by user 
- - add button padding(l/r/t/b) to
-   style
- - add overlayed windows
- - user api for font change
- - internal abstraction for fonts 
+ - d3d11 backend that draws rectangles
+ - sui api that generates rectangles with 
+   correct layout

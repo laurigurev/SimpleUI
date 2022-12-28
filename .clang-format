@@ -20,3 +20,5 @@ BraceWrapping:
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse 
 AllowShortLoopsOnASingleLine: true
 BreakBeforeBraces: Stroustrup
+AlwaysBreakTemplateDeclarations: Yes 
+AllowShortEnumsOnASingleLine: false 
