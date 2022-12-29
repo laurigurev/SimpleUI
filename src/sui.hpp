@@ -140,10 +140,10 @@ struct SuiContext {
         SuiContext();
         void begin(const char* name, const SuiRect rect);
         void end();
-        // void row(const i32 n, const f32* widths, const i32 height);
-        void row(const i32 n, const i32* widths, const i32 height);
-        // void column(const i32 n, const i32 width, const i32 height);
+        void row(const i32 n, const f32* widths, const i32 height);
+        void column(const i32 n, const i32 width, const f32* heights);
         void rect();
+        void reset();
 };
 
 // BACKEND

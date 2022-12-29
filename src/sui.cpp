@@ -15,7 +15,7 @@ SuiContext::SuiContext() : style(2, SuiColor(255, 255, 255, 255), SuiColor(100, 
 void SuiContext::begin(const char* name, const SuiRect rect)
 {
         const i32 spacing = style.spacing;
-        SuiRect   body = {rect.x + spacing, rect.y + spacing, rect.w - spacing, rect.h - spacing};
+        SuiRect   body = {rect.x + spacing, rect.y + spacing, rect.w - 2 * spacing, rect.h - 2 * spacing};
         layouts.push(SuiLayout(rect, body));
         cmdrects.push(SuiCommandRect(rect, style.colors[SUI_COLOR_WINDOWBG]));
 }
@@ -25,10 +25,14 @@ void SuiContext::end()
         layouts.pop();
 }
 
-void SuiContext::row(const i32 n, const i32* widths, const i32 height)
+void SuiContext::row(const i32 n, const f32* widths, const i32 height)
 {
+        // Assertions
         SuiAssert(n < 16);
         SuiAssert(widths);
+        f32 sum = 0.0f;
+        for (i32 i = 0; i < n; i++) sum += widths[i];
+        SuiAssert(sum <= 1.0f);
 
         // get current layout
         SuiLayout current_layout = layouts.get();
@@ -36,18 +40,60 @@ void SuiContext::row(const i32 n, const i32* widths, const i32 height)
         // create new layouts
         i32 x = current_layout.body.x;
         i32 y = current_layout.body.y;
+        i32 w = current_layout.body.w - (n - 1) * style.spacing;
         i32 sumw = 0;
         // TODO: create define variable for this
         SuiLayout new_layouts[16];
         for (i32 i = 0; i < n; i++) {
-                SuiRect rect = {x + sumw, y + style.spacing, widths[i], height};
-                SuiRect body = {x + sumw, y + style.spacing, widths[i], height};
-                sumw += widths[i] + style.spacing;
+                i32 width = static_cast<i32>(w * widths[i]);
+                SuiRect rect = {x + sumw, y, width, height};
+                SuiRect body = {x + sumw, y, width, height};
+                sumw += width + style.spacing;
                 new_layouts[i] = SuiLayout(rect, body);
         }
 
         // update current layout
-        current_layout.body = {x, y + height + style.spacing, current_layout.rect.w, current_layout.rect.h};
+        i32 h0 = height + style.spacing;
+        i32 h1 = current_layout.body.h - h0;
+        current_layout.body = {x, y + h0, current_layout.body.w, h1};
+        layouts.pop();
+        layouts.push(current_layout);
+
+        // push new layouts
+        for (i32 i = n - 1; 0 <= i; i--) layouts.push(new_layouts[i]);
+}
+
+void SuiContext::column(const i32 n, const i32 width, const f32* heights)
+{
+        // Assertions
+        SuiAssert(n < 16);
+        SuiAssert(heights);
+        f32 sum = 0.0f;
+        for (i32 i = 0; i < n; i++) sum += heights[i];
+        SuiAssert(sum <= 1.0f);
+        
+        // get current layout
+        SuiLayout current_layout = layouts.get();
+
+        // create new layouts
+        i32 x = current_layout.body.x;
+        i32 y = current_layout.body.y;
+        i32 h = current_layout.body.h - (n - 1) * style.spacing;
+        i32 sumh = 0;
+        // TODO: create define variable for this
+        SuiLayout new_layouts[16];
+        for (i32 i = 0; i < n; i++) {
+                i32 height = static_cast<i32>(h * heights[i]);
+                SuiRect rect = {x, y + sumh, width, height};
+                SuiRect body = {x, y + sumh, width, height};
+                sumh += height + style.spacing;
+                new_layouts[i] = SuiLayout(rect, body);
+        }
+        
+        // update current layout
+        i32 w0 = width + style.spacing;
+        i32 w1 = current_layout.body.w - w0;
+        current_layout.body = {x + w0, y, w1, sumh - style.spacing};
         layouts.pop();
         layouts.push(current_layout);
 
@@ -60,6 +106,12 @@ void SuiContext::rect()
         SuiLayout layout = layouts.get();
         layouts.pop();
         cmdrects.push(SuiCommandRect(layout.body, style.colors[SUI_COLOR_RECT]));
+}
+
+void SuiContext::reset()
+{
+        layouts.reset();
+        cmdrects.reset();
 }
 
 // --------------------------------------------------------------------------------------------------------------------

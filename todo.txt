@@ -1,4 +1,18 @@
 todos:
- - d3d11 backend that draws rectangles
+ - [DONE] d3d11 backend that draws rectangles
  - sui api that generates rectangles with 
    correct layout
+ - render text
+ - add button()
+ - add checkbox()
+ - add label
+ - add text
+ - add slider
+ - custom font
+ - font with distance fields
+ - d3d11 backend that uses compute shaders
+   to draw everything once
+ - internal statistics
+ - backend profiler
+ - frontend profiler
+ - readme

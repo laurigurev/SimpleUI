@@ -16,6 +16,7 @@ struct App {
         IDXGISwapChain*         swapchain;
         ID3D11RenderTargetView* target;
 
+        // TODO: change title into const char*
         App(const wchar_t* title, const i32 w, const i32 h);
         void _win32(const wchar_t* title, const i32 w, const i32 h);
         void _d3d11();
@@ -33,20 +34,27 @@ void printcmdr(const SuiCommandRect& cmdrect)
 int main()
 {
         App app(L"SimpleUI example.cpp", 600, 600);
-        
         SuiContext sui;
-        sui.begin("window", SuiRect(50, 50, 100, 100));
-        i32 row0[] = {20, 40};
-        sui.row(2, row0, 16);
-        sui.rect();
-        sui.rect();
-        sui.end();
-        for (i32 i = 0; i < sui.cmdrects.idx; i++) printcmdr(sui.cmdrects.data[i]);
-        
         SuiBackend backend(app.device, 600, 600);
+        
         while (app.close()) {
-                backend.record(sui.cmdrects.idx, sui.cmdrects.data);
+                sui.reset();
+                sui.begin("window", SuiRect(50, 50, 100, 100));
+                f32 row0[] = { 0.2f, 0.6f, 0.2f };
+                sui.row(3, row0, 16);
+                sui.rect();
+                sui.rect();
+                sui.rect();
+                f32 column0[] = { 0.2f, 0.3f, 0.2f};
+                sui.column(3, 40, column0);
+                sui.rect();
+                sui.rect();
+                sui.rect();
+                sui.rect();
+                sui.end();
+
                 app.clear(0.0f, 0.0f, 0.5f);
+                backend.record(sui.cmdrects.idx, sui.cmdrects.data);
                 backend.draw();
                 app.present();
         }
@@ -96,8 +104,8 @@ void App::_win32(const wchar_t* title, const i32 w, const i32 h)
 
         SuiAssert(RegisterClassEx(&wc));
 
-        hwnd = CreateWindowEx(0, class_name, title, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, x, y, rect.right - rect.left,
-                              rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
+        hwnd = CreateWindowEx(0, class_name, title, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, x, y, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL,
+                              hInstance, NULL);
 
         SuiAssert(hwnd);
         ShowWindow(hwnd, SW_SHOW);
