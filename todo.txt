@@ -13,6 +13,6 @@ todos:
  - d3d11 backend that uses compute shaders
    to draw everything once
  - internal statistics
- - backend profiler
+ - [DONE] backend profiler
  - frontend profiler
  - readme

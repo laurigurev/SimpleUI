@@ -120,7 +120,104 @@ void SuiContext::reset()
 
 SuiVertex::SuiVertex(const f32 _x, const f32 _y, const SuiColor _color) : x(_x), y(_y), color(_color) {}
 
-SuiBackend::SuiBackend(ID3D11Device* _device, const i32 x, const i32 y)
+
+SuiBackendProfiler::SuiBackendProfiler(ID3D11Device* device)
+{
+        SuiAssert(device);
+        memset(this, 0, sizeof(SuiBackendProfiler));
+
+        HRESULT hr;
+        D3D11_QUERY_DESC query_desc = {D3D11_QUERY_TIMESTAMP, 0}; 
+        
+        hr = device->CreateQuery(&query_desc, &timestamp0);
+        SuiAssert(hr == 0);
+        query_desc.Query = D3D11_QUERY_TIMESTAMP;
+        hr = device->CreateQuery(&query_desc, &timestamp1);
+        SuiAssert(hr == 0);
+        query_desc.Query = D3D11_QUERY_TIMESTAMP_DISJOINT;
+        hr = device->CreateQuery(&query_desc, &disjointed);
+        SuiAssert(hr == 0);
+        query_desc.Query = D3D11_QUERY_PIPELINE_STATISTICS;
+        hr = device->CreateQuery(&query_desc, &pipeline_stats);
+        SuiAssert(hr == 0);
+        query_desc.Query = D3D11_QUERY_SO_STATISTICS;
+        hr = device->CreateQuery(&query_desc, &so_stats);
+        SuiAssert(hr == 0);
+}
+
+void SuiBackendProfiler::begin(ID3D11DeviceContext* context)
+{
+        context->Begin(disjointed);
+        context->End(timestamp0);
+        
+        context->Begin(pipeline_stats);
+        context->Begin(so_stats);
+}
+
+void SuiBackendProfiler::end(ID3D11DeviceContext* context)
+{
+        context->End(timestamp1);
+        context->End(disjointed);
+        
+        context->End(pipeline_stats);
+        context->End(so_stats);
+}
+
+void SuiBackendProfiler::update(ID3D11DeviceContext* context)
+{
+        // get data
+        u64 time0;
+        while(context->GetData(timestamp0, &time0, sizeof(u64), 0) != S_OK);
+        u64 time1;
+        while(context->GetData(timestamp1, &time1, sizeof(u64), 0) != S_OK);
+        D3D11_QUERY_DATA_TIMESTAMP_DISJOINT disjoint_data;
+        while(context->GetData(disjointed, &disjoint_data, sizeof(D3D11_QUERY_DATA_TIMESTAMP_DISJOINT), 0) != S_OK);
+        D3D11_QUERY_DATA_PIPELINE_STATISTICS pipeline_stats_data;
+        while(context->GetData(pipeline_stats, &pipeline_stats_data, sizeof(D3D11_QUERY_DATA_PIPELINE_STATISTICS), 0) != S_OK);
+        D3D11_QUERY_DATA_SO_STATISTICS so_stats_data;
+        while(context->GetData(so_stats, &so_stats_data, sizeof(D3D11_QUERY_DATA_SO_STATISTICS), 0) != S_OK);
+
+        // update data
+        d64 delta = static_cast<d64>(time1 - time0);
+        if (disjoint_data.Disjoint == FALSE) {
+                d64 frequency = static_cast<d64>(disjoint_data.Frequency);
+                time = (delta / frequency) * 1000.0;
+        }
+
+        
+        // D3D11_QUERY_DATA_PIPELINE_STATISTICS
+        ia_vertices = pipeline_stats_data.IAVertices;
+        min_ia_vertices = SuiMin(min_ia_vertices, pipeline_stats_data.IAVertices);
+        max_ia_vertices = SuiMax(max_ia_vertices, pipeline_stats_data.IAVertices);
+
+        ia_primitives = pipeline_stats_data.IAPrimitives;
+        min_ia_primitives = SuiMin(min_ia_primitives, pipeline_stats_data.IAPrimitives);
+        max_ia_primitives = SuiMax(max_ia_primitives, pipeline_stats_data.IAPrimitives);
+
+        vs_invocations = pipeline_stats_data.VSInvocations;
+        min_vs_invocations = SuiMin(min_vs_invocations, pipeline_stats_data.VSInvocations);
+        max_vs_invocations = SuiMax(max_vs_invocations, pipeline_stats_data.VSInvocations);
+
+        ps_invocations = pipeline_stats_data.PSInvocations;
+        min_ps_invocations = SuiMin(min_ps_invocations, pipeline_stats_data.PSInvocations);
+        max_ps_invocations = SuiMax(max_ps_invocations, pipeline_stats_data.PSInvocations);
+
+        cs_invocations = pipeline_stats_data.CSInvocations;
+        min_cs_invocations = SuiMin(min_cs_invocations, pipeline_stats_data.CSInvocations);
+        max_cs_invocations = SuiMax(max_cs_invocations, pipeline_stats_data.CSInvocations);
+        
+        // D3D11_QUERY_DATA_SO_STATISTICS
+        num_primitives_written = so_stats_data.NumPrimitivesWritten;
+        min_num_primitives_written = SuiMin(min_num_primitives_written, num_primitives_written);
+        max_num_primitives_written = SuiMax(max_num_primitives_written, num_primitives_written);
+        
+        primitives_storage_needed = so_stats_data.PrimitivesStorageNeeded;
+        min_primitives_storage_needed = SuiMin(min_primitives_storage_needed, primitives_storage_needed);
+        max_primitives_storage_needed = SuiMax(max_primitives_storage_needed, primitives_storage_needed);
+}
+
+
+SuiBackend::SuiBackend(ID3D11Device* _device, const i32 x, const i32 y) : profiler(SuiBackendProfiler(_device))
 {
         screen_x = x;
         screen_y = y;
@@ -224,6 +321,7 @@ SuiBackend::SuiBackend(ID3D11Device* _device, const i32 x, const i32 y)
 void SuiBackend::record(i32 n, const SuiCommandRect* cmdrects)
 {
         SuiAssert(n * 4 < SUI_VERTEX_SIZE);
+
         HRESULT                  hr;
         D3D11_MAPPED_SUBRESOURCE vtx_rsc;
         hr = context->Map(vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &vtx_rsc);
@@ -248,6 +346,8 @@ void SuiBackend::record(i32 n, const SuiCommandRect* cmdrects)
 
 void SuiBackend::draw()
 {
+        profiler.begin(context);
+        
         context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         context->IASetInputLayout(input_layout);
         context->VSSetShader(vertex_shader, NULL, 0);
@@ -263,4 +363,7 @@ void SuiBackend::draw()
                 context->IASetVertexBuffers(0, 1, &vertex_buffer, &stride, &offset);
                 context->DrawIndexed(6, 0, 0);
         }
+
+        profiler.end(context);
+        profiler.update(context);
 }

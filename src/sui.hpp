@@ -30,6 +30,9 @@ typedef double   d64;
                 }                                                                                                                  \
         }
 
+#define SuiMax(a, b) ((a) > (b) ? (a) : (b))
+#define SuiMin(a, b) ((a) < (b) ? (a) : (b))
+
 // UTILS
 template <i32 n, typename T>
 struct SuiStack {
@@ -151,6 +154,7 @@ struct SuiContext {
 // FORWARD DECLARATIONS
 
 struct SuiVertex;
+struct SuiBackendProfiler;
 struct SuiBackend;
 
 // DECLARATIONS
@@ -166,6 +170,58 @@ struct SuiVertex {
         SuiVertex(const f32 _x, const f32 _y, const SuiColor _color);
 };
 
+struct SuiBackendProfiler {
+        ID3D11Query* timestamp0;
+        ID3D11Query* timestamp1;
+        ID3D11Query* disjointed;
+        ID3D11Query* pipeline_stats;
+        ID3D11Query* so_stats;
+
+        d64 time;
+
+        // D3D11_QUERY_DATA_PIPELINE_STATISTICS
+        u64 ia_vertices;
+        u64 min_ia_vertices;
+        u64 max_ia_vertices;
+        // // u64 avg_ia_vertices;
+
+        u64 ia_primitives;
+        u64 min_ia_primitives;
+        u64 max_ia_primitives;
+        // u64 avg_ia_primitives;
+
+        u64 vs_invocations;
+        u64 min_vs_invocations;
+        u64 max_vs_invocations;
+        // u64 avg_vs_invocations;
+
+        u64 ps_invocations;
+        u64 min_ps_invocations;
+        u64 max_ps_invocations;
+        // u64 avg_ps_invocations;
+
+        u64 cs_invocations;
+        u64 min_cs_invocations;
+        u64 max_cs_invocations;
+        // u64 avg_cs_invocations;
+
+        // D3D11_QUERY_DATA_SO_STATISTICS
+        u64 num_primitives_written;
+        u64 min_num_primitives_written;
+        u64 max_num_primitives_written;
+        // u64 avg_num_primitives_written;
+        
+        u64 primitives_storage_needed;
+        u64 min_primitives_storage_needed;
+        u64 max_primitives_storage_needed;
+        // u64 avg_primitives_storage_needed;
+
+        SuiBackendProfiler(ID3D11Device* device);
+        void begin(ID3D11DeviceContext* context);
+        void end(ID3D11DeviceContext* context);
+        void update(ID3D11DeviceContext* context);
+};
+
 struct SuiBackend {
         i32                  screen_x;
         i32                  screen_y;
@@ -179,6 +235,7 @@ struct SuiBackend {
         ID3D11Buffer*        constant_buffer;
         ID3D11BlendState*    blend_state;
         i32                  vertices_count;
+        SuiBackendProfiler   profiler;
 
         SuiBackend(ID3D11Device* _device, const i32 x, const i32 y);
         void record(i32 n, const SuiCommandRect* cmdrects);
