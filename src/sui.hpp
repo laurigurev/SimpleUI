@@ -16,9 +16,10 @@ typedef double   d64;
 
 // DEFINES
 
-#define SUI_PANELSTACK_SIZE  16
-#define SUI_LAYOUTSTACK_SIZE 16
-#define SUI_RECTSTACK_SIZE   64
+#define SUI_LAYOUTSTACK_SIZE  16
+#define SUI_CMDRECTSTACK_SIZE 128
+
+#include <stdlib.h>
 
 #define SuiAssert(x)                                                                                     \
         {                                                                                                \
@@ -36,7 +37,7 @@ struct SuiStack {
 
         SuiStack() : idx(0) {}
 
-        void push(T t)
+        void push(const T t)
         {
                 if (idx < n) data[idx++] = t;
         }
@@ -44,6 +45,11 @@ struct SuiStack {
         void pop()
         {
                 if (idx) idx--;
+        }
+
+        T get()
+        {
+                return data[idx - 1];
         }
 };
 
@@ -65,7 +71,7 @@ struct SuiRect;
 struct SuiFont;
 struct SuiStyle;
 struct SuiLayout;
-struct SuiPanel;
+struct SuiCommandRect;
 
 struct SuiContext;
 
@@ -73,11 +79,13 @@ struct SuiContext;
 
 struct SuiColor {
         u8 r, g, b, a;
+        SuiColor() = default;
         SuiColor(const u8 _r, const u8 _g, const u8 _b, const u8 _a);
 };
 
 struct SuiRect {
         i32 x, y, w, h;
+        SuiRect() = default;
         SuiRect(const i32 _x, const i32 _y, const i32 _w, const i32 _h);
 };
 
@@ -88,21 +96,29 @@ struct SuiFont {
 struct SuiStyle {
         // TODO
         // SuiFont font;
-        i32      padding;
+        // i32      padding;
         i32      spacing;
         SuiColor colors[SUI_COLOR_MAX];
+
+        SuiStyle() = default;
+        SuiStyle(const i32 _spacing, const SuiColor windowbg, const SuiColor rect, const SuiColor recthover, const SuiColor rectfocus);
 };
 
 struct SuiLayout {
         // TODO
         SuiRect rect;
+        SuiRect body;
+
+        SuiLayout() = default;
+        SuiLayout(const SuiRect _rect, const SuiRect _body);
 };
 
-struct SuiPanel {
-        i32     layout;
-        SuiRect rect;
-        SuiRect bbox;
-        // i32 zindex;
+struct SuiCommandRect {
+        SuiRect  rect;
+        SuiColor color;
+
+        SuiCommandRect() = default;
+        SuiCommandRect(const SuiRect _rect, const SuiColor _color);
 };
 
 struct SuiContext {
@@ -110,16 +126,14 @@ struct SuiContext {
         // u32 hover_id;
         // u32 focus_id;
 
-        // TODO: figure out where should you put SuiStyle
-        SuiStack<SUI_PANELSTACK_SIZE, SuiPanel>   panels;
-        SuiStack<SUI_LAYOUTSTACK_SIZE, SuiLayout> layouts;
-        SuiStack<SUI_RECTSTACK_SIZE, SuiRect>     rects;
+        SuiStyle                                        style;
+        SuiStack<SUI_LAYOUTSTACK_SIZE, SuiLayout>       layouts;
+        SuiStack<SUI_CMDRECTSTACK_SIZE, SuiCommandRect> cmdrects;
 
         SuiContext();
-        // void init();
-        void begin(const char* name, SuiRect rect);
+        void begin(const char* name, const SuiRect rect);
         void end();
         void row(const i32 n, const i32* widths, const i32 height);
-        void column(const i32 n, const i32 width, const i32 height);
+        // void column(const i32 n, const i32 width, const i32 height);
         void rect();
 };
