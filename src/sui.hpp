@@ -19,6 +19,7 @@ typedef double   d64;
 #define SUI_LAYOUTSTACK_SIZE  16
 #define SUI_CMDRECTSTACK_SIZE 128
 #define SUI_VERTEX_SIZE       1024
+#define SUI_MIN_RECT_WIDTH    16
 
 #include <stdlib.h>
 
@@ -116,11 +117,11 @@ struct SuiStyle {
 
 struct SuiLayout {
         // TODO
+        // u64 hash;
         SuiRect rect;
-        SuiRect body;
 
         SuiLayout() = default;
-        SuiLayout(const SuiRect _rect, const SuiRect _body);
+        SuiLayout(const SuiRect _rect);
 };
 
 struct SuiCommandRect {
@@ -143,8 +144,8 @@ struct SuiContext {
         SuiContext();
         void begin(const char* name, const SuiRect rect);
         void end();
-        void row(const i32 n, const f32* widths, const i32 height);
-        void column(const i32 n, const i32 width, const f32* heights);
+        void row(const i32 n, const i32* widths, i32 height);
+        void column(const i32 n, i32 width, const i32* heights);
         void rect();
         void reset();
 };
@@ -210,7 +211,7 @@ struct SuiBackendProfiler {
         u64 min_num_primitives_written;
         u64 max_num_primitives_written;
         // u64 avg_num_primitives_written;
-        
+
         u64 primitives_storage_needed;
         u64 min_primitives_storage_needed;
         u64 max_primitives_storage_needed;

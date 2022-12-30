@@ -1,7 +1,8 @@
 todos:
  - [DONE] d3d11 backend that draws rectangles
- - sui api that generates rectangles with 
+ - [DONE] sui api that generates rectangles with 
    correct layout
+ - render small boxes inside rects with correct alignment
  - render text
  - add button()
  - add checkbox()

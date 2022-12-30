@@ -25,12 +25,6 @@ struct App {
         void present();
 };
 
-void printcmdr(const SuiCommandRect& cmdrect)
-{
-        printf("SuiCommandRect({%i, %i, %i, %i}, {%u, %u, %u, %u})\n", cmdrect.rect.x, cmdrect.rect.y, cmdrect.rect.w, cmdrect.rect.h, cmdrect.color.r,
-               cmdrect.color.g, cmdrect.color.b, cmdrect.color.a);
-}
-
 int main()
 {
         App        app(L"SimpleUI example.cpp", 600, 600);
@@ -40,13 +34,16 @@ int main()
         while (app.close()) {
                 sui.reset();
                 sui.begin("window", SuiRect(50, 50, 100, 100));
-                f32 row0[] = {0.2f, 0.6f, 0.2f};
-                sui.row(3, row0, 16);
+                i32 ws[] = {-1, -1, -1, 10};
+                sui.row(4, ws, 16);
                 sui.rect();
                 sui.rect();
                 sui.rect();
-                f32 column0[] = {0.2f, 0.3f, 0.2f};
-                sui.column(3, 40, column0);
+                sui.rect();
+                i32 hs[] = {16, 16, 16};
+                sui.column(3, 40, hs);
+                sui.rect();
+                sui.rect();
                 sui.rect();
                 sui.rect();
                 sui.rect();
@@ -58,17 +55,19 @@ int main()
                 backend.draw();
                 app.present();
 
-                printf("--------------------------------------\n");
-                printf("d3d11 time %fms\n", backend.profiler.time);
-                printf("d3d11 profiler.ia_vertices    %llu\n", backend.profiler.ia_vertices);
-                printf("d3d11 profiler.ia_primitives  %llu\n", backend.profiler.ia_primitives);
-                printf("d3d11 profiler.vs_invocations %llu\n", backend.profiler.vs_invocations);
-                printf("d3d11 profiler.ps_invocations %llu\n", backend.profiler.ps_invocations);
-                printf("d3d11 profiler.cs_invocations %llu\n\n", backend.profiler.cs_invocations);
-                printf("d3d11 profiler.num_primitives_written   %llu\n", backend.profiler.num_primitives_written);
-                printf("d3d11 profiler.primitives_storage_needed %llu\n", backend.profiler.primitives_storage_needed);
         }
 
+        printf("--------------------------------------\n");
+        printf("d3d11 time %fms\n", backend.profiler.time);
+        printf("d3d11 profiler.ia_vertices    %llu\n", backend.profiler.ia_vertices);
+        printf("d3d11 profiler.ia_primitives  %llu\n", backend.profiler.ia_primitives);
+        printf("d3d11 profiler.vs_invocations %llu\n", backend.profiler.vs_invocations);
+        printf("d3d11 profiler.ps_invocations %llu\n", backend.profiler.ps_invocations);
+        printf("d3d11 profiler.cs_invocations %llu\n\n", backend.profiler.cs_invocations);
+        printf("d3d11 profiler.num_primitives_written   %llu\n", backend.profiler.num_primitives_written);
+        printf("d3d11 profiler.primitives_storage_needed %llu\n", backend.profiler.primitives_storage_needed);
+        printf("--------------------------------------\n");
+        
         return 0;
 }
 

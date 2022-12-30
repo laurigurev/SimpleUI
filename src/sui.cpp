@@ -7,7 +7,7 @@ SuiStyle::SuiStyle(const i32 _spacing, const SuiColor windowbg, const SuiColor r
     : spacing(_spacing), colors{windowbg, rect, recthover, rectfocus}
 {
 }
-SuiLayout::SuiLayout(const SuiRect _rect, const SuiRect _body) : rect(_rect), body(_body) {}
+SuiLayout::SuiLayout(const SuiRect _rect) : rect(_rect) {}
 SuiCommandRect::SuiCommandRect(const SuiRect _rect, const SuiColor _color) : rect(_rect), color(_color) {}
 
 SuiContext::SuiContext() : style(2, SuiColor(255, 255, 255, 255), SuiColor(100, 0, 0, 255), SuiColor(255, 0, 0, 255), SuiColor(150, 0, 0, 255)) {}
@@ -16,7 +16,7 @@ void SuiContext::begin(const char* name, const SuiRect rect)
 {
         const i32 spacing = style.spacing;
         SuiRect   body = {rect.x + spacing, rect.y + spacing, rect.w - 2 * spacing, rect.h - 2 * spacing};
-        layouts.push(SuiLayout(rect, body));
+        layouts.push(SuiLayout(body));
         cmdrects.push(SuiCommandRect(rect, style.colors[SUI_COLOR_WINDOWBG]));
 }
 
@@ -25,87 +25,133 @@ void SuiContext::end()
         layouts.pop();
 }
 
-void SuiContext::row(const i32 n, const f32* widths, const i32 height)
+void SuiContext::row(const i32 n, const i32* widths, i32 height)
 {
-        // Assertions
-        SuiAssert(n < 16);
+        SuiAssert(0 < n && n < 16);
         SuiAssert(widths);
-        f32 sum = 0.0f;
-        for (i32 i = 0; i < n; i++) sum += widths[i];
-        SuiAssert(sum <= 1.0f);
 
-        // get current layout
-        SuiLayout current_layout = layouts.get();
+        // Declare variables
+        SuiLayout curr_layout = layouts.get();
+        layouts.pop();
+        if (height == -1) height = curr_layout.rect.h;
+        SuiAssert(height <= curr_layout.rect.h);
 
-        // create new layouts
-        i32 x = current_layout.body.x;
-        i32 y = current_layout.body.y;
-        i32 w = current_layout.body.w - (n - 1) * style.spacing;
-        i32 sumw = 0;
-        // TODO: create define variable for this
-        SuiLayout new_layouts[16];
+        // get last assert
+        i32 ws[16];
+        i32 leftover_width, summed_width = 0, body_width = 0, neg1counter = 0;
+
+        body_width = curr_layout.rect.w - (n - 1) * style.spacing;
+        leftover_width = body_width;
+
+        memcpy(ws, widths, n * sizeof(i32));
         for (i32 i = 0; i < n; i++) {
-                i32 width = static_cast<i32>(w * widths[i]);
-                SuiRect rect = {x + sumw, y, width, height};
-                SuiRect body = {x + sumw, y, width, height};
-                sumw += width + style.spacing;
-                new_layouts[i] = SuiLayout(rect, body);
+                if (widths[i] == -1) {
+                        neg1counter++;
+                        continue;
+                }
+                summed_width += widths[i];
+                leftover_width -= widths[i];
+        }
+        summed_width += neg1counter * SUI_MIN_RECT_WIDTH;
+        SuiAssert(summed_width <= body_width);
+
+        SuiLayout new_layouts[16];
+        i32       x, y, width, neg1w = 0, leftover = 0, xoff = 0;
+
+        x = curr_layout.rect.x;
+        y = curr_layout.rect.y;
+        if (neg1counter) {
+                neg1w = leftover_width / neg1counter;
+                leftover = leftover_width - neg1w * neg1counter;
+        }
+        for (i32 i = 0; i < n; i++) {
+                width = widths[i];
+                if (width == -1) width = neg1w;
+                if (i == n - 1) width += leftover;
+                SuiRect rect = {x + xoff, y, width, height};
+                xoff += width + style.spacing;
+                new_layouts[i] = SuiLayout(rect);
         }
 
-        // update current layout
-        i32 h0 = height + style.spacing;
-        i32 h1 = current_layout.body.h - h0;
-        current_layout.body = {x, y + h0, current_layout.body.w, h1};
-        layouts.pop();
-        layouts.push(current_layout);
+        i32 h0, h1;
 
-        // push new layouts
+        h0 = height + style.spacing;
+        h1 = curr_layout.rect.h - h0;
+        curr_layout.rect = {x, y + h0, curr_layout.rect.w, h1};
+        layouts.push(curr_layout);
+
         for (i32 i = n - 1; 0 <= i; i--) layouts.push(new_layouts[i]);
 }
 
-void SuiContext::column(const i32 n, const i32 width, const f32* heights)
+void SuiContext::column(const i32 n, i32 width, const i32* heights)
 {
-        // Assertions
-        SuiAssert(n < 16);
+        SuiAssert(0 < n && n < 16);
         SuiAssert(heights);
-        f32 sum = 0.0f;
-        for (i32 i = 0; i < n; i++) sum += heights[i];
-        SuiAssert(sum <= 1.0f);
-        
-        // get current layout
-        SuiLayout current_layout = layouts.get();
 
-        // create new layouts
-        i32 x = current_layout.body.x;
-        i32 y = current_layout.body.y;
-        i32 h = current_layout.body.h - (n - 1) * style.spacing;
-        i32 sumh = 0;
-        // TODO: create define variable for this
-        SuiLayout new_layouts[16];
-        for (i32 i = 0; i < n; i++) {
-                i32 height = static_cast<i32>(h * heights[i]);
-                SuiRect rect = {x, y + sumh, width, height};
-                SuiRect body = {x, y + sumh, width, height};
-                sumh += height + style.spacing;
-                new_layouts[i] = SuiLayout(rect, body);
-        }
-        
-        // update current layout
-        i32 w0 = width + style.spacing;
-        i32 w1 = current_layout.body.w - w0;
-        current_layout.body = {x + w0, y, w1, sumh - style.spacing};
+        // Declare variables
+        SuiLayout curr_layout = layouts.get();
         layouts.pop();
-        layouts.push(current_layout);
+        if (width == -1) width = curr_layout.rect.w;
+        SuiAssert(width <= curr_layout.rect.w);
 
-        // push new layouts
+        // get last assert
+        i32 hs[16];
+        i32 leftover_height, summed_height = 0, body_height = 0, neg1counter = 0;
+
+        body_height = curr_layout.rect.h - (n - 1) * style.spacing;
+        leftover_height = body_height;
+
+        memcpy(hs, heights, n * sizeof(i32));
+        for (i32 i = 0; i < n; i++) {
+                if (heights[i] == -1) {
+                        neg1counter++;
+                        continue;
+                }
+                summed_height += heights[i];
+                leftover_height -= heights[i];
+        }
+        summed_height += neg1counter * SUI_MIN_RECT_WIDTH;
+        SuiAssert(summed_height <= body_height);
+
+        SuiLayout new_layouts[16];
+        i32       x, y, height, neg1h = 0, leftover = 0, yoff = 0;
+
+        x = curr_layout.rect.x;
+        y = curr_layout.rect.y;
+        if (neg1counter) {
+                neg1h = leftover_height / neg1counter;
+                leftover = leftover_height - neg1h * neg1counter;
+        }
+        for (i32 i = 0; i < n; i++) {
+                height = heights[i];
+                if (height == -1) height = neg1h;
+                if (i == n - 1) height += leftover;
+                SuiRect rect = {x, y + yoff, width, height};
+                yoff += height + style.spacing;
+                new_layouts[i] = SuiLayout(rect);
+        }
+
+        i32 w0, w1;
+
+        if (summed_height != body_height) {
+                curr_layout.rect = {x, y + yoff, curr_layout.rect.w, curr_layout.rect.h - yoff};
+                layouts.push(curr_layout);
+        }
+        w0 = width + style.spacing;
+        w1 = curr_layout.rect.w - w0;
+        curr_layout.rect = {x + w0, y, w1, yoff - style.spacing};
+        layouts.push(curr_layout);
+
         for (i32 i = n - 1; 0 <= i; i--) layouts.push(new_layouts[i]);
 }
 
 void SuiContext::rect()
 {
+        // TODO: stronger error catching
+        if (layouts.idx == 0) return;
         SuiLayout layout = layouts.get();
         layouts.pop();
-        cmdrects.push(SuiCommandRect(layout.body, style.colors[SUI_COLOR_RECT]));
+        cmdrects.push(SuiCommandRect(layout.rect, style.colors[SUI_COLOR_RECT]));
 }
 
 void SuiContext::reset()
@@ -120,15 +166,14 @@ void SuiContext::reset()
 
 SuiVertex::SuiVertex(const f32 _x, const f32 _y, const SuiColor _color) : x(_x), y(_y), color(_color) {}
 
-
 SuiBackendProfiler::SuiBackendProfiler(ID3D11Device* device)
 {
         SuiAssert(device);
         memset(this, 0, sizeof(SuiBackendProfiler));
 
-        HRESULT hr;
-        D3D11_QUERY_DESC query_desc = {D3D11_QUERY_TIMESTAMP, 0}; 
-        
+        HRESULT          hr;
+        D3D11_QUERY_DESC query_desc = {D3D11_QUERY_TIMESTAMP, 0};
+
         hr = device->CreateQuery(&query_desc, &timestamp0);
         SuiAssert(hr == 0);
         query_desc.Query = D3D11_QUERY_TIMESTAMP;
@@ -149,7 +194,7 @@ void SuiBackendProfiler::begin(ID3D11DeviceContext* context)
 {
         context->Begin(disjointed);
         context->End(timestamp0);
-        
+
         context->Begin(pipeline_stats);
         context->Begin(so_stats);
 }
@@ -158,7 +203,7 @@ void SuiBackendProfiler::end(ID3D11DeviceContext* context)
 {
         context->End(timestamp1);
         context->End(disjointed);
-        
+
         context->End(pipeline_stats);
         context->End(so_stats);
 }
@@ -167,15 +212,20 @@ void SuiBackendProfiler::update(ID3D11DeviceContext* context)
 {
         // get data
         u64 time0;
-        while(context->GetData(timestamp0, &time0, sizeof(u64), 0) != S_OK);
+        while (context->GetData(timestamp0, &time0, sizeof(u64), 0) != S_OK)
+                ;
         u64 time1;
-        while(context->GetData(timestamp1, &time1, sizeof(u64), 0) != S_OK);
+        while (context->GetData(timestamp1, &time1, sizeof(u64), 0) != S_OK)
+                ;
         D3D11_QUERY_DATA_TIMESTAMP_DISJOINT disjoint_data;
-        while(context->GetData(disjointed, &disjoint_data, sizeof(D3D11_QUERY_DATA_TIMESTAMP_DISJOINT), 0) != S_OK);
+        while (context->GetData(disjointed, &disjoint_data, sizeof(D3D11_QUERY_DATA_TIMESTAMP_DISJOINT), 0) != S_OK)
+                ;
         D3D11_QUERY_DATA_PIPELINE_STATISTICS pipeline_stats_data;
-        while(context->GetData(pipeline_stats, &pipeline_stats_data, sizeof(D3D11_QUERY_DATA_PIPELINE_STATISTICS), 0) != S_OK);
+        while (context->GetData(pipeline_stats, &pipeline_stats_data, sizeof(D3D11_QUERY_DATA_PIPELINE_STATISTICS), 0) != S_OK)
+                ;
         D3D11_QUERY_DATA_SO_STATISTICS so_stats_data;
-        while(context->GetData(so_stats, &so_stats_data, sizeof(D3D11_QUERY_DATA_SO_STATISTICS), 0) != S_OK);
+        while (context->GetData(so_stats, &so_stats_data, sizeof(D3D11_QUERY_DATA_SO_STATISTICS), 0) != S_OK)
+                ;
 
         // update data
         d64 delta = static_cast<d64>(time1 - time0);
@@ -184,7 +234,6 @@ void SuiBackendProfiler::update(ID3D11DeviceContext* context)
                 time = (delta / frequency) * 1000.0;
         }
 
-        
         // D3D11_QUERY_DATA_PIPELINE_STATISTICS
         ia_vertices = pipeline_stats_data.IAVertices;
         min_ia_vertices = SuiMin(min_ia_vertices, pipeline_stats_data.IAVertices);
@@ -205,17 +254,16 @@ void SuiBackendProfiler::update(ID3D11DeviceContext* context)
         cs_invocations = pipeline_stats_data.CSInvocations;
         min_cs_invocations = SuiMin(min_cs_invocations, pipeline_stats_data.CSInvocations);
         max_cs_invocations = SuiMax(max_cs_invocations, pipeline_stats_data.CSInvocations);
-        
+
         // D3D11_QUERY_DATA_SO_STATISTICS
         num_primitives_written = so_stats_data.NumPrimitivesWritten;
         min_num_primitives_written = SuiMin(min_num_primitives_written, num_primitives_written);
         max_num_primitives_written = SuiMax(max_num_primitives_written, num_primitives_written);
-        
+
         primitives_storage_needed = so_stats_data.PrimitivesStorageNeeded;
         min_primitives_storage_needed = SuiMin(min_primitives_storage_needed, primitives_storage_needed);
         max_primitives_storage_needed = SuiMax(max_primitives_storage_needed, primitives_storage_needed);
 }
-
 
 SuiBackend::SuiBackend(ID3D11Device* _device, const i32 x, const i32 y) : profiler(SuiBackendProfiler(_device))
 {
@@ -347,7 +395,7 @@ void SuiBackend::record(i32 n, const SuiCommandRect* cmdrects)
 void SuiBackend::draw()
 {
         profiler.begin(context);
-        
+
         context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         context->IASetInputLayout(input_layout);
         context->VSSetShader(vertex_shader, NULL, 0);
