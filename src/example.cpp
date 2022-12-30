@@ -45,8 +45,8 @@ int main()
                 sui.rect();
                 sui.rect();
                 sui.rect();
-                sui.rect();
-                sui.rect();
+                // sui.rect();
+                sui.box(SUI_ALIGNMENT_FLAG_RIGHT | SUI_ALIGNMENT_FLAG_TOP);
                 sui.rect();
                 sui.end();
 
@@ -54,7 +54,6 @@ int main()
                 backend.record(sui.cmdrects.idx, sui.cmdrects.data);
                 backend.draw();
                 app.present();
-
         }
 
         printf("--------------------------------------\n");
@@ -67,7 +66,7 @@ int main()
         printf("d3d11 profiler.num_primitives_written   %llu\n", backend.profiler.num_primitives_written);
         printf("d3d11 profiler.primitives_storage_needed %llu\n", backend.profiler.primitives_storage_needed);
         printf("--------------------------------------\n");
-        
+
         return 0;
 }
 

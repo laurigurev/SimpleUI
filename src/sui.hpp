@@ -20,6 +20,7 @@ typedef double   d64;
 #define SUI_CMDRECTSTACK_SIZE 128
 #define SUI_VERTEX_SIZE       1024
 #define SUI_MIN_RECT_WIDTH    16
+#define SUI_MIN_RECT_HEIGHT   16
 
 #include <stdlib.h>
 
@@ -71,11 +72,26 @@ enum {
         SUI_COLOR_RECT,
         SUI_COLOR_RECTHOVER,
         SUI_COLOR_RECTFOCUS,
+        SUI_COLOR_BOX,
         SUI_COLOR_MAX
 };
 
+enum {
+        SUI_ALIGNMENT_FLAG_LEFT = (1 << 0),
+        SUI_ALIGNMENT_FLAG_RIGHT = (1 << 1),
+        SUI_ALIGNMENT_FLAG_HMIDDLE = (1 << 2),
+        SUI_ALIGNMENT_FLAG_TOP = (1 << 3),
+        SUI_ALIGNMENT_FLAG_BOTTOM = (1 << 4),
+        SUI_ALIGNMENT_FLAG_VMIDDLE = (1 << 5),
+};
+
+// TYPEDEFS
+
+typedef u32 SuiAlignmentFlags;
+
 // FORWARD DECLARATIONS
 
+// struct SuiVector;
 struct SuiColor;
 struct SuiRect;
 
@@ -112,7 +128,7 @@ struct SuiStyle {
         SuiColor colors[SUI_COLOR_MAX];
 
         SuiStyle() = default;
-        SuiStyle(const i32 _spacing, const SuiColor windowbg, const SuiColor rect, const SuiColor recthover, const SuiColor rectfocus);
+        SuiStyle(const i32 _spacing, const SuiColor windowbg, const SuiColor rect, const SuiColor recthover, const SuiColor rectfocus, const SuiColor box);
 };
 
 struct SuiLayout {
@@ -147,6 +163,7 @@ struct SuiContext {
         void row(const i32 n, const i32* widths, i32 height);
         void column(const i32 n, i32 width, const i32* heights);
         void rect();
+        void box(SuiAlignmentFlags flags);
         void reset();
 };
 

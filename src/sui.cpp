@@ -3,14 +3,17 @@
 
 SuiColor::SuiColor(const u8 _r, const u8 _g, const u8 _b, const u8 _a) : r(_r), g(_g), b(_b), a(_a) {}
 SuiRect::SuiRect(const i32 _x, const i32 _y, const i32 _w, const i32 _h) : x(_x), y(_y), w(_w), h(_h) {}
-SuiStyle::SuiStyle(const i32 _spacing, const SuiColor windowbg, const SuiColor rect, const SuiColor recthover, const SuiColor rectfocus)
-    : spacing(_spacing), colors{windowbg, rect, recthover, rectfocus}
+SuiStyle::SuiStyle(const i32 _spacing, const SuiColor windowbg, const SuiColor rect, const SuiColor recthover, const SuiColor rectfocus, const SuiColor box)
+    : spacing(_spacing), colors{windowbg, rect, recthover, rectfocus, box}
 {
 }
 SuiLayout::SuiLayout(const SuiRect _rect) : rect(_rect) {}
 SuiCommandRect::SuiCommandRect(const SuiRect _rect, const SuiColor _color) : rect(_rect), color(_color) {}
 
-SuiContext::SuiContext() : style(2, SuiColor(255, 255, 255, 255), SuiColor(100, 0, 0, 255), SuiColor(255, 0, 0, 255), SuiColor(150, 0, 0, 255)) {}
+SuiContext::SuiContext()
+    : style(2, SuiColor(255, 255, 255, 255), SuiColor(100, 0, 0, 255), SuiColor(255, 0, 0, 255), SuiColor(150, 0, 0, 255), SuiColor(0, 0, 0, 255))
+{
+}
 
 void SuiContext::begin(const char* name, const SuiRect rect)
 {
@@ -110,7 +113,7 @@ void SuiContext::column(const i32 n, i32 width, const i32* heights)
                 summed_height += heights[i];
                 leftover_height -= heights[i];
         }
-        summed_height += neg1counter * SUI_MIN_RECT_WIDTH;
+        summed_height += neg1counter * SUI_MIN_RECT_HEIGHT;
         SuiAssert(summed_height <= body_height);
 
         SuiLayout new_layouts[16];
@@ -152,6 +155,41 @@ void SuiContext::rect()
         SuiLayout layout = layouts.get();
         layouts.pop();
         cmdrects.push(SuiCommandRect(layout.rect, style.colors[SUI_COLOR_RECT]));
+}
+
+void SuiContext::box(SuiAlignmentFlags flags)
+{
+        // TODO: stronger error catching
+        if (layouts.idx == 0) return;
+        SuiLayout layout = layouts.get();
+        layouts.pop();
+
+        const i32 x = layout.rect.x, y = layout.rect.y;
+        const i32 w = 16, h = 16, halfw = 8, halfh = 8;
+        i32 xoff, yoff;
+
+        // SUI_ALIGNMENT_FLAG_HMIDDLE
+        xoff = (layout.rect.w / 2) - halfw;
+        if (flags & SUI_ALIGNMENT_FLAG_LEFT) {
+                xoff = 0;
+        }
+        else if (flags & SUI_ALIGNMENT_FLAG_RIGHT) {
+                xoff = layout.rect.w - w;
+        }
+
+        // SUI_ALIGNMENT_FLAG_VMIDDLE
+        yoff = (layout.rect.h / 2) - halfh;
+        if (flags & SUI_ALIGNMENT_FLAG_TOP) {
+                yoff = 0;
+        }
+        else if (flags & SUI_ALIGNMENT_FLAG_BOTTOM) {
+                yoff = layout.rect.h - h;
+        }
+        
+        SuiRect rect(x + xoff, y + yoff, w, h);
+
+        cmdrects.push(SuiCommandRect(layout.rect, style.colors[SUI_COLOR_RECT]));
+        cmdrects.push(SuiCommandRect(rect, style.colors[SUI_COLOR_BOX]));
 }
 
 void SuiContext::reset()

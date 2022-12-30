@@ -2,7 +2,10 @@ todos:
  - [DONE] d3d11 backend that draws rectangles
  - [DONE] sui api that generates rectangles with 
    correct layout
- - render small boxes inside rects with correct alignment
+ - [DONE] render small boxes inside rects with correct alignment
+ - get hovering and clicking working
+ - add support for multiple sub windows
+ - add support for overlapping windows
  - render text
  - add button()
  - add checkbox()
