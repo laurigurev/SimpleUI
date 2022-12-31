@@ -1,18 +1,51 @@
 #include "sui.hpp"
 #include <stdio.h>
 
+u32 SuiHash(const char* s)
+{
+        u32 hash = 5381;
+        while (*s) hash = ((hash << 5) + hash) + *s++;
+        return hash;
+}
+
 SuiColor::SuiColor(const u8 _r, const u8 _g, const u8 _b, const u8 _a) : r(_r), g(_g), b(_b), a(_a) {}
 SuiRect::SuiRect(const i32 _x, const i32 _y, const i32 _w, const i32 _h) : x(_x), y(_y), w(_w), h(_h) {}
-SuiStyle::SuiStyle(const i32 _spacing, const SuiColor windowbg, const SuiColor rect, const SuiColor recthover, const SuiColor rectfocus, const SuiColor box)
-    : spacing(_spacing), colors{windowbg, rect, recthover, rectfocus, box}
+SuiStyle::SuiStyle(const i32 _spacing, const SuiColor windowbg, const SuiColor rect, const SuiColor box, const SuiColor boxhot, const SuiColor boxactive)
+    : spacing(_spacing), colors{windowbg, rect, box, boxhot, boxactive}
 {
 }
 SuiLayout::SuiLayout(const SuiRect _rect) : rect(_rect) {}
 SuiCommandRect::SuiCommandRect(const SuiRect _rect, const SuiColor _color) : rect(_rect), color(_color) {}
+SuiIO::SuiIO() : mx(0), my(0), dmx(0), dmy(0), ldown(0), lup(0), lheld(0), lclick(0), rdown(0), rup(0), rheld(0), rclick(0) {}
+
+i32 SuiIO::mxy_in_rect(const SuiRect rect)
+{
+        const i32 x0 = rect.x;
+        const i32 x1 = rect.x + rect.w;
+        const i32 y0 = rect.y;
+        const i32 y1 = rect.y + rect.h;
+        if (x0 < mx && mx < x1 && y0 < my && my < y1) return 1;
+        return 0;
+}
 
 SuiContext::SuiContext()
-    : style(2, SuiColor(255, 255, 255, 255), SuiColor(100, 0, 0, 255), SuiColor(255, 0, 0, 255), SuiColor(150, 0, 0, 255), SuiColor(0, 0, 0, 255))
+    : style(2, SuiColor(255, 255, 255, 255), SuiColor(100, 0, 0, 255), SuiColor(0, 0, 0, 255), SuiColor(100, 100, 100, 255), SuiColor(200, 200, 200, 255))
 {
+}
+
+void SuiContext::inputs(i32 mx, i32 my, u8 ldown, u8 lup, u8 rdown, u8 rup)
+{
+        io.dmx = io.mx - mx;
+        io.dmy = io.my - my;
+        io.mx = mx;
+        io.my = my;
+
+        io.ldown = ldown;
+        io.lup = lup;
+        io.rdown = rdown;
+        io.rup = rup;
+
+        // TODO: held and click
 }
 
 void SuiContext::begin(const char* name, const SuiRect rect)
@@ -155,15 +188,17 @@ void SuiContext::rect()
         cmdrects.push(SuiCommandRect(layout.rect, style.colors[SUI_COLOR_RECT]));
 }
 
-void SuiContext::box_ex(const i32 w, const i32 h, const SuiAlignmentFlags flags, const SuiLayoutAction action)
+void SuiContext::box_ex(const char* name, const i32 w, const i32 h, const SuiAlignmentFlags flags, const SuiLayoutAction action)
 {
+        u32 id = SuiHash(name);
+
         // TODO: stronger error catching
         SuiAssert(layouts.idx != 0);
         SuiLayout layout = layouts.pop();
 
         const i32 x = layout.rect.x, y = layout.rect.y;
         const i32 halfw = w / 2, halfh = h / 2;
-        i32 xoff, yoff;
+        i32       xoff, yoff;
 
         // SUI_ALIGNMENT_FLAG_HMIDDLE
         xoff = (layout.rect.w / 2) - halfw;
@@ -182,11 +217,19 @@ void SuiContext::box_ex(const i32 w, const i32 h, const SuiAlignmentFlags flags,
         else if (flags & SUI_ALIGNMENT_FLAG_BOTTOM) {
                 yoff = layout.rect.h - h;
         }
-        
-        SuiRect rect(x + xoff, y + yoff, w, h);
 
+        SuiRect rect(x + xoff, y + yoff, w, h);
+        // if overlapping set different color
+        if (io.mxy_in_rect(rect)) {
+                if (io.ldown) hot_id = id;
+                if (hot_id == id && io.lup) active_id = id;
+        }
+        
+        i32 color = SUI_COLOR_BOX;
+        if (hot_id == id) color = SUI_COLOR_BOX_HOT;
+        else if (active_id == id) style.colors[1] = SuiColor(0, 100, 0, 255);
         // cmdrects.push(SuiCommandRect(layout.rect, style.colors[SUI_COLOR_RECT]));
-        cmdrects.push(SuiCommandRect(rect, style.colors[SUI_COLOR_BOX]));
+        cmdrects.push(SuiCommandRect(rect, style.colors[color]));
 
         if (action == SUI_LAYOUT_ACTION_SPLIT && !(flags & SUI_ALIGNMENT_FLAG_HMIDDLE)) {
                 layout.rect.x += xoff + w + style.spacing;
@@ -195,9 +238,9 @@ void SuiContext::box_ex(const i32 w, const i32 h, const SuiAlignmentFlags flags,
         }
 }
 
-void SuiContext::box()
+void SuiContext::box(const char* name)
 {
-        box_ex(16, 16, 0, SUI_LAYOUT_ACTION_NEXT);
+        box_ex(name, 16, 16, 0, SUI_LAYOUT_ACTION_NEXT);
 }
 
 void SuiContext::next()
@@ -207,6 +250,8 @@ void SuiContext::next()
 
 void SuiContext::reset()
 {
+        if (!active_id) hot_id = 0;
+        active_id = 0;
         layouts.reset();
         cmdrects.reset();
 }

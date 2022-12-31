@@ -5,8 +5,6 @@
 #include <d3d11.h>
 #include <windows.h>
 
-LRESULT CALLBACK DefaultMessageCallback(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
-
 struct App {
         WNDCLASSEX              wc;
         HINSTANCE               hInstance;
@@ -16,6 +14,13 @@ struct App {
         IDXGISwapChain*         swapchain;
         ID3D11RenderTargetView* target;
 
+        struct Mouse {
+                i32 x, y;
+                u8  ldown, lup;
+                u8  rdown, rup;
+        };
+        Mouse mouse;
+
         // TODO: change title into const char*
         App(const wchar_t* title, const i32 w, const i32 h);
         void _win32(const wchar_t* title, const i32 w, const i32 h);
@@ -23,6 +28,9 @@ struct App {
         i32  close();
         void clear(const f32 red, const f32 green, const f32 blue);
         void present();
+
+        static LRESULT CALLBACK SetupMessageCallback(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+        static LRESULT CALLBACK MessageCallback(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 };
 
 int main()
@@ -33,24 +41,25 @@ int main()
 
         while (app.close()) {
                 sui.reset();
+                sui.inputs(app.mouse.x, app.mouse.y, app.mouse.ldown, app.mouse.lup, app.mouse.rdown, app.mouse.rup);
                 sui.begin("window", SuiRect(50, 50, 100, 100));
-                
+
                 i32 ws[] = {-1, 16};
                 sui.row(2, ws, 16);
-                sui.box_ex(16, 16, SUI_ALIGNMENT_FLAG_LEFT, SUI_LAYOUT_ACTION_SPLIT);
-                sui.box_ex(16, 16, SUI_ALIGNMENT_FLAG_LEFT, SUI_LAYOUT_ACTION_NEXT);
+                sui.box_ex("test box_ex 0", 16, 16, SUI_ALIGNMENT_FLAG_LEFT, SUI_LAYOUT_ACTION_SPLIT);
+                sui.box_ex("test box_ex 1", 16, 16, SUI_ALIGNMENT_FLAG_LEFT, SUI_LAYOUT_ACTION_NEXT);
                 // sui.rect();
                 sui.rect();
-                
+
                 i32 hs[] = {16, 16, 16};
                 sui.column(3, 40, hs);
                 sui.rect();
                 sui.rect();
                 sui.rect();
-                
+
                 sui.rect();
                 sui.rect();
-                
+
                 sui.end();
 
                 app.clear(0.0f, 0.0f, 0.5f);
@@ -73,7 +82,7 @@ int main()
         return 0;
 }
 
-LRESULT CALLBACK DefaultMessageCallback(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+/* LRESULT CALLBACK DefaultMessageCallback(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
         switch (msg) {
         case WM_CLOSE:
@@ -81,7 +90,7 @@ LRESULT CALLBACK DefaultMessageCallback(HWND hwnd, UINT msg, WPARAM wparam, LPAR
                 break;
         }
         return DefWindowProc(hwnd, msg, wparam, lparam);
-}
+} */
 
 App::App(const wchar_t* title, const i32 w, const i32 h)
 {
@@ -102,7 +111,7 @@ void App::_win32(const wchar_t* title, const i32 w, const i32 h)
 
         wc.cbSize = sizeof(wc);
         wc.style = CS_OWNDC;
-        wc.lpfnWndProc = DefaultMessageCallback;
+        wc.lpfnWndProc = SetupMessageCallback;
         wc.cbClsExtra = 0;
         wc.cbWndExtra = 0;
         wc.hInstance = hInstance;
@@ -116,7 +125,7 @@ void App::_win32(const wchar_t* title, const i32 w, const i32 h)
         SuiAssert(RegisterClassEx(&wc));
 
         hwnd = CreateWindowEx(0, class_name, title, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, x, y, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL,
-                              hInstance, NULL);
+                              hInstance, this);
 
         SuiAssert(hwnd);
         ShowWindow(hwnd, SW_SHOW);
@@ -173,4 +182,50 @@ void App::clear(const f32 red, const f32 green, const f32 blue)
 void App::present()
 {
         swapchain->Present(1, 0);
+}
+
+LRESULT CALLBACK App::SetupMessageCallback(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+        if (msg == WM_NCCREATE) {
+                CREATESTRUCT* create = (CREATESTRUCT*)lparam;
+                App*          app = (App*)create->lpCreateParams;
+                SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)app);
+                SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)MessageCallback);
+                return MessageCallback(hwnd, msg, wparam, lparam);
+        }
+        return DefWindowProc(hwnd, msg, wparam, lparam);
+}
+
+LRESULT CALLBACK App::MessageCallback(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+        App* app = (App*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+        switch (msg) {
+        case WM_CLOSE: {
+                PostQuitMessage(0);
+                break;
+        }
+        case WM_MOUSEMOVE: {
+                POINTS p = MAKEPOINTS(lparam);
+                app->mouse.x = p.x;
+                app->mouse.y = p.y;
+                break;
+        }
+        case WM_LBUTTONDOWN: {
+                app->mouse.ldown = 1;
+                break;
+        }
+        case WM_RBUTTONDOWN: {
+                app->mouse.rdown = 1;
+                break;
+        }
+        case WM_LBUTTONUP: {
+                app->mouse.lup = 1;
+                break;
+        }
+        case WM_RBUTTONUP: {
+                app->mouse.rup = 1;
+                break;
+        }
+        }
+        return DefWindowProc(hwnd, msg, wparam, lparam);
 }

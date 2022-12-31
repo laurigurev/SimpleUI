@@ -1,4 +1,4 @@
-#pragma once
+// #pragma once
 
 // TYPES
 #include <stdint.h>
@@ -76,15 +76,17 @@ struct SuiStack {
         }
 };
 
+u32 SuiHash(const char* s);
+
 // FRONTEND
 // ENUMS
 
 enum {
         SUI_COLOR_WINDOWBG,
         SUI_COLOR_RECT,
-        SUI_COLOR_RECTHOVER,
-        SUI_COLOR_RECTFOCUS,
         SUI_COLOR_BOX,
+        SUI_COLOR_BOX_HOT,
+        SUI_COLOR_BOX_ACTIVE,
         SUI_COLOR_MAX
 };
 
@@ -99,7 +101,7 @@ enum {
 
 enum SuiLayoutAction {
         SUI_LAYOUT_ACTION_SPLIT,
-        SUI_LAYOUT_ACTION_NEXT 
+        SUI_LAYOUT_ACTION_NEXT
 };
 
 // TYPEDEFS
@@ -116,6 +118,7 @@ struct SuiFont;
 struct SuiStyle;
 struct SuiLayout;
 struct SuiCommandRect;
+struct SuiIO;
 
 struct SuiContext;
 
@@ -145,7 +148,7 @@ struct SuiStyle {
         SuiColor colors[SUI_COLOR_MAX];
 
         SuiStyle() = default;
-        SuiStyle(const i32 _spacing, const SuiColor windowbg, const SuiColor rect, const SuiColor recthover, const SuiColor rectfocus, const SuiColor box);
+        SuiStyle(const i32 _spacing, const SuiColor windowbg, const SuiColor rect, const SuiColor box, const SuiColor boxhot, const SuiColor boxactive);
 };
 
 struct SuiLayout {
@@ -164,23 +167,33 @@ struct SuiCommandRect {
         SuiCommandRect(const SuiRect _rect, const SuiColor _color);
 };
 
+struct SuiIO {
+        i32 mx, my, dmx, dmy;
+        u8  ldown, lup, lheld, lclick;
+        u8  rdown, rup, rheld, rclick;
+        
+        SuiIO();
+        i32 mxy_in_rect(const SuiRect rect);
+};
+
 struct SuiContext {
-        // TODO
-        // u32 hover_id;
-        // u32 focus_id;
+        u32   hot_id;
+        u32   active_id;
+        SuiIO io;
 
         SuiStyle                                        style;
         SuiStack<SUI_LAYOUTSTACK_SIZE, SuiLayout>       layouts;
         SuiStack<SUI_CMDRECTSTACK_SIZE, SuiCommandRect> cmdrects;
 
         SuiContext();
+        void inputs(i32 mx, i32 my, u8 ldown, u8 lup, u8 rdown, u8 rup);
         void begin(const char* name, const SuiRect rect);
         void end();
         void row(const i32 n, const i32* widths, i32 height);
         void column(const i32 n, i32 width, const i32* heights);
         void rect();
-        void box_ex(const i32 w, const i32 h, const SuiAlignmentFlags flags, const SuiLayoutAction action);
-        void box();
+        void box_ex(const char* name, const i32 w, const i32 h, const SuiAlignmentFlags flags, const SuiLayoutAction action);
+        void box(const char* name);
         void next();
         // TODO: change to void finish();
         void reset();

@@ -20,3 +20,4 @@ todos:
  - [DONE] backend profiler
  - frontend profiler
  - readme
+ - make it all dummy proof
