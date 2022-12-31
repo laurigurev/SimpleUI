@@ -34,8 +34,7 @@ void SuiContext::row(const i32 n, const i32* widths, i32 height)
         SuiAssert(widths);
 
         // Declare variables
-        SuiLayout curr_layout = layouts.get();
-        layouts.pop();
+        SuiLayout curr_layout = layouts.pop();
         if (height == -1) height = curr_layout.rect.h;
         SuiAssert(height <= curr_layout.rect.h);
 
@@ -92,8 +91,7 @@ void SuiContext::column(const i32 n, i32 width, const i32* heights)
         SuiAssert(heights);
 
         // Declare variables
-        SuiLayout curr_layout = layouts.get();
-        layouts.pop();
+        SuiLayout curr_layout = layouts.pop();
         if (width == -1) width = curr_layout.rect.w;
         SuiAssert(width <= curr_layout.rect.w);
 
@@ -128,6 +126,7 @@ void SuiContext::column(const i32 n, i32 width, const i32* heights)
         for (i32 i = 0; i < n; i++) {
                 height = heights[i];
                 if (height == -1) height = neg1h;
+                // TODO: change this to last neg1
                 if (i == n - 1) height += leftover;
                 SuiRect rect = {x, y + yoff, width, height};
                 yoff += height + style.spacing;
@@ -151,21 +150,19 @@ void SuiContext::column(const i32 n, i32 width, const i32* heights)
 void SuiContext::rect()
 {
         // TODO: stronger error catching
-        if (layouts.idx == 0) return;
-        SuiLayout layout = layouts.get();
-        layouts.pop();
+        SuiAssert(layouts.idx != 0);
+        SuiLayout layout = layouts.pop();
         cmdrects.push(SuiCommandRect(layout.rect, style.colors[SUI_COLOR_RECT]));
 }
 
-void SuiContext::box(SuiAlignmentFlags flags)
+void SuiContext::box_ex(const i32 w, const i32 h, const SuiAlignmentFlags flags, const SuiLayoutAction action)
 {
         // TODO: stronger error catching
-        if (layouts.idx == 0) return;
-        SuiLayout layout = layouts.get();
-        layouts.pop();
+        SuiAssert(layouts.idx != 0);
+        SuiLayout layout = layouts.pop();
 
         const i32 x = layout.rect.x, y = layout.rect.y;
-        const i32 w = 16, h = 16, halfw = 8, halfh = 8;
+        const i32 halfw = w / 2, halfh = h / 2;
         i32 xoff, yoff;
 
         // SUI_ALIGNMENT_FLAG_HMIDDLE
@@ -188,8 +185,24 @@ void SuiContext::box(SuiAlignmentFlags flags)
         
         SuiRect rect(x + xoff, y + yoff, w, h);
 
-        cmdrects.push(SuiCommandRect(layout.rect, style.colors[SUI_COLOR_RECT]));
+        // cmdrects.push(SuiCommandRect(layout.rect, style.colors[SUI_COLOR_RECT]));
         cmdrects.push(SuiCommandRect(rect, style.colors[SUI_COLOR_BOX]));
+
+        if (action == SUI_LAYOUT_ACTION_SPLIT && !(flags & SUI_ALIGNMENT_FLAG_HMIDDLE)) {
+                layout.rect.x += xoff + w + style.spacing;
+                layout.rect.w -= (xoff + w + style.spacing);
+                layouts.push(layout);
+        }
+}
+
+void SuiContext::box()
+{
+        box_ex(16, 16, 0, SUI_LAYOUT_ACTION_NEXT);
+}
+
+void SuiContext::next()
+{
+        layouts.pop();
 }
 
 void SuiContext::reset()

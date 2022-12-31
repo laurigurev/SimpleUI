@@ -48,14 +48,26 @@ struct SuiStack {
                 if (idx < n) data[idx++] = t;
         }
 
-        void pop()
+        T pop()
         {
-                if (idx) idx--;
+                return data[--idx];
         }
 
-        T get()
+        T peek()
         {
                 return data[idx - 1];
+        }
+
+        i32 empty()
+        {
+                if (idx) return 0;
+                return 1;
+        }
+
+        i32 full()
+        {
+                if (idx == n) return 1;
+                return 0;
         }
 
         void reset()
@@ -83,6 +95,11 @@ enum {
         SUI_ALIGNMENT_FLAG_TOP = (1 << 3),
         SUI_ALIGNMENT_FLAG_BOTTOM = (1 << 4),
         SUI_ALIGNMENT_FLAG_VMIDDLE = (1 << 5),
+};
+
+enum SuiLayoutAction {
+        SUI_LAYOUT_ACTION_SPLIT,
+        SUI_LAYOUT_ACTION_NEXT 
 };
 
 // TYPEDEFS
@@ -132,7 +149,6 @@ struct SuiStyle {
 };
 
 struct SuiLayout {
-        // TODO
         // u64 hash;
         SuiRect rect;
 
@@ -163,7 +179,10 @@ struct SuiContext {
         void row(const i32 n, const i32* widths, i32 height);
         void column(const i32 n, i32 width, const i32* heights);
         void rect();
-        void box(SuiAlignmentFlags flags);
+        void box_ex(const i32 w, const i32 h, const SuiAlignmentFlags flags, const SuiLayoutAction action);
+        void box();
+        void next();
+        // TODO: change to void finish();
         void reset();
 };
 

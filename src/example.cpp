@@ -34,20 +34,23 @@ int main()
         while (app.close()) {
                 sui.reset();
                 sui.begin("window", SuiRect(50, 50, 100, 100));
-                i32 ws[] = {-1, -1, -1, 10};
-                sui.row(4, ws, 16);
+                
+                i32 ws[] = {-1, 16};
+                sui.row(2, ws, 16);
+                sui.box_ex(16, 16, SUI_ALIGNMENT_FLAG_LEFT, SUI_LAYOUT_ACTION_SPLIT);
+                sui.box_ex(16, 16, SUI_ALIGNMENT_FLAG_LEFT, SUI_LAYOUT_ACTION_NEXT);
+                // sui.rect();
                 sui.rect();
-                sui.rect();
-                sui.rect();
-                sui.rect();
+                
                 i32 hs[] = {16, 16, 16};
                 sui.column(3, 40, hs);
                 sui.rect();
                 sui.rect();
                 sui.rect();
-                // sui.rect();
-                sui.box(SUI_ALIGNMENT_FLAG_RIGHT | SUI_ALIGNMENT_FLAG_TOP);
+                
                 sui.rect();
+                sui.rect();
+                
                 sui.end();
 
                 app.clear(0.0f, 0.0f, 0.5f);
