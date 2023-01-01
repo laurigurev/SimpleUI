@@ -10,6 +10,51 @@ u32 SuiHash(const char* s)
 
 SuiColor::SuiColor(const u8 _r, const u8 _g, const u8 _b, const u8 _a) : r(_r), g(_g), b(_b), a(_a) {}
 SuiRect::SuiRect(const i32 _x, const i32 _y, const i32 _w, const i32 _h) : x(_x), y(_y), w(_w), h(_h) {}
+
+SuiUV::SuiUV(const i32 x, const i32 y, const i32 w, const i32 h)
+{
+        const f32 image_w = 128;
+        const f32 image_h = 64;
+
+        u0 = (f32)x / image_w;
+        v0 = (f32)y / image_h;
+        u1 = u0 + (f32)w / image_w;
+        v1 = v0 + (f32)h / image_h;
+}
+
+SuiFont::SuiFont()
+    : uvs{SuiUV(63, 48, 24, 1), SuiUV(83, 31, 4, 9),  SuiUV(105, 39, 6, 3), SuiUV(8, 14, 7, 9),   SuiUV(0, 0, 6, 13),   SuiUV(26, 0, 8, 11),
+          SuiUV(16, 13, 7, 9),  SuiUV(125, 10, 2, 3), SuiUV(54, 0, 4, 11),  SuiUV(59, 0, 4, 11),  SuiUV(63, 42, 7, 5),  SuiUV(71, 41, 6, 5),
+          SuiUV(78, 41, 3, 4),  SuiUV(121, 39, 6, 1), SuiUV(117, 39, 3, 2), SuiUV(86, 0, 6, 10),  SuiUV(62, 12, 6, 9),  SuiUV(77, 31, 5, 9),
+          SuiUV(69, 11, 6, 9),  SuiUV(76, 11, 6, 9),  SuiUV(32, 12, 7, 9),  SuiUV(83, 11, 6, 9),  SuiUV(90, 11, 6, 9),  SuiUV(97, 11, 6, 9),
+          SuiUV(48, 12, 6, 9),  SuiUV(104, 11, 6, 9), SuiUV(122, 30, 3, 7), SuiUV(88, 31, 3, 9),  SuiUV(111, 11, 6, 9), SuiUV(91, 41, 6, 3),
+          SuiUV(118, 10, 6, 9), SuiUV(0, 24, 6, 9),   SuiUV(114, 0, 8, 9),  SuiUV(7, 24, 6, 9),   SuiUV(14, 24, 6, 9),  SuiUV(21, 23, 6, 9),
+          SuiUV(55, 12, 6, 9),  SuiUV(28, 23, 6, 9),  SuiUV(35, 22, 6, 9),  SuiUV(42, 22, 6, 9),  SuiUV(49, 22, 6, 9),  SuiUV(123, 0, 4, 9),
+          SuiUV(56, 22, 6, 9),  SuiUV(63, 22, 6, 9),  SuiUV(70, 21, 6, 9),  SuiUV(0, 14, 7, 9),   SuiUV(40, 12, 7, 9),  SuiUV(77, 21, 6, 9),
+          SuiUV(21, 33, 6, 9),  SuiUV(35, 0, 6, 11),  SuiUV(91, 21, 6, 9),  SuiUV(98, 21, 6, 9),  SuiUV(105, 21, 6, 9), SuiUV(112, 21, 6, 9),
+          SuiUV(119, 20, 6, 9), SuiUV(24, 13, 7, 9),  SuiUV(0, 34, 6, 9),   SuiUV(7, 34, 6, 9),   SuiUV(14, 34, 6, 9),  SuiUV(18, 0, 4, 12),
+          SuiUV(100, 0, 6, 10), SuiUV(13, 0, 4, 12),  SuiUV(98, 39, 6, 3),  SuiUV(88, 45, 8, 1),  SuiUV(112, 39, 4, 3), SuiUV(108, 31, 6, 7),
+          SuiUV(28, 33, 6, 9),  SuiUV(115, 31, 6, 7), SuiUV(35, 32, 6, 9),  SuiUV(0, 44, 6, 7),   SuiUV(42, 32, 6, 9),  SuiUV(107, 0, 6, 10),
+          SuiUV(49, 32, 6, 9),  SuiUV(93, 0, 6, 10),  SuiUV(7, 0, 5, 13),   SuiUV(56, 32, 6, 9),  SuiUV(63, 32, 6, 9),  SuiUV(92, 31, 7, 7),
+          SuiUV(7, 44, 6, 7),   SuiUV(14, 44, 6, 7),  SuiUV(79, 0, 6, 10),  SuiUV(72, 0, 6, 10),  SuiUV(21, 43, 6, 7),  SuiUV(56, 42, 6, 7),
+          SuiUV(70, 31, 6, 9),  SuiUV(28, 43, 6, 7),  SuiUV(35, 42, 6, 7),  SuiUV(100, 31, 7, 7), SuiUV(42, 42, 6, 7),  SuiUV(64, 0, 7, 10),
+          SuiUV(49, 42, 6, 7),  SuiUV(48, 0, 5, 11),  SuiUV(23, 0, 2, 12),  SuiUV(42, 0, 5, 11),  SuiUV(82, 41, 8, 3),  SuiUV(84, 21, 6, 9)},
+      xoffs{-8, 2, 1, 1, 1, 0, 1, 3, 2, 2, 1, 1, 3, 1, 3, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1,
+            1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 3, 2, 0, 1},
+      yoffs{14, 3, 3, 3, 1, 2, 3, 3, 3, 3, 5, 5, 10, 7, 10, 3,  3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 5, 3, 6, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            3,  3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,  3, 1,  14, 1, 5, 3, 5, 3, 5, 3, 5, 3, 2, 2, 3, 3, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 3, 3, 3, 3, 3},
+      xadvs{8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+            8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8},
+      name("Fixedsys")
+{
+        // SuiUV uvs[95];
+        // i32 xoffs[95];
+        // i32 yoffs[95];
+        // i32 xadvs[95];
+
+        // VERY UGLY STUFF
+}
+
 SuiStyle::SuiStyle(const i32 _spacing, const SuiColor windowbg, const SuiColor rect, const SuiColor box, const SuiColor boxhot, const SuiColor boxactive)
     : spacing(_spacing), colors{windowbg, rect, box, boxhot, boxactive}
 {
@@ -221,13 +266,14 @@ void SuiContext::box_ex(const char* name, const i32 w, const i32 h, const SuiAli
         SuiRect rect(x + xoff, y + yoff, w, h);
         // if overlapping set different color
         if (io.mxy_in_rect(rect)) {
-                if (io.ldown) hot_id = id;
-                if (hot_id == id && io.lup) active_id = id;
+                hot_id = id;
+                if (active_id == 0 && io.ldown) active_id = id;
         }
-        
+
         i32 color = SUI_COLOR_BOX;
         if (hot_id == id) color = SUI_COLOR_BOX_HOT;
-        else if (active_id == id) style.colors[1] = SuiColor(0, 100, 0, 255);
+        if (io.lup && hot_id == id && active_id == id) printf("'%s' pressed\n", name);
+
         // cmdrects.push(SuiCommandRect(layout.rect, style.colors[SUI_COLOR_RECT]));
         cmdrects.push(SuiCommandRect(rect, style.colors[color]));
 
@@ -250,8 +296,8 @@ void SuiContext::next()
 
 void SuiContext::reset()
 {
-        if (!active_id) hot_id = 0;
-        active_id = 0;
+        hot_id = 0;
+        if (io.lup) active_id = 0;
         layouts.reset();
         cmdrects.reset();
 }
@@ -259,8 +305,10 @@ void SuiContext::reset()
 // --------------------------------------------------------------------------------------------------------------------
 
 #include <d3dcompiler.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
-SuiVertex::SuiVertex(const f32 _x, const f32 _y, const SuiColor _color) : x(_x), y(_y), color(_color) {}
+SuiVertex::SuiVertex(const f32 _x, const f32 _y, const f32 _u, const f32 _v, const SuiColor _color) : x(_x), y(_y), u(_u), v(_v), color(_color) {}
 
 SuiBackendProfiler::SuiBackendProfiler(ID3D11Device* device)
 {
@@ -361,7 +409,7 @@ void SuiBackendProfiler::update(ID3D11DeviceContext* context)
         max_primitives_storage_needed = SuiMax(max_primitives_storage_needed, primitives_storage_needed);
 }
 
-SuiBackend::SuiBackend(ID3D11Device* _device, const i32 x, const i32 y) : profiler(SuiBackendProfiler(_device))
+SuiBackend::SuiBackend(ID3D11Device* _device, const i32 x, const i32 y, const SuiUV* _uvs) : profiler(SuiBackendProfiler(_device)), uvs(_uvs)
 {
         screen_x = x;
         screen_y = y;
@@ -379,9 +427,10 @@ SuiBackend::SuiBackend(ID3D11Device* _device, const i32 x, const i32 y) : profil
 
         D3D11_INPUT_ELEMENT_DESC ieds[] = {
             {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,   0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+            {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,   0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
             {"COLOR",    0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
         };
-        hr = device->CreateInputLayout(ieds, 2, blob->GetBufferPointer(), blob->GetBufferSize(), &input_layout);
+        hr = device->CreateInputLayout(ieds, 3, blob->GetBufferPointer(), blob->GetBufferSize(), &input_layout);
         SuiAssert(hr == 0);
 
         hr = D3DCompileFromFile(L"shaders\\SuiPixel.hlsl", NULL, NULL, "main", "ps_4_0", 0, 0, &blob, NULL);
@@ -460,7 +509,59 @@ SuiBackend::SuiBackend(ID3D11Device* _device, const i32 x, const i32 y) : profil
 
         hr = device->CreateBuffer(&bufdsc, &subrsc, &constant_buffer);
         SuiAssert(hr == 0);
-}
+
+        i32         w, h, n;
+        const char* file = "Fixedsys.png";
+        u8*         bmp = stbi_load(file, &w, &h, &n, 0);
+
+        D3D11_TEXTURE2D_DESC texture_desc;
+        texture_desc.Width = w;
+        texture_desc.Height = h;
+        texture_desc.MipLevels = 1;
+        texture_desc.ArraySize = 1;
+        texture_desc.Format = DXGI_FORMAT_R8_UNORM;
+        texture_desc.SampleDesc = {1, 0};
+        texture_desc.Usage = D3D11_USAGE_DEFAULT;
+        texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        texture_desc.CPUAccessFlags = 0;
+        texture_desc.MiscFlags = 0;
+
+        D3D11_SUBRESOURCE_DATA sub_data;
+        sub_data.pSysMem = bmp;
+        sub_data.SysMemPitch = w;
+        sub_data.SysMemSlicePitch = 0;
+
+        ID3D11Texture2D* texture;
+        hr = _device->CreateTexture2D(&texture_desc, &sub_data, &texture);
+        SuiAssert(hr == 0);
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvd;
+        srvd.Format = texture_desc.Format;
+        srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        srvd.Texture2D = {0, 1};
+
+        hr = _device->CreateShaderResourceView(texture, &srvd, &view);
+        SuiAssert(hr == 0);
+
+        D3D11_SAMPLER_DESC sampler_desc;
+        memset(&sampler_desc, 0, sizeof(D3D11_SAMPLER_DESC));
+        sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+        sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+        sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+        sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+        // sampler_desc.MipLODBias = 0;
+        // sampler_desc.MaxAnisotropy = 0;
+        // sampler_desc.ComparisonFunc = 0;
+        // sampler_desc.BorderColor = 0;
+        // sampler_desc.MinLOD;
+        // sampler_desc.MaxLOD;
+
+        hr = _device->CreateSamplerState(&sampler_desc, &sampler);
+        SuiAssert(hr == 0);
+
+        texture->Release();
+        stbi_image_free(bmp); 
+	}
 
 void SuiBackend::record(i32 n, const SuiCommandRect* cmdrects)
 {
@@ -474,14 +575,17 @@ void SuiBackend::record(i32 n, const SuiCommandRect* cmdrects)
         // memcpy((char*)vtx_rsc.pData + n * sizeof(struct sui_vertex), vertices, n * sizeof(struct sui_vertex));
         SuiVertex* vertex = reinterpret_cast<SuiVertex*>(vtx_rsc.pData);
         for (i32 i = 0; i < n; i++) {
-                f32 x0 = (f32)cmdrects[i].rect.x;
-                f32 y0 = (f32)cmdrects[i].rect.y;
-                f32 x1 = (f32)cmdrects[i].rect.x + (f32)cmdrects[i].rect.w;
-                f32 y1 = (f32)cmdrects[i].rect.y + (f32)cmdrects[i].rect.h;
-                *vertex++ = SuiVertex(x0, y0, cmdrects[i].color);
-                *vertex++ = SuiVertex(x1, y1, cmdrects[i].color);
-                *vertex++ = SuiVertex(x0, y1, cmdrects[i].color);
-                *vertex++ = SuiVertex(x1, y0, cmdrects[i].color);
+                f32   x0 = (f32)cmdrects[i].rect.x;
+                f32   y0 = (f32)cmdrects[i].rect.y;
+                f32   x1 = (f32)cmdrects[i].rect.x + (f32)cmdrects[i].rect.w;
+                f32   y1 = (f32)cmdrects[i].rect.y + (f32)cmdrects[i].rect.h;
+                
+                SuiUV uv = uvs[127 - 32];
+                
+                *vertex++ = SuiVertex(x0, y0, uv.u0, uv.v0, cmdrects[i].color);
+                *vertex++ = SuiVertex(x1, y1, uv.u1, uv.v1, cmdrects[i].color);
+                *vertex++ = SuiVertex(x0, y1, uv.u0, uv.v1, cmdrects[i].color);
+                *vertex++ = SuiVertex(x1, y0, uv.u1, uv.v0, cmdrects[i].color);
         }
 
         context->Unmap(vertex_buffer, 0);
@@ -499,6 +603,8 @@ void SuiBackend::draw()
         context->IASetIndexBuffer(index_buffer, DXGI_FORMAT_R32_UINT, 0);
         context->VSSetConstantBuffers(0, 1, &constant_buffer);
         context->OMSetBlendState(blend_state, 0, 0xffffffff);
+        context->PSSetShaderResources(0, 1, &view);
+        context->PSSetSamplers(0, 1, &sampler);
 
         u32 stride = sizeof(SuiVertex);
         u32 offset = 0;

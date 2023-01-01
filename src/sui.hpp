@@ -114,6 +114,7 @@ typedef u32 SuiAlignmentFlags;
 struct SuiColor;
 struct SuiRect;
 
+struct SuiUV;
 struct SuiFont;
 struct SuiStyle;
 struct SuiLayout;
@@ -136,14 +137,30 @@ struct SuiRect {
         SuiRect(const i32 _x, const i32 _y, const i32 _w, const i32 _h);
 };
 
+struct SuiUV {
+        f32 u0;
+        f32 u1;
+        f32 v0;
+        f32 v1;
+
+        SuiUV(const i32 x, const i32 y, const i32 w, const i32 h);
+};
+
 struct SuiFont {
-        // TODO
+        // 127 - 32 = 95
+        const char* name;
+        SuiUV       uvs[96];
+        i32         xoffs[96];
+        i32         yoffs[96];
+        i32         xadvs[96];
+
+        SuiFont();
 };
 
 struct SuiStyle {
         // TODO
-        // SuiFont font;
         // i32      padding;
+        SuiFont  font;
         i32      spacing;
         SuiColor colors[SUI_COLOR_MAX];
 
@@ -171,7 +188,7 @@ struct SuiIO {
         i32 mx, my, dmx, dmy;
         u8  ldown, lup, lheld, lclick;
         u8  rdown, rup, rheld, rclick;
-        
+
         SuiIO();
         i32 mxy_in_rect(const SuiRect rect);
 };
@@ -194,6 +211,9 @@ struct SuiContext {
         void rect();
         void box_ex(const char* name, const i32 w, const i32 h, const SuiAlignmentFlags flags, const SuiLayoutAction action);
         void box(const char* name);
+        // TODO
+        // i32  button_ex(const char* name, const SuiAlignmentFlags flags, const SuiLayoutAction action);
+        void label_ex(const char* name, const SuiAlignmentFlags, const SuiLayoutAction action);
         void next();
         // TODO: change to void finish();
         void reset();
@@ -214,10 +234,11 @@ struct SuiBackend;
 
 struct SuiVertex {
         f32      x, y;
+        f32      u, v;
         SuiColor color;
 
         SuiVertex() = default;
-        SuiVertex(const f32 _x, const f32 _y, const SuiColor _color);
+        SuiVertex(const f32 _x, const f32 _y, const f32 _u, const f32 _v, const SuiColor _color);
 };
 
 struct SuiBackendProfiler {
@@ -273,21 +294,24 @@ struct SuiBackendProfiler {
 };
 
 struct SuiBackend {
-        i32                  screen_x;
-        i32                  screen_y;
-        ID3D11Device*        device;
-        ID3D11DeviceContext* context;
-        ID3D11InputLayout*   input_layout;
-        ID3D11VertexShader*  vertex_shader;
-        ID3D11PixelShader*   pixel_shader;
-        ID3D11Buffer*        vertex_buffer;
-        ID3D11Buffer*        index_buffer;
-        ID3D11Buffer*        constant_buffer;
-        ID3D11BlendState*    blend_state;
-        i32                  vertices_count;
-        SuiBackendProfiler   profiler;
+        i32                       screen_x;
+        i32                       screen_y;
+        ID3D11Device*             device;
+        ID3D11DeviceContext*      context;
+        ID3D11InputLayout*        input_layout;
+        ID3D11VertexShader*       vertex_shader;
+        ID3D11PixelShader*        pixel_shader;
+        ID3D11Buffer*             vertex_buffer;
+        ID3D11Buffer*             index_buffer;
+        ID3D11Buffer*             constant_buffer;
+        ID3D11BlendState*         blend_state;
+        ID3D11ShaderResourceView* view;
+        ID3D11SamplerState*       sampler;
+        i32                       vertices_count;
+        SuiBackendProfiler        profiler;
+        const SuiUV*              uvs;
 
-        SuiBackend(ID3D11Device* _device, const i32 x, const i32 y);
+        SuiBackend(ID3D11Device* _device, const i32 x, const i32 y, const SuiUV* _uvs);
         void record(i32 n, const SuiCommandRect* cmdrects);
         void draw();
 };

@@ -37,7 +37,7 @@ int main()
 {
         App        app(L"SimpleUI example.cpp", 600, 600);
         SuiContext sui;
-        SuiBackend backend(app.device, 600, 600);
+        SuiBackend backend(app.device, 600, 600, sui.style.font.uvs);
 
         while (app.close()) {
                 sui.reset();
@@ -199,6 +199,12 @@ LRESULT CALLBACK App::SetupMessageCallback(HWND hwnd, UINT msg, WPARAM wparam, L
 LRESULT CALLBACK App::MessageCallback(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
         App* app = (App*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+        
+        app->mouse.ldown = 0;
+        app->mouse.lup = 0;
+        app->mouse.rdown = 0;
+        app->mouse.rup = 0;
+        
         switch (msg) {
         case WM_CLOSE: {
                 PostQuitMessage(0);
