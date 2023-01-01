@@ -22,6 +22,8 @@ SuiUV::SuiUV(const i32 x, const i32 y, const i32 w, const i32 h)
         v1 = v0 + (f32)h / image_h;
 }
 
+SuiGlyph::SuiGlyph(const i32 _w, const i32 _h, const i32 _xoff, const i32 _yoff) : w(_w), h(_h), xoff(_xoff), yoff(_yoff) {}
+
 SuiFont::SuiFont()
     : uvs{SuiUV(63, 48, 24, 1), SuiUV(83, 31, 4, 9),  SuiUV(105, 39, 6, 3), SuiUV(8, 14, 7, 9),   SuiUV(0, 0, 6, 13),   SuiUV(26, 0, 8, 11),
           SuiUV(16, 13, 7, 9),  SuiUV(125, 10, 2, 3), SuiUV(54, 0, 4, 11),  SuiUV(59, 0, 4, 11),  SuiUV(63, 42, 7, 5),  SuiUV(71, 41, 6, 5),
@@ -39,28 +41,40 @@ SuiFont::SuiFont()
           SuiUV(7, 44, 6, 7),   SuiUV(14, 44, 6, 7),  SuiUV(79, 0, 6, 10),  SuiUV(72, 0, 6, 10),  SuiUV(21, 43, 6, 7),  SuiUV(56, 42, 6, 7),
           SuiUV(70, 31, 6, 9),  SuiUV(28, 43, 6, 7),  SuiUV(35, 42, 6, 7),  SuiUV(100, 31, 7, 7), SuiUV(42, 42, 6, 7),  SuiUV(64, 0, 7, 10),
           SuiUV(49, 42, 6, 7),  SuiUV(48, 0, 5, 11),  SuiUV(23, 0, 2, 12),  SuiUV(42, 0, 5, 11),  SuiUV(82, 41, 8, 3),  SuiUV(84, 21, 6, 9)},
-      xoffs{-8, 2, 1, 1, 1, 0, 1, 3, 2, 2, 1, 1, 3, 1, 3, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1,
-            1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 3, 2, 0, 1},
-      yoffs{14, 3, 3, 3, 1, 2, 3, 3, 3, 3, 5, 5, 10, 7, 10, 3,  3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 5, 3, 6, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-            3,  3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,  3, 1,  14, 1, 5, 3, 5, 3, 5, 3, 5, 3, 2, 2, 3, 3, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 3, 3, 3, 3, 3},
+      glyphs{SuiGlyph(24, 1, -8, 14), SuiGlyph(4, 9, 2, 3),  SuiGlyph(6, 3, 1, 3),  SuiGlyph(7, 9, 1, 3),  SuiGlyph(6, 13, 1, 1), SuiGlyph(8, 11, 0, 2),
+             SuiGlyph(7, 9, 1, 3),    SuiGlyph(2, 3, 3, 3),  SuiGlyph(4, 11, 2, 3), SuiGlyph(4, 11, 2, 3), SuiGlyph(7, 5, 1, 5),  SuiGlyph(6, 5, 1, 5),
+             SuiGlyph(3, 4, 3, 10),   SuiGlyph(6, 1, 1, 7),  SuiGlyph(3, 2, 3, 10), SuiGlyph(6, 10, 1, 3), SuiGlyph(6, 9, 2, 3),  SuiGlyph(5, 9, 1, 3),
+             SuiGlyph(6, 9, 1, 3),    SuiGlyph(6, 9, 1, 3),  SuiGlyph(7, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),
+             SuiGlyph(6, 9, 1, 3),    SuiGlyph(6, 9, 1, 3),  SuiGlyph(3, 7, 3, 5),  SuiGlyph(3, 9, 3, 5),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 3, 1, 6),
+             SuiGlyph(6, 9, 1, 3),    SuiGlyph(6, 9, 1, 3),  SuiGlyph(8, 9, 0, 3),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),
+             SuiGlyph(6, 9, 1, 3),    SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(4, 9, 2, 3),
+             SuiGlyph(6, 9, 1, 3),    SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(7, 9, 1, 3),  SuiGlyph(7, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),
+             SuiGlyph(6, 9, 1, 3),    SuiGlyph(6, 11, 1, 3), SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),
+             SuiGlyph(6, 9, 1, 3),    SuiGlyph(7, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(4, 12, 2, 3),
+             SuiGlyph(6, 10, 1, 3),   SuiGlyph(4, 12, 2, 3), SuiGlyph(6, 3, 1, 1),  SuiGlyph(8, 1, 0, 14), SuiGlyph(4, 3, 2, 1),  SuiGlyph(6, 7, 1, 5),
+             SuiGlyph(6, 9, 1, 3),    SuiGlyph(6, 7, 1, 5),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 7, 1, 5),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 10, 1, 5),
+             SuiGlyph(6, 9, 1, 3),    SuiGlyph(6, 10, 1, 2), SuiGlyph(5, 13, 1, 2), SuiGlyph(6, 9, 1, 3),  SuiGlyph(6, 9, 1, 3),  SuiGlyph(7, 7, 1, 5),
+             SuiGlyph(6, 7, 1, 5),    SuiGlyph(6, 7, 1, 5),  SuiGlyph(6, 10, 1, 5), SuiGlyph(6, 10, 1, 5), SuiGlyph(6, 7, 1, 5),  SuiGlyph(6, 7, 1, 5),
+             SuiGlyph(6, 9, 1, 3),    SuiGlyph(6, 7, 1, 5),  SuiGlyph(6, 7, 1, 5),  SuiGlyph(7, 7, 1, 5),  SuiGlyph(6, 7, 1, 5),  SuiGlyph(7, 10, 0, 5),
+             SuiGlyph(6, 7, 1, 5),    SuiGlyph(5, 11, 1, 3), SuiGlyph(2, 12, 3, 3), SuiGlyph(5, 11, 2, 3), SuiGlyph(8, 3, 0, 3),  SuiGlyph(6, 9, 1, 3)},
       xadvs{8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
             8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8},
       name("Fixedsys")
 {
         // SuiUV uvs[95];
-        // i32 xoffs[95];
-        // i32 yoffs[95];
+        // SuiGlyph glyphs[96];
         // i32 xadvs[95];
 
         // VERY UGLY STUFF
 }
 
-SuiStyle::SuiStyle(const i32 _spacing, const SuiColor windowbg, const SuiColor rect, const SuiColor box, const SuiColor boxhot, const SuiColor boxactive)
-    : spacing(_spacing), colors{windowbg, rect, box, boxhot, boxactive}
+SuiStyle::SuiStyle()
+    : spacing(2), colors{SuiColor(255, 255, 255, 255), SuiColor(100, 0, 0, 255),  SuiColor(255, 255, 255, 255),
+                         SuiColor(100, 100, 100, 255), SuiColor(50, 50, 50, 255), SuiColor(100, 100, 100, 255)}
 {
 }
 SuiLayout::SuiLayout(const SuiRect _rect) : rect(_rect) {}
-SuiCommandRect::SuiCommandRect(const SuiRect _rect, const SuiColor _color) : rect(_rect), color(_color) {}
+SuiRectCommand::SuiRectCommand(const SuiRect _rect, const SuiColor _color, const i32 _c) : rect(_rect), color(_color), c(_c) {}
 SuiIO::SuiIO() : mx(0), my(0), dmx(0), dmy(0), ldown(0), lup(0), lheld(0), lclick(0), rdown(0), rup(0), rheld(0), rclick(0) {}
 
 i32 SuiIO::mxy_in_rect(const SuiRect rect)
@@ -73,10 +87,7 @@ i32 SuiIO::mxy_in_rect(const SuiRect rect)
         return 0;
 }
 
-SuiContext::SuiContext()
-    : style(2, SuiColor(255, 255, 255, 255), SuiColor(100, 0, 0, 255), SuiColor(0, 0, 0, 255), SuiColor(100, 100, 100, 255), SuiColor(200, 200, 200, 255))
-{
-}
+SuiContext::SuiContext() {}
 
 void SuiContext::inputs(i32 mx, i32 my, u8 ldown, u8 lup, u8 rdown, u8 rup)
 {
@@ -98,7 +109,7 @@ void SuiContext::begin(const char* name, const SuiRect rect)
         const i32 spacing = style.spacing;
         SuiRect   body = {rect.x + spacing, rect.y + spacing, rect.w - 2 * spacing, rect.h - 2 * spacing};
         layouts.push(SuiLayout(body));
-        cmdrects.push(SuiCommandRect(rect, style.colors[SUI_COLOR_WINDOWBG]));
+        rectcmds.push(SuiRectCommand(rect, style.colors[SUI_COLOR_WINDOWBG], 127));
 }
 
 void SuiContext::end()
@@ -225,15 +236,13 @@ void SuiContext::column(const i32 n, i32 width, const i32* heights)
         for (i32 i = n - 1; 0 <= i; i--) layouts.push(new_layouts[i]);
 }
 
-void SuiContext::rect()
+void SuiContext::reveal_layout()
 {
-        // TODO: stronger error catching
-        SuiAssert(layouts.idx != 0);
         SuiLayout layout = layouts.pop();
-        cmdrects.push(SuiCommandRect(layout.rect, style.colors[SUI_COLOR_RECT]));
+        rectcmds.push(SuiRectCommand(layout.rect, style.colors[SUI_COLOR_LAYOUT], 127));
 }
 
-void SuiContext::box_ex(const char* name, const i32 w, const i32 h, const SuiAlignmentFlags flags, const SuiLayoutAction action)
+/* void SuiContext::box_ex(const char* name, const i32 w, const i32 h, const SuiAlignmentFlags flags, const SuiLayoutAction action)
 {
         u32 id = SuiHash(name);
 
@@ -282,11 +291,93 @@ void SuiContext::box_ex(const char* name, const i32 w, const i32 h, const SuiAli
                 layout.rect.w -= (xoff + w + style.spacing);
                 layouts.push(layout);
         }
+} */
+
+SuiRect SuiContext::get_rect(const i32 w, const i32 h, const SuiAlignmentFlags alignment, const SuiLayout& layout)
+{
+        SuiAssert(w <= layout.rect.w && h <= layout.rect.h);
+
+        // SUI_ALIGNMENT_FLAG_LEFT && SUI_ALIGNMENT_FLAG_TOP
+        i32 xoff = 0, yoff = 0;
+        if (alignment & SUI_ALIGNMENT_FLAG_RIGHT) {
+                xoff = layout.rect.w - w;
+        }
+        else if (!(alignment & SUI_ALIGNMENT_FLAG_LEFT)) {
+                xoff = (layout.rect.w / 2) - (w / 2);
+        }
+
+        if (alignment & SUI_ALIGNMENT_FLAG_BOTTOM) {
+                yoff = layout.rect.h - h;
+        }
+        else if (!(alignment & SUI_ALIGNMENT_FLAG_TOP)) {
+                yoff = (layout.rect.h / 2) - (h / 2);
+        }
+
+        return SuiRect(layout.rect.x + xoff, layout.rect.y + yoff, w, h);
 }
 
-void SuiContext::box(const char* name)
+void SuiContext::label(const char* s)
 {
-        box_ex(name, 16, 16, 0, SUI_LAYOUT_ACTION_NEXT);
+        SuiAssert(s);
+        const char* c = s;
+        i32         len = 0;
+        while (*c) len += style.font.xadvs[*c++ - 32];
+
+        SuiAssert(layouts.idx != 0);
+        SuiLayout layout = layouts.pop();
+        SuiRect   rect = get_rect(len, 16, SUI_ALIGNMENT_FLAG_LEFT, layout);
+        SuiColor  color = style.colors[SUI_COLOR_LABELBG];
+
+        // SuiLayoutAction action = SUI_LAYOUT_ACTION_NEXT;
+        rectcmds.push(SuiRectCommand(rect, color, 127));
+
+        c = s;
+        len = 0;
+        while (*c) {
+                SuiGlyph glyph = style.font.glyphs[*c - 32];
+                SuiRect  rect = {layout.rect.x + len + glyph.xoff, layout.rect.y + glyph.yoff, glyph.w, glyph.h};
+                rectcmds.push(SuiRectCommand(rect, style.colors[SUI_COLOR_TEXT], *c));
+                len += style.font.xadvs[*c - 32];
+                c++;
+        }
+}
+
+i32 SuiContext::button(const char* s)
+{
+        SuiAssert(s);
+        u32 id = SuiHash(s);
+
+        const char* c = s;
+        i32         len = 0;
+        while (*c) len += style.font.xadvs[*c++ - 32];
+
+        SuiAssert(layouts.idx != 0);
+        SuiLayout layout = layouts.pop();
+        SuiRect   rect = get_rect(len, 16, SUI_ALIGNMENT_FLAG_LEFT, layout);
+        SuiColor  color = style.colors[SUI_COLOR_BUTTON];
+
+        if (io.mxy_in_rect(rect)) {
+                hot_id = id;
+                if (active_id == 0 && io.ldown) active_id = id;
+        }
+
+        if (hot_id == id) color = style.colors[SUI_COLOR_BUTTON_HOT];
+
+        // SuiLayoutAction action = SUI_LAYOUT_ACTION_NEXT;
+        rectcmds.push(SuiRectCommand(rect, color, 127));
+
+        c = s;
+        len = 0;
+        while (*c) {
+                SuiGlyph glyph = style.font.glyphs[*c - 32];
+                SuiRect  rect = {layout.rect.x + len + glyph.xoff, layout.rect.y + glyph.yoff, glyph.w, glyph.h};
+                rectcmds.push(SuiRectCommand(rect, style.colors[SUI_COLOR_TEXT], *c));
+                len += style.font.xadvs[*c - 32];
+                c++;
+        }
+
+        if (active_id == id && io.lup) return 1;
+        return 0;
 }
 
 void SuiContext::next()
@@ -299,7 +390,7 @@ void SuiContext::reset()
         hot_id = 0;
         if (io.lup) active_id = 0;
         layouts.reset();
-        cmdrects.reset();
+        rectcmds.reset();
 }
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -560,10 +651,10 @@ SuiBackend::SuiBackend(ID3D11Device* _device, const i32 x, const i32 y, const Su
         SuiAssert(hr == 0);
 
         texture->Release();
-        stbi_image_free(bmp); 
-	}
+        stbi_image_free(bmp);
+}
 
-void SuiBackend::record(i32 n, const SuiCommandRect* cmdrects)
+void SuiBackend::record(i32 n, const SuiRectCommand* rectcmds)
 {
         SuiAssert(n * 4 < SUI_VERTEX_SIZE);
 
@@ -575,17 +666,17 @@ void SuiBackend::record(i32 n, const SuiCommandRect* cmdrects)
         // memcpy((char*)vtx_rsc.pData + n * sizeof(struct sui_vertex), vertices, n * sizeof(struct sui_vertex));
         SuiVertex* vertex = reinterpret_cast<SuiVertex*>(vtx_rsc.pData);
         for (i32 i = 0; i < n; i++) {
-                f32   x0 = (f32)cmdrects[i].rect.x;
-                f32   y0 = (f32)cmdrects[i].rect.y;
-                f32   x1 = (f32)cmdrects[i].rect.x + (f32)cmdrects[i].rect.w;
-                f32   y1 = (f32)cmdrects[i].rect.y + (f32)cmdrects[i].rect.h;
-                
-                SuiUV uv = uvs[127 - 32];
-                
-                *vertex++ = SuiVertex(x0, y0, uv.u0, uv.v0, cmdrects[i].color);
-                *vertex++ = SuiVertex(x1, y1, uv.u1, uv.v1, cmdrects[i].color);
-                *vertex++ = SuiVertex(x0, y1, uv.u0, uv.v1, cmdrects[i].color);
-                *vertex++ = SuiVertex(x1, y0, uv.u1, uv.v0, cmdrects[i].color);
+                f32 x0 = (f32)rectcmds[i].rect.x;
+                f32 y0 = (f32)rectcmds[i].rect.y;
+                f32 x1 = (f32)rectcmds[i].rect.x + (f32)rectcmds[i].rect.w;
+                f32 y1 = (f32)rectcmds[i].rect.y + (f32)rectcmds[i].rect.h;
+
+                SuiUV uv = uvs[rectcmds[i].c - 32];
+
+                *vertex++ = SuiVertex(x0, y0, uv.u0, uv.v0, rectcmds[i].color);
+                *vertex++ = SuiVertex(x1, y1, uv.u1, uv.v1, rectcmds[i].color);
+                *vertex++ = SuiVertex(x0, y1, uv.u0, uv.v1, rectcmds[i].color);
+                *vertex++ = SuiVertex(x1, y0, uv.u1, uv.v0, rectcmds[i].color);
         }
 
         context->Unmap(vertex_buffer, 0);

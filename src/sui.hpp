@@ -83,20 +83,19 @@ u32 SuiHash(const char* s);
 
 enum {
         SUI_COLOR_WINDOWBG,
-        SUI_COLOR_RECT,
-        SUI_COLOR_BOX,
-        SUI_COLOR_BOX_HOT,
-        SUI_COLOR_BOX_ACTIVE,
+        SUI_COLOR_LAYOUT,
+        SUI_COLOR_TEXT,
+        SUI_COLOR_LABELBG,
+        SUI_COLOR_BUTTON,
+        SUI_COLOR_BUTTON_HOT,
         SUI_COLOR_MAX
 };
 
 enum {
         SUI_ALIGNMENT_FLAG_LEFT = (1 << 0),
         SUI_ALIGNMENT_FLAG_RIGHT = (1 << 1),
-        SUI_ALIGNMENT_FLAG_HMIDDLE = (1 << 2),
-        SUI_ALIGNMENT_FLAG_TOP = (1 << 3),
-        SUI_ALIGNMENT_FLAG_BOTTOM = (1 << 4),
-        SUI_ALIGNMENT_FLAG_VMIDDLE = (1 << 5),
+        SUI_ALIGNMENT_FLAG_TOP = (1 << 2),
+        SUI_ALIGNMENT_FLAG_BOTTOM = (1 << 3),
 };
 
 enum SuiLayoutAction {
@@ -115,10 +114,11 @@ struct SuiColor;
 struct SuiRect;
 
 struct SuiUV;
+struct SuiGlyph;
 struct SuiFont;
 struct SuiStyle;
 struct SuiLayout;
-struct SuiCommandRect;
+struct SuiRectCommand;
 struct SuiIO;
 
 struct SuiContext;
@@ -146,12 +146,20 @@ struct SuiUV {
         SuiUV(const i32 x, const i32 y, const i32 w, const i32 h);
 };
 
+struct SuiGlyph {
+        i32 w;
+        i32 h;
+        i32 xoff;
+        i32 yoff;
+
+        SuiGlyph(const i32 _w, const i32 _h, const i32 _xoff, const i32 _yoff);
+};
+
 struct SuiFont {
         // 127 - 32 = 95
         const char* name;
         SuiUV       uvs[96];
-        i32         xoffs[96];
-        i32         yoffs[96];
+        SuiGlyph    glyphs[96];
         i32         xadvs[96];
 
         SuiFont();
@@ -164,8 +172,7 @@ struct SuiStyle {
         i32      spacing;
         SuiColor colors[SUI_COLOR_MAX];
 
-        SuiStyle() = default;
-        SuiStyle(const i32 _spacing, const SuiColor windowbg, const SuiColor rect, const SuiColor box, const SuiColor boxhot, const SuiColor boxactive);
+        SuiStyle();
 };
 
 struct SuiLayout {
@@ -176,12 +183,13 @@ struct SuiLayout {
         SuiLayout(const SuiRect _rect);
 };
 
-struct SuiCommandRect {
+struct SuiRectCommand {
         SuiRect  rect;
         SuiColor color;
+        i32      c;
 
-        SuiCommandRect() = default;
-        SuiCommandRect(const SuiRect _rect, const SuiColor _color);
+        SuiRectCommand() = default;
+        SuiRectCommand(const SuiRect _rect, const SuiColor _color, const i32 _c);
 };
 
 struct SuiIO {
@@ -200,7 +208,7 @@ struct SuiContext {
 
         SuiStyle                                        style;
         SuiStack<SUI_LAYOUTSTACK_SIZE, SuiLayout>       layouts;
-        SuiStack<SUI_CMDRECTSTACK_SIZE, SuiCommandRect> cmdrects;
+        SuiStack<SUI_CMDRECTSTACK_SIZE, SuiRectCommand> rectcmds;
 
         SuiContext();
         void inputs(i32 mx, i32 my, u8 ldown, u8 lup, u8 rdown, u8 rup);
@@ -208,13 +216,12 @@ struct SuiContext {
         void end();
         void row(const i32 n, const i32* widths, i32 height);
         void column(const i32 n, i32 width, const i32* heights);
-        void rect();
-        void box_ex(const char* name, const i32 w, const i32 h, const SuiAlignmentFlags flags, const SuiLayoutAction action);
-        void box(const char* name);
-        // TODO
-        // i32  button_ex(const char* name, const SuiAlignmentFlags flags, const SuiLayoutAction action);
-        void label_ex(const char* name, const SuiAlignmentFlags, const SuiLayoutAction action);
-        void next();
+        // void box_ex(const char* name, const i32 w, const i32 h, const SuiAlignmentFlags flags, const SuiLayoutAction action);
+        void  reveal_layout();
+        SuiRect get_rect(const i32 w, const i32 h, const SuiAlignmentFlags alignment, const SuiLayout& layout);
+        void    label(const char* s);
+        i32 button(const char* s);
+        void    next();
         // TODO: change to void finish();
         void reset();
 };
@@ -312,6 +319,6 @@ struct SuiBackend {
         const SuiUV*              uvs;
 
         SuiBackend(ID3D11Device* _device, const i32 x, const i32 y, const SuiUV* _uvs);
-        void record(i32 n, const SuiCommandRect* cmdrects);
+        void record(i32 n, const SuiRectCommand* rectcmds);
         void draw();
 };

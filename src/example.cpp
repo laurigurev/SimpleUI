@@ -46,24 +46,24 @@ int main()
 
                 i32 ws[] = {-1, 16};
                 sui.row(2, ws, 16);
-                sui.box_ex("test box_ex 0", 16, 16, SUI_ALIGNMENT_FLAG_LEFT, SUI_LAYOUT_ACTION_SPLIT);
-                sui.box_ex("test box_ex 1", 16, 16, SUI_ALIGNMENT_FLAG_LEFT, SUI_LAYOUT_ACTION_NEXT);
-                // sui.rect();
-                sui.rect();
+                // sui.reveal_layout();
+                sui.label("label");
+                sui.reveal_layout();
 
                 i32 hs[] = {16, 16, 16};
                 sui.column(3, 40, hs);
-                sui.rect();
-                sui.rect();
-                sui.rect();
-
-                sui.rect();
-                sui.rect();
+                sui.reveal_layout();
+                // sui.reveal_layout();
+                if (sui.button("btn0")) printf("btn0 pressed\n");
+                sui.reveal_layout();
+                
+                sui.reveal_layout();
+                sui.reveal_layout();
 
                 sui.end();
 
                 app.clear(0.0f, 0.0f, 0.5f);
-                backend.record(sui.cmdrects.idx, sui.cmdrects.data);
+                backend.record(sui.rectcmds.idx, sui.rectcmds.data);
                 backend.draw();
                 app.present();
         }
