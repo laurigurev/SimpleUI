@@ -74,9 +74,9 @@ SuiFont::SuiFont()
 }
 
 SuiStyle::SuiStyle()
-    : spacing(2), colors{SuiColor(255, 255, 255, 255), SuiColor(100, 0, 0, 255),     SuiColor(255, 255, 255, 255), SuiColor(100, 100, 100, 255),
-                         SuiColor(50, 50, 50, 255),    SuiColor(100, 100, 100, 255), SuiColor(0, 0, 0, 255),       SuiColor(255, 255, 255, 255),
-                         SuiColor(0, 0, 0, 255),       SuiColor(100, 100, 100, 255)}
+    : spacing(2), colors{SuiColor(0, 0, 0, 255),     SuiColor(100, 0, 0, 255),     SuiColor(150, 150, 200, 255), SuiColor(0, 0, 0, 0),
+                         SuiColor(50, 50, 100, 255), SuiColor(100, 100, 200, 255), SuiColor(50, 50, 100, 255),   SuiColor(160, 160, 160, 255),
+                         SuiColor(30, 30, 80, 255),  SuiColor(100, 100, 100, 255)}
 {
 }
 SuiLayout::SuiLayout(const SuiRect _rect) : rect(_rect) {}
@@ -234,16 +234,18 @@ void SuiContext::column(const i32 n, i32 width, const i32* heights)
                 curr_layout.rect = {x, y + yoff, curr_layout.rect.w, curr_layout.rect.h - yoff};
                 layouts.push(curr_layout);
         }
-        w0 = width + style.spacing;
-        w1 = curr_layout.rect.w - w0;
-        curr_layout.rect = {x + w0, y, w1, yoff - style.spacing};
-        layouts.push(curr_layout);
-
+        if (width != curr_layout.rect.w) {
+                w0 = width + style.spacing;
+                w1 = curr_layout.rect.w - w0;
+                curr_layout.rect = {x + w0, y, w1, yoff - style.spacing};
+                layouts.push(curr_layout);
+        }
         for (i32 i = n - 1; 0 <= i; i--) layouts.push(new_layouts[i]);
 }
 
 void SuiContext::reveal_layout()
 {
+        SuiAssert(layouts.idx != 0);
         SuiLayout layout = layouts.pop();
         rectcmds.push(SuiRectCommand(layout.rect, style.colors[SUI_COLOR_LAYOUT], 127));
 }
@@ -396,13 +398,13 @@ void SuiContext::slider(const char* s, f32* const value)
 void SuiContext::labelf(const char* s, ...)
 {
         SuiAssert(s);
-        
-        char buffer[64];
+
+        char    buffer[64];
         va_list args;
         va_start(args, s);
         i32 n = vsnprintf(buffer, 64 - 1, s, args);
         SuiAssert(n != -1);
-        
+
         const char* c = buffer;
         i32         len = 0;
         while (*c) len += style.font.xadvs[*c++ - 32];

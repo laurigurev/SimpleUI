@@ -21,3 +21,5 @@ todos:
  - frontend profiler
  - readme
  - make it all dummy proof
+ - error catching in SuiStack
+ - clipping

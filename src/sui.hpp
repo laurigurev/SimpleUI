@@ -17,7 +17,7 @@ typedef double   d64;
 // DEFINES
 
 #define SUI_LAYOUTSTACK_SIZE  16
-#define SUI_CMDRECTSTACK_SIZE 128
+#define SUI_CMDRECTSTACK_SIZE 256
 #define SUI_VERTEX_SIZE       1024
 #define SUI_MIN_RECT_WIDTH    16
 #define SUI_MIN_RECT_HEIGHT   16
@@ -231,9 +231,6 @@ struct SuiContext {
         void    checkbox(const char* s, i32* const value);
         void    slider(const char* s, f32* const value);
         void    labelf(const char* s, ...);
-        void    text(const char* txt, ...);       // TODO
-        void    textbox(const char* txt);         // TODO
-        i32     menu(const char* s, const i32 n); // TODO
         void    next();
         // TODO: change to void finish();
         void reset();
