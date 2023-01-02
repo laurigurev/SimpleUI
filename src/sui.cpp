@@ -11,6 +11,11 @@ u32 SuiHash(const char* s)
 SuiColor::SuiColor(const u8 _r, const u8 _g, const u8 _b, const u8 _a) : r(_r), g(_g), b(_b), a(_a) {}
 SuiRect::SuiRect(const i32 _x, const i32 _y, const i32 _w, const i32 _h) : x(_x), y(_y), w(_w), h(_h) {}
 
+SuiRect SuiRect::scale(const i32 px)
+{
+        return SuiRect(x + px, y + px, w - 2 * px, h - 2 * px);
+}
+
 SuiUV::SuiUV(const i32 x, const i32 y, const i32 w, const i32 h)
 {
         const f32 image_w = 128;
@@ -69,8 +74,9 @@ SuiFont::SuiFont()
 }
 
 SuiStyle::SuiStyle()
-    : spacing(2), colors{SuiColor(255, 255, 255, 255), SuiColor(100, 0, 0, 255),  SuiColor(255, 255, 255, 255),
-                         SuiColor(100, 100, 100, 255), SuiColor(50, 50, 50, 255), SuiColor(100, 100, 100, 255)}
+    : spacing(2), colors{SuiColor(255, 255, 255, 255), SuiColor(100, 0, 0, 255),     SuiColor(255, 255, 255, 255), SuiColor(100, 100, 100, 255),
+                         SuiColor(50, 50, 50, 255),    SuiColor(100, 100, 100, 255), SuiColor(0, 0, 0, 255),       SuiColor(255, 255, 255, 255),
+                         SuiColor(0, 0, 0, 255),       SuiColor(100, 100, 100, 255)}
 {
 }
 SuiLayout::SuiLayout(const SuiRect _rect) : rect(_rect) {}
@@ -87,7 +93,7 @@ i32 SuiIO::mxy_in_rect(const SuiRect rect)
         return 0;
 }
 
-SuiContext::SuiContext() {}
+SuiContext::SuiContext() : hot_id(0), active_id(0) {}
 
 void SuiContext::inputs(i32 mx, i32 my, u8 ldown, u8 lup, u8 rdown, u8 rup)
 {
@@ -242,57 +248,6 @@ void SuiContext::reveal_layout()
         rectcmds.push(SuiRectCommand(layout.rect, style.colors[SUI_COLOR_LAYOUT], 127));
 }
 
-/* void SuiContext::box_ex(const char* name, const i32 w, const i32 h, const SuiAlignmentFlags flags, const SuiLayoutAction action)
-{
-        u32 id = SuiHash(name);
-
-        // TODO: stronger error catching
-        SuiAssert(layouts.idx != 0);
-        SuiLayout layout = layouts.pop();
-
-        const i32 x = layout.rect.x, y = layout.rect.y;
-        const i32 halfw = w / 2, halfh = h / 2;
-        i32       xoff, yoff;
-
-        // SUI_ALIGNMENT_FLAG_HMIDDLE
-        xoff = (layout.rect.w / 2) - halfw;
-        if (flags & SUI_ALIGNMENT_FLAG_LEFT) {
-                xoff = 0;
-        }
-        else if (flags & SUI_ALIGNMENT_FLAG_RIGHT) {
-                xoff = layout.rect.w - w;
-        }
-
-        // SUI_ALIGNMENT_FLAG_VMIDDLE
-        yoff = (layout.rect.h / 2) - halfh;
-        if (flags & SUI_ALIGNMENT_FLAG_TOP) {
-                yoff = 0;
-        }
-        else if (flags & SUI_ALIGNMENT_FLAG_BOTTOM) {
-                yoff = layout.rect.h - h;
-        }
-
-        SuiRect rect(x + xoff, y + yoff, w, h);
-        // if overlapping set different color
-        if (io.mxy_in_rect(rect)) {
-                hot_id = id;
-                if (active_id == 0 && io.ldown) active_id = id;
-        }
-
-        i32 color = SUI_COLOR_BOX;
-        if (hot_id == id) color = SUI_COLOR_BOX_HOT;
-        if (io.lup && hot_id == id && active_id == id) printf("'%s' pressed\n", name);
-
-        // cmdrects.push(SuiCommandRect(layout.rect, style.colors[SUI_COLOR_RECT]));
-        cmdrects.push(SuiCommandRect(rect, style.colors[color]));
-
-        if (action == SUI_LAYOUT_ACTION_SPLIT && !(flags & SUI_ALIGNMENT_FLAG_HMIDDLE)) {
-                layout.rect.x += xoff + w + style.spacing;
-                layout.rect.w -= (xoff + w + style.spacing);
-                layouts.push(layout);
-        }
-} */
-
 SuiRect SuiContext::get_rect(const i32 w, const i32 h, const SuiAlignmentFlags alignment, const SuiLayout& layout)
 {
         SuiAssert(w <= layout.rect.w && h <= layout.rect.h);
@@ -334,9 +289,9 @@ void SuiContext::label(const char* s)
         c = s;
         len = 0;
         while (*c) {
-                SuiGlyph glyph = style.font.glyphs[*c - 32];
-                SuiRect  rect = {layout.rect.x + len + glyph.xoff, layout.rect.y + glyph.yoff, glyph.w, glyph.h};
-                rectcmds.push(SuiRectCommand(rect, style.colors[SUI_COLOR_TEXT], *c));
+                const SuiGlyph glyph = style.font.glyphs[*c - 32];
+                const SuiRect  grect = {rect.x + len + glyph.xoff, rect.y + glyph.yoff, glyph.w, glyph.h};
+                rectcmds.push(SuiRectCommand(grect, style.colors[SUI_COLOR_TEXT], *c));
                 len += style.font.xadvs[*c - 32];
                 c++;
         }
@@ -376,8 +331,98 @@ i32 SuiContext::button(const char* s)
                 c++;
         }
 
-        if (active_id == id && io.lup) return 1;
+        if (hot_id == id && active_id == id && io.lup) return 1;
         return 0;
+}
+
+void SuiContext::checkbox(const char* s, i32* const value)
+{
+        SuiAssert(s);
+        u32 id = SuiHash(s);
+
+        SuiAssert(layouts.idx != 0);
+        SuiLayout layout = layouts.pop();
+        SuiRect   rect = get_rect(16, 16, 0, layout);
+        SuiRect   bbox = rect.scale(2);
+        SuiRect   check = bbox.scale(2);
+
+        if (io.mxy_in_rect(bbox)) {
+                hot_id = id;
+                if (active_id == 0 && io.ldown) active_id = id;
+        }
+
+        if (hot_id == id && active_id == id && io.lup) {
+                if (*value) *value = 0;
+                else *value = 1;
+        }
+
+        rectcmds.push(SuiRectCommand(rect, style.colors[SUI_COLOR_CHECKBOX], 127));
+        rectcmds.push(SuiRectCommand(bbox, style.colors[SUI_COLOR_CHECKBOXBG], 127));
+        if (*value) rectcmds.push(SuiRectCommand(check, style.colors[SUI_COLOR_CHECKBOX], 127));
+}
+
+void SuiContext::slider(const char* s, f32* const value)
+{
+        SuiAssert(s);
+        u32 id = SuiHash(s);
+
+        SuiAssert(layouts.idx != 0);
+        SuiLayout layout = layouts.pop();
+
+        const i32 w = 128, h = 2;
+        // const i32 xoff = static_cast<const i32>(128.0f * *value);
+        const i32 xoff = static_cast<const i32>(112.0f * *value);
+        SuiRect   rect = get_rect(w, h, 0, layout);
+        SuiRect   control = get_rect(16, 16, 0, layout);
+        control.x += xoff - 56;
+
+        if (io.mxy_in_rect(control)) {
+                hot_id = id;
+                if (active_id == 0 && io.ldown) active_id = id;
+        }
+
+        if (active_id == id) {
+                *value -= (io.dmx / 128.0f);
+                if (*value < 0.0f) *value = 0.0f;
+                if (1.0f < *value) *value = 1.0f;
+                if (io.mx < rect.x) *value = 0.0f;
+                if (rect.x + rect.w < io.mx) *value = 1.0f;
+        }
+
+        rectcmds.push(SuiRectCommand(rect, style.colors[SUI_COLOR_SLIDERBG], 127));
+        rectcmds.push(SuiRectCommand(control, style.colors[SUI_COLOR_SLIDER], 127));
+}
+
+void SuiContext::labelf(const char* s, ...)
+{
+        SuiAssert(s);
+        
+        char buffer[64];
+        va_list args;
+        va_start(args, s);
+        i32 n = vsnprintf(buffer, 64 - 1, s, args);
+        SuiAssert(n != -1);
+        
+        const char* c = buffer;
+        i32         len = 0;
+        while (*c) len += style.font.xadvs[*c++ - 32];
+
+        SuiAssert(layouts.idx != 0);
+        SuiLayout layout = layouts.pop();
+        SuiRect   rect = get_rect(len, 16, SUI_ALIGNMENT_FLAG_LEFT, layout);
+        SuiColor  color = style.colors[SUI_COLOR_LABELBG];
+
+        rectcmds.push(SuiRectCommand(rect, color, 127));
+
+        c = buffer;
+        len = 0;
+        while (*c) {
+                const SuiGlyph glyph = style.font.glyphs[*c - 32];
+                const SuiRect  grect = {rect.x + len + glyph.xoff, rect.y + glyph.yoff, glyph.w, glyph.h};
+                rectcmds.push(SuiRectCommand(grect, style.colors[SUI_COLOR_TEXT], *c));
+                len += style.font.xadvs[*c - 32];
+                c++;
+        }
 }
 
 void SuiContext::next()

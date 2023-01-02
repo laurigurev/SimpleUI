@@ -3,15 +3,15 @@ todos:
  - [DONE] sui api that generates rectangles with 
    correct layout
  - [DONE] render small boxes inside rects with correct alignment
- - get hovering and clicking working
+ - [DONE] get hovering and clicking working
  - add support for multiple sub windows
  - add support for overlapping windows
- - render text
- - add button()
- - add checkbox()
- - add label
+ - [DONE] render text
+ - [DONE] add button()
+ - [DONE] add checkbox()
+ - [DONE] add label
  - add text
- - add slider
+ - [DONE] add slider
  - custom font
  - font with distance fields
  - d3d11 backend that uses compute shaders

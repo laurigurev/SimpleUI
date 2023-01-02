@@ -88,6 +88,10 @@ enum {
         SUI_COLOR_LABELBG,
         SUI_COLOR_BUTTON,
         SUI_COLOR_BUTTON_HOT,
+        SUI_COLOR_CHECKBOX,
+        SUI_COLOR_CHECKBOXBG,
+        SUI_COLOR_SLIDER,
+        SUI_COLOR_SLIDERBG,
         SUI_COLOR_MAX
 };
 
@@ -127,14 +131,18 @@ struct SuiContext;
 
 struct SuiColor {
         u8 r, g, b, a;
+
         SuiColor() = default;
         SuiColor(const u8 _r, const u8 _g, const u8 _b, const u8 _a);
 };
 
 struct SuiRect {
         i32 x, y, w, h;
+
         SuiRect() = default;
         SuiRect(const i32 _x, const i32 _y, const i32 _w, const i32 _h);
+
+        SuiRect scale(const i32 px);
 };
 
 struct SuiUV {
@@ -211,16 +219,21 @@ struct SuiContext {
         SuiStack<SUI_CMDRECTSTACK_SIZE, SuiRectCommand> rectcmds;
 
         SuiContext();
-        void inputs(i32 mx, i32 my, u8 ldown, u8 lup, u8 rdown, u8 rup);
-        void begin(const char* name, const SuiRect rect);
-        void end();
-        void row(const i32 n, const i32* widths, i32 height);
-        void column(const i32 n, i32 width, const i32* heights);
-        // void box_ex(const char* name, const i32 w, const i32 h, const SuiAlignmentFlags flags, const SuiLayoutAction action);
-        void  reveal_layout();
+        void    inputs(i32 mx, i32 my, u8 ldown, u8 lup, u8 rdown, u8 rup);
+        void    begin(const char* name, const SuiRect rect);
+        void    end();
+        void    row(const i32 n, const i32* widths, i32 height);
+        void    column(const i32 n, i32 width, const i32* heights);
+        void    reveal_layout();
         SuiRect get_rect(const i32 w, const i32 h, const SuiAlignmentFlags alignment, const SuiLayout& layout);
         void    label(const char* s);
-        i32 button(const char* s);
+        i32     button(const char* s);
+        void    checkbox(const char* s, i32* const value);
+        void    slider(const char* s, f32* const value);
+        void    labelf(const char* s, ...);
+        void    text(const char* txt, ...);       // TODO
+        void    textbox(const char* txt);         // TODO
+        i32     menu(const char* s, const i32 n); // TODO
         void    next();
         // TODO: change to void finish();
         void reset();

@@ -39,10 +39,13 @@ int main()
         SuiContext sui;
         SuiBackend backend(app.device, 600, 600, sui.style.font.uvs);
 
+        i32 value0 = 0;
+        f32 value1 = 0.5f;
+
         while (app.close()) {
                 sui.reset();
                 sui.inputs(app.mouse.x, app.mouse.y, app.mouse.ldown, app.mouse.lup, app.mouse.rdown, app.mouse.rup);
-                sui.begin("window", SuiRect(50, 50, 100, 100));
+                sui.begin("window", SuiRect(50, 50, 200, 200));
 
                 i32 ws[] = {-1, 16};
                 sui.row(2, ws, 16);
@@ -52,17 +55,20 @@ int main()
 
                 i32 hs[] = {16, 16, 16};
                 sui.column(3, 40, hs);
-                sui.reveal_layout();
+                // sui.reveal_layout();
+                sui.checkbox("checkbox0", &value0);
                 // sui.reveal_layout();
                 if (sui.button("btn0")) printf("btn0 pressed\n");
                 sui.reveal_layout();
                 
-                sui.reveal_layout();
-                sui.reveal_layout();
+                if (value0) sui.reveal_layout();
+                else sui.slider("slider0", &value1);
+                // sui.reveal_layout();
+                sui.labelf("slider %.2f", value1);
 
                 sui.end();
 
-                app.clear(0.0f, 0.0f, 0.5f);
+                app.clear(0.0f, 0.0f, value1);
                 backend.record(sui.rectcmds.idx, sui.rectcmds.data);
                 backend.draw();
                 app.present();
