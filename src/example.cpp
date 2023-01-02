@@ -5,6 +5,19 @@
 #include <d3d11.h>
 #include <windows.h>
 
+struct Timer {
+        d64           frequency;
+        LARGE_INTEGER start;
+        d64           time;
+        d64           total;
+        i64           counter;
+        d64           avg;
+
+        Timer();
+        void begin();
+        void end();
+};
+
 struct App {
         WNDCLASSEX              wc;
         HINSTANCE               hInstance;
@@ -38,18 +51,20 @@ int main()
         App        app(L"SimpleUI example.cpp", 600, 600);
         SuiContext sui;
         SuiBackend backend(app.device, 600, 600, sui.style.font.uvs);
+        Timer      timer;
 
         f32 red = 0.5f, green = 0.0f, blue = 0.5f;
 
         while (app.close()) {
+                timer.begin();
                 sui.reset();
                 sui.inputs(app.mouse.x, app.mouse.y, app.mouse.ldown, app.mouse.lup, app.mouse.rdown, app.mouse.rup);
-                
+
                 sui.begin("creal color settings", SuiRect(200, 250, 200, 100));
                 const i32 ws[] = {-1};
                 sui.row(1, ws, 24);
                 sui.label("Pick your clear color");
-                const i32 hs[] = { 16, 16, 16};
+                const i32 hs[] = {16, 16, 16};
                 sui.column(3, 46, hs);
                 sui.label("red");
                 sui.label("green");
@@ -62,11 +77,12 @@ int main()
                 sui.labelf("rgb(%.2f, %.2f, %.2f)", red, green, blue);
                 sui.end();
 
-                sui.begin("profile data window", SuiRect(0, 0, 200, 136));
+                sui.begin("profile data window", SuiRect(0, 0, 200, 154));
                 sui.row(1, ws, 24);
                 sui.label("SuiBackend profiler data");
-                const i32 phs[] = {16, 16, 16, 16, 16, 16};
-                sui.column(6, -1, phs);
+                const i32 phs[] = {16, 16, 16, 16, 16, 16, 16};
+                sui.column(7, -1, phs);
+                sui.labelf("frame time     %.3fms", timer.avg);
                 sui.labelf("gpu time       %.3fms", backend.profiler.time);
                 sui.labelf("ia_vertices    %llu", backend.profiler.ia_vertices);
                 sui.labelf("ia_primitives  %llu", backend.profiler.ia_primitives);
@@ -74,10 +90,11 @@ int main()
                 sui.labelf("ps_invocations %llu", backend.profiler.ps_invocations);
                 sui.labelf("cs_invocations %llu", backend.profiler.cs_invocations);
                 sui.end();
-                
+
                 app.clear(red, green, blue);
                 backend.record(sui.rectcmds.idx, sui.rectcmds.data);
                 backend.draw();
+                timer.end();
                 app.present();
         }
 
@@ -95,15 +112,33 @@ int main()
         return 0;
 }
 
-/* LRESULT CALLBACK DefaultMessageCallback(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+Timer::Timer()
 {
-        switch (msg) {
-        case WM_CLOSE:
-                PostQuitMessage(0);
-                break;
+        memset(this, 0, sizeof(Timer));
+        LARGE_INTEGER FREQUENCY;
+        QueryPerformanceFrequency(&FREQUENCY);
+        frequency = static_cast<d64>(FREQUENCY.QuadPart) / 1000.0;
+}
+
+void Timer::begin()
+{
+        QueryPerformanceCounter(&start);
+}
+
+void Timer::end()
+{
+        LARGE_INTEGER end;
+        QueryPerformanceCounter(&end);
+        time = static_cast<d64>(end.QuadPart - start.QuadPart) / frequency;
+
+        total += time;
+        counter++;
+        if (counter == 20) {
+                avg = total / 20.0;
+                total = 0.0;
+                counter = 0;
         }
-        return DefWindowProc(hwnd, msg, wparam, lparam);
-} */
+}
 
 App::App(const wchar_t* title, const i32 w, const i32 h)
 {
@@ -212,12 +247,12 @@ LRESULT CALLBACK App::SetupMessageCallback(HWND hwnd, UINT msg, WPARAM wparam, L
 LRESULT CALLBACK App::MessageCallback(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
         App* app = (App*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-        
+
         app->mouse.ldown = 0;
         app->mouse.lup = 0;
         app->mouse.rdown = 0;
         app->mouse.rup = 0;
-        
+
         switch (msg) {
         case WM_CLOSE: {
                 PostQuitMessage(0);
