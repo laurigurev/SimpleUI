@@ -564,9 +564,9 @@ SuiBackend::SuiBackend(ID3D11Device* _device, const i32 x, const i32 y, const Su
         SuiAssert(hr == 0);
 
         D3D11_INPUT_ELEMENT_DESC ieds[] = {
-            {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,   0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-            {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,   0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-            {"COLOR",    0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+            {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,       0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+            {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+            {"COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
         };
         hr = device->CreateInputLayout(ieds, 3, blob->GetBufferPointer(), blob->GetBufferSize(), &input_layout);
         SuiAssert(hr == 0);
@@ -574,6 +574,11 @@ SuiBackend::SuiBackend(ID3D11Device* _device, const i32 x, const i32 y, const Su
         hr = D3DCompileFromFile(L"shaders\\SuiPixel.hlsl", NULL, NULL, "main", "ps_4_0", 0, 0, &blob, NULL);
         SuiAssert(hr == 0);
         hr = device->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), NULL, &pixel_shader);
+        SuiAssert(hr == 0);
+
+        hr = D3DCompileFromFile(L"shaders\\SuiCompute.hlsl", NULL, NULL, "main", "cs_4_0", 0, 0, &blob, NULL);
+        SuiAssert(hr == 0);
+        hr = device->CreateComputeShader(blob->GetBufferPointer(), blob->GetBufferSize(), NULL, &compute_shader);
         SuiAssert(hr == 0);
 
         blob->Release();
@@ -699,13 +704,80 @@ SuiBackend::SuiBackend(ID3D11Device* _device, const i32 x, const i32 y, const Su
 
         texture->Release();
         stbi_image_free(bmp);
+
+        // input buffer 0 : stride = sizeof(SuiUV), size = 96
+        D3D11_BUFFER_DESC desc;
+        desc.ByteWidth = sizeof(SuiUV) * 96;
+        desc.Usage = D3D11_USAGE_DEFAULT;
+        desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+        desc.CPUAccessFlags = 0;
+        desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+        desc.StructureByteStride = sizeof(SuiUV);
+
+        D3D11_SUBRESOURCE_DATA sub_desc;
+        sub_desc.pSysMem = _uvs;
+        sub_desc.SysMemPitch = 0;
+        sub_desc.SysMemSlicePitch = 0;
+
+        hr = device->CreateBuffer(&desc, &sub_desc, &compute_in_buffer0);
+        SuiAssert(hr == 0);
+
+        // input buffer 1 : stride = sizeof(SuiRectCommand), size = n
+        desc.ByteWidth = sizeof(SuiRectCommand) * SUI_CMDRECTSTACK_SIZE;
+        desc.Usage = D3D11_USAGE_DYNAMIC;
+        // desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+        desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+        desc.StructureByteStride = sizeof(SuiRectCommand);
+
+        hr = device->CreateBuffer(&desc, NULL, &compute_in_buffer1);
+        SuiAssert(hr == 0);
+
+        // output buffer 0 : stride = sizeof(SuiVertex), size = n * 4
+        desc.ByteWidth = sizeof(SuiDeviceVertex) * SUI_CMDRECTSTACK_SIZE * 4;
+        desc.Usage = D3D11_USAGE_DEFAULT;
+        desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+        desc.CPUAccessFlags = 0;
+        desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+        desc.StructureByteStride = sizeof(SuiDeviceVertex);
+
+        hr = device->CreateBuffer(&desc, NULL, &compute_out_buffer0);
+        SuiAssert(hr == 0);
+
+        // shader resource views
+        D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc;
+        srv_desc.Format = DXGI_FORMAT_UNKNOWN;
+        srv_desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+        srv_desc.BufferEx.FirstElement = 0;
+        srv_desc.BufferEx.NumElements = 96;
+
+        hr = _device->CreateShaderResourceView(compute_in_buffer0, &srv_desc, &cib0SRV);
+        SuiAssert(hr == 0);
+
+        srv_desc.Format = DXGI_FORMAT_UNKNOWN;
+        srv_desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+        srv_desc.BufferEx.FirstElement = 0;
+        srv_desc.BufferEx.NumElements = SUI_CMDRECTSTACK_SIZE;
+
+        hr = _device->CreateShaderResourceView(compute_in_buffer1, &srv_desc, &cib1SRV);
+        SuiAssert(hr == 0);
+
+        D3D11_UNORDERED_ACCESS_VIEW_DESC uav_desc;
+        uav_desc.Format = DXGI_FORMAT_UNKNOWN;
+        uav_desc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+        uav_desc.Buffer.FirstElement = 0;
+        uav_desc.Buffer.NumElements = SUI_CMDRECTSTACK_SIZE * 4;
+        uav_desc.Buffer.Flags = 0;
+
+        hr = device->CreateUnorderedAccessView(compute_out_buffer0, &uav_desc, &cob0UAV);
 }
 
 void SuiBackend::record(i32 n, const SuiRectCommand* rectcmds)
 {
         SuiAssert(n * 4 < SUI_VERTEX_SIZE);
 
-        HRESULT                  hr;
+        /* HRESULT                  hr;
         D3D11_MAPPED_SUBRESOURCE vtx_rsc;
         hr = context->Map(vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &vtx_rsc);
         SuiAssert(hr == 0);
@@ -727,12 +799,36 @@ void SuiBackend::record(i32 n, const SuiRectCommand* rectcmds)
         }
 
         context->Unmap(vertex_buffer, 0);
+        vertices_count = n * 4; */
+
+        HRESULT                  hr;
+        D3D11_MAPPED_SUBRESOURCE resource;
+        hr = context->Map(compute_in_buffer1, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
+        SuiAssert(hr == 0);
+
+        SuiRectCommand* cmds = reinterpret_cast<SuiRectCommand*>(resource.pData);
+        for (i32 i = 0; i < n; i++) {
+                *cmds++ = *rectcmds++;
+        }
+
+        context->Unmap(compute_in_buffer1, 0);
         vertices_count = n * 4;
 }
 
 void SuiBackend::draw()
 {
         profiler.begin(context);
+
+        // dispatch compute shader
+        context->CSSetShader(compute_shader, NULL, 0);
+        ID3D11ShaderResourceView* srvs[] = {cib0SRV, cib1SRV};
+        context->CSSetShaderResources(0, 2, srvs);
+        context->CSSetUnorderedAccessViews(0, 1, &cob0UAV, 0);
+        context->Dispatch(SUI_CMDRECTSTACK_SIZE, 1, 1);
+        ID3D11ShaderResourceView* srvs_null[] = {nullptr, nullptr};
+        context->CSSetShaderResources(0, 2, srvs_null);
+        ID3D11UnorderedAccessView* uav_null = nullptr;
+        context->CSSetUnorderedAccessViews(0, 1, &uav_null, 0);
 
         context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         context->IASetInputLayout(input_layout);
@@ -744,11 +840,13 @@ void SuiBackend::draw()
         context->PSSetShaderResources(0, 1, &view);
         context->PSSetSamplers(0, 1, &sampler);
 
-        u32 stride = sizeof(SuiVertex);
+        // u32 stride = sizeof(SuiVertex);
+        u32 stride = sizeof(SuiDeviceVertex);
         u32 offset = 0;
         for (i32 i = 0; i < vertices_count; i += 4) {
                 offset = i * stride;
-                context->IASetVertexBuffers(0, 1, &vertex_buffer, &stride, &offset);
+                // context->IASetVertexBuffers(0, 1, &vertex_buffer, &stride, &offset);
+                context->IASetVertexBuffers(0, 1, &compute_out_buffer0, &stride, &offset);
                 context->DrawIndexed(6, 0, 0);
         }
 

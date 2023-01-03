@@ -16,9 +16,9 @@ typedef double   d64;
 
 // DEFINES
 
-#define SUI_LAYOUTSTACK_SIZE  16
-#define SUI_CMDRECTSTACK_SIZE 256
-#define SUI_VERTEX_SIZE       1024
+#define SUI_LAYOUTSTACK_SIZE  32
+#define SUI_CMDRECTSTACK_SIZE 512
+#define SUI_VERTEX_SIZE       2048
 #define SUI_MIN_RECT_WIDTH    16
 #define SUI_MIN_RECT_HEIGHT   16
 
@@ -258,6 +258,12 @@ struct SuiVertex {
         SuiVertex(const f32 _x, const f32 _y, const f32 _u, const f32 _v, const SuiColor _color);
 };
 
+struct SuiDeviceVertex {
+        f32 x, y;
+        f32 u, v;
+        f32 r, g, b, a;
+};
+
 struct SuiBackendProfiler {
         ID3D11Query* timestamp0;
         ID3D11Query* timestamp1;
@@ -318,6 +324,7 @@ struct SuiBackend {
         ID3D11InputLayout*        input_layout;
         ID3D11VertexShader*       vertex_shader;
         ID3D11PixelShader*        pixel_shader;
+        ID3D11ComputeShader*      compute_shader;
         ID3D11Buffer*             vertex_buffer;
         ID3D11Buffer*             index_buffer;
         ID3D11Buffer*             constant_buffer;
@@ -327,6 +334,14 @@ struct SuiBackend {
         i32                       vertices_count;
         SuiBackendProfiler        profiler;
         const SuiUV*              uvs;
+
+        ID3D11Buffer* compute_in_buffer0;
+        ID3D11Buffer* compute_in_buffer1;
+        ID3D11Buffer* compute_out_buffer0;
+
+        ID3D11ShaderResourceView*  cib0SRV;
+        ID3D11ShaderResourceView*  cib1SRV;
+        ID3D11UnorderedAccessView* cob0UAV;
 
         SuiBackend(ID3D11Device* _device, const i32 x, const i32 y, const SuiUV* _uvs);
         void record(i32 n, const SuiRectCommand* rectcmds);
