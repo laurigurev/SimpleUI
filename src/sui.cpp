@@ -600,10 +600,10 @@ SuiBackend::SuiBackend(ID3D11Device* _device, const i32 x, const i32 y, const Su
 
         // buffers
         D3D11_BUFFER_DESC bufdsc;
-        bufdsc.ByteWidth = sizeof(SuiVertex) * SUI_VERTEX_SIZE;
-        bufdsc.Usage = D3D11_USAGE_DYNAMIC;
+        bufdsc.ByteWidth = sizeof(SuiDeviceVertex) * SUI_CMDRECTSTACK_SIZE * 4;
+        bufdsc.Usage = D3D11_USAGE_DEFAULT;
         bufdsc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-        bufdsc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        bufdsc.CPUAccessFlags = 0;
         bufdsc.MiscFlags = 0;
         bufdsc.StructureByteStride = 0;
 
@@ -777,30 +777,6 @@ void SuiBackend::record(i32 n, const SuiRectCommand* rectcmds)
 {
         SuiAssert(n * 4 < SUI_VERTEX_SIZE);
 
-        /* HRESULT                  hr;
-        D3D11_MAPPED_SUBRESOURCE vtx_rsc;
-        hr = context->Map(vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &vtx_rsc);
-        SuiAssert(hr == 0);
-
-        // memcpy((char*)vtx_rsc.pData + n * sizeof(struct sui_vertex), vertices, n * sizeof(struct sui_vertex));
-        SuiVertex* vertex = reinterpret_cast<SuiVertex*>(vtx_rsc.pData);
-        for (i32 i = 0; i < n; i++) {
-                f32 x0 = (f32)rectcmds[i].rect.x;
-                f32 y0 = (f32)rectcmds[i].rect.y;
-                f32 x1 = (f32)rectcmds[i].rect.x + (f32)rectcmds[i].rect.w;
-                f32 y1 = (f32)rectcmds[i].rect.y + (f32)rectcmds[i].rect.h;
-
-                SuiUV uv = uvs[rectcmds[i].c - 32];
-
-                *vertex++ = SuiVertex(x0, y0, uv.u0, uv.v0, rectcmds[i].color);
-                *vertex++ = SuiVertex(x1, y1, uv.u1, uv.v1, rectcmds[i].color);
-                *vertex++ = SuiVertex(x0, y1, uv.u0, uv.v1, rectcmds[i].color);
-                *vertex++ = SuiVertex(x1, y0, uv.u1, uv.v0, rectcmds[i].color);
-        }
-
-        context->Unmap(vertex_buffer, 0);
-        vertices_count = n * 4; */
-
         HRESULT                  hr;
         D3D11_MAPPED_SUBRESOURCE resource;
         hr = context->Map(compute_in_buffer1, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
@@ -824,11 +800,13 @@ void SuiBackend::draw()
         ID3D11ShaderResourceView* srvs[] = {cib0SRV, cib1SRV};
         context->CSSetShaderResources(0, 2, srvs);
         context->CSSetUnorderedAccessViews(0, 1, &cob0UAV, 0);
-        context->Dispatch(SUI_CMDRECTSTACK_SIZE, 1, 1);
+        context->Dispatch(SUI_CMDRECTSTACK_SIZE / 64, 1, 1);
         ID3D11ShaderResourceView* srvs_null[] = {nullptr, nullptr};
         context->CSSetShaderResources(0, 2, srvs_null);
         ID3D11UnorderedAccessView* uav_null = nullptr;
         context->CSSetUnorderedAccessViews(0, 1, &uav_null, 0);
+
+        context->CopyResource(vertex_buffer, compute_out_buffer0);
 
         context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         context->IASetInputLayout(input_layout);
@@ -840,13 +818,11 @@ void SuiBackend::draw()
         context->PSSetShaderResources(0, 1, &view);
         context->PSSetSamplers(0, 1, &sampler);
 
-        // u32 stride = sizeof(SuiVertex);
         u32 stride = sizeof(SuiDeviceVertex);
         u32 offset = 0;
         for (i32 i = 0; i < vertices_count; i += 4) {
                 offset = i * stride;
-                // context->IASetVertexBuffers(0, 1, &vertex_buffer, &stride, &offset);
-                context->IASetVertexBuffers(0, 1, &compute_out_buffer0, &stride, &offset);
+                context->IASetVertexBuffers(0, 1, &vertex_buffer, &stride, &offset);
                 context->DrawIndexed(6, 0, 0);
         }
 

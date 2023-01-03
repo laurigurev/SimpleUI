@@ -33,7 +33,7 @@ float4 read_color(uint char_color) {
 	return out_color;
 }
 
-[numthreads(1, 1, 1)]
+[numthreads(64, 1, 1)]
 void main(uint3 dtid : SV_DispatchThreadID) {
 	// load rect
 	Rect rect = inBuffer1[dtid.x];

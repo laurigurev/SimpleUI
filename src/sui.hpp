@@ -317,28 +317,26 @@ struct SuiBackendProfiler {
 };
 
 struct SuiBackend {
-        i32                       screen_x;
-        i32                       screen_y;
-        ID3D11Device*             device;
-        ID3D11DeviceContext*      context;
-        ID3D11InputLayout*        input_layout;
-        ID3D11VertexShader*       vertex_shader;
-        ID3D11PixelShader*        pixel_shader;
-        ID3D11ComputeShader*      compute_shader;
-        ID3D11Buffer*             vertex_buffer;
-        ID3D11Buffer*             index_buffer;
-        ID3D11Buffer*             constant_buffer;
-        ID3D11BlendState*         blend_state;
-        ID3D11ShaderResourceView* view;
-        ID3D11SamplerState*       sampler;
-        i32                       vertices_count;
-        SuiBackendProfiler        profiler;
-        const SuiUV*              uvs;
-
-        ID3D11Buffer* compute_in_buffer0;
-        ID3D11Buffer* compute_in_buffer1;
-        ID3D11Buffer* compute_out_buffer0;
-
+        i32                        screen_x;
+        i32                        screen_y;
+        ID3D11Device*              device;
+        ID3D11DeviceContext*       context;
+        ID3D11InputLayout*         input_layout;
+        ID3D11VertexShader*        vertex_shader;
+        ID3D11PixelShader*         pixel_shader;
+        ID3D11ComputeShader*       compute_shader;
+        ID3D11Buffer*              vertex_buffer;
+        ID3D11Buffer*              index_buffer;
+        ID3D11Buffer*              constant_buffer;
+        ID3D11BlendState*          blend_state;
+        ID3D11ShaderResourceView*  view;
+        ID3D11SamplerState*        sampler;
+        i32                        vertices_count;
+        SuiBackendProfiler         profiler;
+        const SuiUV*               uvs;
+        ID3D11Buffer*              compute_in_buffer0;
+        ID3D11Buffer*              compute_in_buffer1;
+        ID3D11Buffer*              compute_out_buffer0;
         ID3D11ShaderResourceView*  cib0SRV;
         ID3D11ShaderResourceView*  cib1SRV;
         ID3D11UnorderedAccessView* cob0UAV;
